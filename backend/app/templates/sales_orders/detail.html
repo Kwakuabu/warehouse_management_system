@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Order {{ sales_order.order_number }} - Alive Pharmaceuticals</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border-right: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .logo {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .nav-menu {
+            padding: 1rem 0;
+            flex: 1;
+        }
+
+        .nav-item {
+            margin: 0.25rem 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: #555;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .nav-link i {
+            margin-right: 1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .logout-section {
+            padding: 1rem;
+            margin-top: auto;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logout-btn:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .logout-btn i {
+            margin-right: 0.5rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-info h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-info p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 0.75rem 1.5rem;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .status-pending { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
+        .status-confirmed { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; }
+        .status-shipped { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; }
+        .status-delivered { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+        .status-cancelled { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
+
+        .action-btn {
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .btn-ship {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .btn-cancel {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-btn i {
+            margin-right: 0.5rem;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header h3 {
+            color: #333;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-header h3 i {
+            margin-right: 0.5rem;
+        }
+
+        .card-content {
+            padding: 2rem;
+        }
+
+        /* Order Details */
+        .order-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .detail-section h4 {
+            color: #333;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 500;
+            color: #666;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .customer-info {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .customer-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .customer-details h4 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .customer-details p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Order Items Table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .items-table th,
+        .items-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .items-table th {
+            background: rgba(102, 126, 234, 0.05);
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .items-table td {
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .product-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .product-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .product-details h5 {
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .product-details p {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .quantity-info {
+            text-align: center;
+        }
+
+        .quantity-ordered {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .quantity-shipped {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        .price-info {
+            text-align: right;
+        }
+
+        .unit-price {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .total-price {
+            font-weight: 700;
+            color: #10b981;
+            font-size: 1.1rem;
+        }
+
+        /* Order Summary */
+        .summary-section {
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .summary-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .summary-label {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .summary-value {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        .total-row {
+            border-top: 2px solid rgba(102, 126, 234, 0.2);
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+
+        .total-value {
+            font-size: 1.5rem;
+            color: #10b981;
+            font-weight: 700;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.75rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+            padding-left: 2rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -0.5rem;
+            top: 0.5rem;
+            width: 1rem;
+            height: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .timeline-item.active::before {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .timeline-item.pending::before {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .timeline-content {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-date {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* Status Update Form */
+        .status-update {
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .status-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .update-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .update-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .header-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .order-detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1><i class="fas fa-pills"></i> Alive Pharma</h1>
+                <p>Warehouse Management</p>
+            </div>
+            
+            <nav class="nav-menu">
+                <div class="nav-item">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        Dashboard
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/categories" class="nav-link">
+                        <i class="fas fa-tags"></i>
+                        Categories
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/products" class="nav-link">
+                        <i class="fas fa-pills"></i>
+                        Products
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/customers" class="nav-link">
+                        <i class="fas fa-building"></i>
+                        Customers
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/inventory" class="nav-link">
+                        <i class="fas fa-boxes"></i>
+                        Inventory
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/purchase-orders" class="nav-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        Purchase Orders
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/sales-orders" class="nav-link active">
+                        <i class="fas fa-truck"></i>
+                        Sales Orders
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/vendors" class="nav-link">
+                        <i class="fas fa-industry"></i>
+                        Vendors
+                    </a>
+                </div>
+            </nav>
+            
+            <!-- Logout Button -->
+            <div class="logout-section">
+                <form method="POST" action="/auth/logout" style="width: 100%;">
+                    <button type="submit" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-info">
+                    <h1>Order {{ sales_order.order_number }}</h1>
+                    <p>Sales order details and management</p>
+                </div>
+                <div class="header-actions">
+                    <span class="status-badge status-{{ sales_order.status }}">
+                        {{ sales_order.status.title() }}
+                    </span>
+                    <a href="/sales-orders" class="action-btn btn-back">
+                        <i class="fas fa-arrow-left"></i>
+                        Back
+                    </a>
+                    {% if sales_order.status in ['pending', 'confirmed'] %}
+                    <a href="/sales-orders/edit/{{ sales_order.id }}" class="action-btn btn-edit">
+                        <i class="fas fa-edit"></i>
+                        Edit
+                    </a>
+                    {% endif %}
+                    <button class="action-btn btn-print" onclick="window.print()">
+                        <i class="fas fa-print"></i>
+                        Print
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Main Content -->
+                <div>
+                    <!-- Order Details Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-info-circle"></i> Order Information</h3>
+                        </div>
+                        <div class="card-content">
+                            <!-- Customer Information -->
+                            <div class="customer-info">
+                                <div class="customer-icon">
+                                    <i class="fas fa-hospital"></i>
+                                </div>
+                                <div class="customer-details">
+                                    <h4>{{ sales_order.customer.name }}</h4>
+                                    <p><i class="fas fa-map-marker-alt"></i> {{ sales_order.customer.city or 'Unknown location' }}</p>
+                                    <p><i class="fas fa-user"></i> {{ sales_order.customer.contact_person or 'No contact person' }}</p>
+                                    <p><i class="fas fa-envelope"></i> {{ sales_order.customer.email or 'No email' }}</p>
+                                    <p><i class="fas fa-phone"></i> {{ sales_order.customer.phone or 'No phone' }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Order Details Grid -->
+                            <div class="order-detail-grid">
+                                <div class="detail-section">
+                                    <h4>Order Details</h4>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Order Number:</span>
+                                        <span class="detail-value">{{ sales_order.order_number }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Order Date:</span>
+                                        <span class="detail-value">{{ sales_order.order_date.strftime('%Y-%m-%d %H:%M') }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Delivery Date:</span>
+                                        <span class="detail-value">
+                                            {{ sales_order.delivery_date.strftime('%Y-%m-%d') if sales_order.delivery_date else 'Not specified' }}
+                                        </span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Total Items:</span>
+                                        <span class="detail-value">{{ sales_order.items|length }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="detail-section">
+                                    <h4>Financial Details</h4>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Discount:</span>
+                                        <span class="detail-value">{{ sales_order.discount_percentage }}%</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Payment Terms:</span>
+                                        <span class="detail-value">{{ sales_order.customer.payment_terms or 'Net 30' }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Order Value:</span>
+                                        <span class="detail-value">₵{{ "%.2f"|format(sales_order.total_amount) }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Status:</span>
+                                        <span class="detail-value">{{ sales_order.status.title() }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if sales_order.notes %}
+                            <div class="detail-section">
+                                <h4>Order Notes</h4>
+                                <p style="color: #666; padding: 1rem; background: rgba(102, 126, 234, 0.05); border-radius: 8px;">
+                                    {{ sales_order.notes }}
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Order Items Card -->
+                    <div class="card" style="margin-top: 2rem;">
+                        <div class="card-header">
+                            <h3><i class="fas fa-list"></i> Order Items</h3>
+                        </div>
+                        <div class="card-content">
+                            <table class="items-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>Unit Price</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in sales_order.items %}
+                                    <tr>
+                                        <td>
+                                            <div class="product-info">
+                                                <div class="product-icon">
+                                                    <i class="fas fa-pills"></i>
+                                                </div>
+                                                <div class="product-details">
+                                                    <h5>{{ item.product.name }}</h5>
+                                                    <p>SKU: {{ item.product.sku }}</p>
+                                                    {% if item.inventory_item %}
+                                                    <p>Batch: {{ item.inventory_item.batch_number }}</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="quantity-info">
+                                                <div class="quantity-ordered">{{ item.quantity_ordered }}</div>
+                                                {% if item.quantity_shipped > 0 %}
+                                                <div class="quantity-shipped">Shipped: {{ item.quantity_shipped }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="price-info">
+                                                <div class="unit-price">₵{{ "%.2f"|format(item.unit_price) }}</div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="price-info">
+                                                <div class="total-price">₵{{ "%.2f"|format(item.total_price) }}</div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if item.quantity_shipped >= item.quantity_ordered %}
+                                                <span style="color: #10b981; font-weight: 600;">Shipped</span>
+                                            {% elif item.quantity_shipped > 0 %}
+                                                <span style="color: #f59e0b; font-weight: 600;">Partial</span>
+                                            {% else %}
+                                                <span style="color: #6b7280; font-weight: 600;">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+
+                            <!-- Order Summary -->
+                            <div class="summary-section">
+                                <div class="summary-row">
+                                    <span class="summary-label">Subtotal:</span>
+                                    <span class="summary-value">
+                                        ₵{{ "%.2f"|format(sales_order.total_amount / (1 - sales_order.discount_percentage/100) if sales_order.discount_percentage > 0 else sales_order.total_amount) }}
+                                    </span>
+                                </div>
+                                {% if sales_order.discount_percentage > 0 %}
+                                <div class="summary-row">
+                                    <span class="summary-label">Discount ({{ sales_order.discount_percentage }}%):</span>
+                                    <span class="summary-value">
+                                        -₵{{ "%.2f"|format((sales_order.total_amount / (1 - sales_order.discount_percentage/100)) * (sales_order.discount_percentage/100)) }}
+                                    </span>
+                                </div>
+                                {% endif %}
+                                <div class="summary-row total-row">
+                                    <span class="summary-label">Total Amount:</span>
+                                    <span class="total-value">₵{{ "%.2f"|format(sales_order.total_amount) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar Content -->
+                <div>
+                    <!-- Order Status Management -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-tasks"></i> Order Status</h3>
+                        </div>
+                        <div class="card-content">
+                            <form method="POST" action="/sales-orders/{{ sales_order.id }}/update-status">
+                                <div class="status-update">
+                                    <label for="status">Update Status:</label>
+                                    <select name="status" id="status" class="status-select">
+                                        <option value="pending" {{ 'selected' if sales_order.status == 'pending' else '' }}>Pending</option>
+                                        <option value="confirmed" {{ 'selected' if sales_order.status == 'confirmed' else '' }}>Confirmed</option>
+                                        <option value="shipped" {{ 'selected' if sales_order.status == 'shipped' else '' }}>Shipped</option>
+                                        <option value="delivered" {{ 'selected' if sales_order.status == 'delivered' else '' }}>Delivered</option>
+                                        <option value="cancelled" {{ 'selected' if sales_order.status == 'cancelled' else '' }}>Cancelled</option>
+                                    </select>
+                                    <button type="submit" class="update-btn">
+                                        <i class="fas fa-sync-alt"></i>
+                                        Update Status
+                                    </button>
+                                </div>
+                            </form>
+
+                            {% if sales_order.status == 'confirmed' %}
+                            <div style="margin-top: 1rem;">
+                                <button class="action-btn btn-ship" onclick="markAsShipped()" style="width: 100%;">
+                                    <i class="fas fa-shipping-fast"></i>
+                                    Ship Order
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Order Timeline -->
+                    <div class="card" style="margin-top: 2rem;">
+                        <div class="card-header">
+                            <h3><i class="fas fa-history"></i> Order Timeline</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="timeline">
+                                <div class="timeline-item active">
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">Order Created</div>
+                                        <div class="timeline-date">{{ sales_order.order_date.strftime('%Y-%m-%d %H:%M') }}</div>
+                                    </div>
+                                </div>
+                                
+                                {% if sales_order.status in ['confirmed', 'shipped', 'delivered'] %}
+                                <div class="timeline-item active">
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">Order Confirmed</div>
+                                        <div class="timeline-date">Confirmed by system</div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if sales_order.status in ['shipped', 'delivered'] %}
+                                <div class="timeline-item active">
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">Order Shipped</div>
+                                        <div class="timeline-date">Items dispatched to customer</div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if sales_order.status == 'delivered' %}
+                                <div class="timeline-item active">
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">Order Delivered</div>
+                                        <div class="timeline-date">Successfully delivered to customer</div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if sales_order.status == 'cancelled' %}
+                                <div class="timeline-item" style="color: #ef4444;">
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">Order Cancelled</div>
+                                        <div class="timeline-date">Order was cancelled</div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if sales_order.delivery_date and sales_order.status not in ['delivered', 'cancelled'] %}
+                                <div class="timeline-item pending">
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">Expected Delivery</div>
+                                        <div class="timeline-date">{{ sales_order.delivery_date.strftime('%Y-%m-%d') }}</div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function markAsShipped() {
+            if (confirm('Mark this order as shipped? This will reduce inventory levels.')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/sales-orders/{{ sales_order.id }}/update-status`;
+                
+                const statusInput = document.createElement('input');
+                statusInput.type = 'hidden';
+                statusInput.name = 'status';
+                statusInput.value = 'shipped';
+                
+                form.appendChild(statusInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        // Auto-refresh timeline based on status changes
+        document.getElementById('status').addEventListener('change', function() {
+            // You could add real-time updates here
+        });
+    </script>
+</body>
+</html>

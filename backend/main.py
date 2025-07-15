@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from app.database import get_db, create_tables
 from app.models.models import User
-from app.routes import auth, categories, products, customers, inventory, purchase_orders
+from app.routes import auth, categories, products, customers, inventory, purchase_orders, sales_orders
 from app.utils.auth import get_current_user
 from app.utils.seed_data import seed_all_data
 from typing import Optional
@@ -45,6 +45,7 @@ app.include_router(products.router, prefix="/products", tags=["products"])
 app.include_router(customers.router, prefix="/customers", tags=["customers"])
 app.include_router(inventory.router, prefix="/inventory", tags=["inventory"])
 app.include_router(purchase_orders.router, prefix="/purchase-orders", tags=["purchase_orders"])
+app.include_router(sales_orders.router, prefix="/sales-orders", tags=["sales_orders"])
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
