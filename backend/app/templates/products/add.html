@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Product - Alive Pharmaceuticals</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border-right: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .logo {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .nav-menu {
+            padding: 1rem 0;
+            flex: 1;
+        }
+
+        .nav-item {
+            margin: 0.25rem 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: #555;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .nav-link i {
+            margin-right: 1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .logout-section {
+            padding: 1rem;
+            margin-top: auto;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logout-btn:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .logout-btn i {
+            margin-right: 0.5rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .back-btn {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(107, 114, 128, 0.4);
+        }
+
+        .back-btn i {
+            margin-right: 0.5rem;
+        }
+
+        /* Form */
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-grid-full {
+            grid-column: 1 / -1;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .required {
+            color: #ef4444;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-control select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23667eea' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        .form-control textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #667eea;
+        }
+
+        .checkbox-item label {
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .input-group input {
+            flex: 1;
+        }
+
+        .input-group span {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary i {
+            margin-right: 0.5rem;
+        }
+
+        .btn-secondary {
+            padding: 1rem 2rem;
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-secondary i {
+            margin-right: 0.5rem;
+        }
+
+        .help-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .form-container {
+                padding: 2rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1><i class="fas fa-pills"></i> Alive Pharma</h1>
+                <p>Warehouse Management</p>
+            </div>
+            
+            <nav class="nav-menu">
+                <div class="nav-item">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        Dashboard
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/categories" class="nav-link">
+                        <i class="fas fa-tags"></i>
+                        Categories
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/products" class="nav-link active">
+                        <i class="fas fa-pills"></i>
+                        Products
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/inventory" class="nav-link">
+                        <i class="fas fa-boxes"></i>
+                        Inventory
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/purchase-orders" class="nav-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        Purchase Orders
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/sales-orders" class="nav-link">
+                        <i class="fas fa-truck"></i>
+                        Sales Orders
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/customers" class="nav-link">
+                        <i class="fas fa-building"></i>
+                        Customers
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/vendors" class="nav-link">
+                        <i class="fas fa-industry"></i>
+                        Vendors
+                    </a>
+                </div>
+            </nav>
+            
+            <!-- Logout Button -->
+            <div class="logout-section">
+                <form method="POST" action="/auth/logout" style="width: 100%;">
+                    <button type="submit" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div>
+                    <h1>Add New Product</h1>
+                    <p>Add a new dialysis consumable to your inventory</p>
+                </div>
+                <a href="/products" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Products
+                </a>
+            </div>
+
+            <!-- Form -->
+            <div class="form-container">
+                {% if error %}
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i> {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="/products/add" id="productForm">
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-info-circle"></i> Basic Information</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="sku">SKU <span class="required">*</span></label>
+                                <input type="text" id="sku" name="sku" class="form-control" 
+                                       placeholder="e.g., DLZ-001" required>
+                                <div class="help-text">Unique product identifier</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="name">Product Name <span class="required">*</span></label>
+                                <input type="text" id="name" name="name" class="form-control" 
+                                       placeholder="e.g., Fresenius F6 Dialyzer" required>
+                            </div>
+
+                            <div class="form-group form-grid-full">
+                                <label for="description">Description</label>
+                                <textarea id="description" name="description" class="form-control" 
+                                          placeholder="Detailed product description..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Classification -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-sitemap"></i> Classification</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="category_id">Category <span class="required">*</span></label>
+                                <select id="category_id" name="category_id" class="form-control" required>
+                                    <option value="">Select a category</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="vendor_id">Vendor <span class="required">*</span></label>
+                                <select id="vendor_id" name="vendor_id" class="form-control" required>
+                                    <option value="">Select a vendor</option>
+                                    {% for vendor in vendors %}
+                                    <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inventory Settings -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-warehouse"></i> Inventory Settings</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="unit_of_measure">Unit of Measure <span class="required">*</span></label>
+                                <select id="unit_of_measure" name="unit_of_measure" class="form-control" required>
+                                    <option value="">Select unit</option>
+                                    <option value="pcs">Pieces</option>
+                                    <option value="boxes">Boxes</option>
+                                    <option value="liters">Liters</option>
+                                    <option value="ml">Milliliters</option>
+                                    <option value="kg">Kilograms</option>
+                                    <option value="sets">Sets</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reorder_point">Reorder Point</label>
+                                <input type="number" id="reorder_point" name="reorder_point" class="form-control" 
+                                       value="10" min="0">
+                                <div class="help-text">Minimum stock level to trigger reorder</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="max_stock_level">Maximum Stock Level</label>
+                                <input type="number" id="max_stock_level" name="max_stock_level" class="form-control" 
+                                       value="1000" min="0">
+                                <div class="help-text">Maximum inventory capacity</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Storage Requirements -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-thermometer-half"></i> Storage Requirements</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="storage_temperature_min">Min Temperature (°C)</label>
+                                <input type="number" id="storage_temperature_min" name="storage_temperature_min" 
+                                       class="form-control" step="0.1" placeholder="e.g., 2">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="storage_temperature_max">Max Temperature (°C)</label>
+                                <input type="number" id="storage_temperature_max" name="storage_temperature_max" 
+                                       class="form-control" step="0.1" placeholder="e.g., 8">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Special Requirements -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Special Requirements</h3>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="requires_cold_chain" name="requires_cold_chain" value="true">
+                                <label for="requires_cold_chain">Requires Cold Chain</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="is_controlled_substance" name="is_controlled_substance" value="true">
+                                <label for="is_controlled_substance">Controlled Substance</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="/products" class="btn-secondary">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i>
+                            Save Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('productForm');
+            const skuInput = document.getElementById('sku');
+            const nameInput = document.getElementById('name');
+            
+            // Auto-generate SKU from name
+            nameInput.addEventListener('input', function() {
+                if (!skuInput.value) {
+                    const name = this.value.trim();
+                    if (name) {
+                        const sku = name.toUpperCase()
+                            .replace(/[^A-Z0-9\s]/g, '')
+                            .replace(/\s+/g, '-')
+                            .substring(0, 10);
+                        skuInput.value = sku;
+                    }
+                }
+            });
+
+            // Form validation
+            form.addEventListener('submit', function(e) {
+                const sku = skuInput.value.trim();
+                const name = nameInput.value.trim();
+                const categoryId = document.getElementById('category_id').value;
+                const vendorId = document.getElementById('vendor_id').value;
+                const unitOfMeasure = document.getElementById('unit_of_measure').value;
+                
+                if (!sku || !name || !categoryId || !vendorId || !unitOfMeasure) {
+                    e.preventDefault();
+                    alert('Please fill in all required fields');
+                    return false;
+                }
+                
+                if (sku.length < 3) {
+                    e.preventDefault();
+                    alert('SKU must be at least 3 characters long');
+                    skuInput.focus();
+                    return false;
+                }
+            });
+
+            // Auto-focus on SKU input
+            skuInput.focus();
+        });
+    </script>
+</body>
+</html>

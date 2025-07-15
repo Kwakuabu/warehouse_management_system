@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alive Pharmaceuticals - Warehouse Management</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border-right: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .logo {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* User Info Section */
+        .user-info {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            background: rgba(102, 126, 234, 0.1);
+            margin: 0 1rem;
+            border-radius: 15px;
+            margin-bottom: 1rem;
+        }
+
+        .user-avatar {
+            margin-right: 1rem;
+        }
+
+        .user-avatar i {
+            font-size: 2.5rem;
+            color: #667eea;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-menu {
+            padding: 1rem 0;
+            flex: 1;
+        }
+
+        .nav-item {
+            margin: 0.25rem 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: #555;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .nav-link i {
+            margin-right: 1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Logout Section */
+        .logout-section {
+            padding: 1rem;
+            margin-top: auto;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logout-btn:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .logout-btn i {
+            margin-right: 0.5rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        /* Dashboard Cards */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 48px rgba(31, 38, 135, 0.5);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+        }
+
+        .card-icon i {
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .card-title {
+            color: #333;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-subtitle {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Status indicators */
+        .status-good { color: #10b981; }
+        .status-warning { color: #f59e0b; }
+        .status-critical { color: #ef4444; }
+
+        /* Quick Actions */
+        .quick-actions {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .quick-actions h3 {
+            margin-bottom: 1.5rem;
+            color: #333;
+            font-size: 1.3rem;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .action-btn {
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .action-btn i {
+            margin-right: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                position: fixed;
+                top: 0;
+                left: -100%;
+                height: 100vh;
+                z-index: 1000;
+                transition: left 0.3s ease;
+            }
+            
+            .sidebar.active {
+                left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .card-value {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1><i class="fas fa-pills"></i> Alive Pharma</h1>
+                <p>Warehouse Management</p>
+            </div>
+            
+            <!-- User Info Section -->
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-details">
+                    <div class="user-name">John Doe</div>
+                    <div class="user-role">Administrator</div>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <div class="nav-item">
+                    <a href="/" class="nav-link active">
+                        <i class="fas fa-chart-line"></i>
+                        Dashboard
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/categories" class="nav-link">
+                        <i class="fas fa-tags"></i>
+                        Categories
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/products" class="nav-link">
+                        <i class="fas fa-pills"></i>
+                        Products
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/inventory" class="nav-link">
+                        <i class="fas fa-boxes"></i>
+                        Inventory
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/purchase-orders" class="nav-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        Purchase Orders
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/sales-orders" class="nav-link">
+                        <i class="fas fa-truck"></i>
+                        Sales Orders
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/customers" class="nav-link">
+                        <i class="fas fa-building"></i>
+                        Customers
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/vendors" class="nav-link">
+                        <i class="fas fa-industry"></i>
+                        Vendors
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/alerts" class="nav-link">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Alerts
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/reports" class="nav-link">
+                        <i class="fas fa-chart-bar"></i>
+                        Reports
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/settings" class="nav-link">
+                        <i class="fas fa-cog"></i>
+                        Settings
+                    </a>
+                </div>
+            </nav>
+            
+            <!-- Logout Button -->
+            <div class="logout-section">
+                <form method="POST" action="/auth/logout" style="width: 100%;">
+                    <button type="submit" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <h1>Welcome to Warehouse Dashboard</h1>
+                <p>Monitor your dialysis consumables inventory and operations</p>
+            </div>
+
+            <!-- Dashboard Cards -->
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                        <div class="card-title">Total Products</div>
+                    </div>
+                    <div class="card-value">1,247</div>
+                    <div class="card-subtitle">Active inventory items</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="card-title">Low Stock Alerts</div>
+                    </div>
+                    <div class="card-value status-warning">23</div>
+                    <div class="card-subtitle">Items below reorder point</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="card-title">Expiring Soon</div>
+                    </div>
+                    <div class="card-value status-critical">8</div>
+                    <div class="card-subtitle">Items expiring in 30 days</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="card-title">Inventory Value</div>
+                    </div>
+                    <div class="card-value">₵2.8M</div>
+                    <div class="card-subtitle">Total stock value</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="card-title">Pending Orders</div>
+                    </div>
+                    <div class="card-value">15</div>
+                    <div class="card-subtitle">Purchase orders in transit</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-hospital"></i>
+                        </div>
+                        <div class="card-title">Active Hospitals</div>
+                    </div>
+                    <div class="card-value">42</div>
+                    <div class="card-subtitle">Regular customers</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                <div class="action-buttons">
+                    <a href="/categories/add" class="action-btn">
+                        <i class="fas fa-tags"></i>
+                        Add Category
+                    </a>
+                    <a href="/products/add" class="action-btn">
+                        <i class="fas fa-plus"></i>
+                        Add New Product
+                    </a>
+                    <a href="/purchase-orders/add" class="action-btn">
+                        <i class="fas fa-shopping-cart"></i>
+                        Create Purchase Order
+                    </a>
+                    <a href="/sales-orders/add" class="action-btn">
+                        <i class="fas fa-truck"></i>
+                        Process Sales Order
+                    </a>
+                    <a href="/inventory/search" class="action-btn">
+                        <i class="fas fa-search"></i>
+                        Stock Inquiry
+                    </a>
+                    <a href="/reports" class="action-btn">
+                        <i class="fas fa-file-alt"></i>
+                        Generate Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add some basic interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            // Highlight active nav item
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Add loading animation to action buttons
+            const actionBtns = document.querySelectorAll('.action-btn');
+            actionBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const icon = this.querySelector('i');
+                    const originalClass = icon.className;
+                    icon.className = 'fas fa-spinner fa-spin';
+                    
+                    setTimeout(() => {
+                        icon.className = originalClass;
+                    }, 2000);
+                });
+            });
+
+            // Logout confirmation
+            const logoutBtn = document.querySelector('.logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    if (!confirm('Are you sure you want to logout?')) {
+                        e.preventDefault();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

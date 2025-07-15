@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receive Stock - Alive Pharmaceuticals</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border-right: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .logo {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .nav-menu {
+            padding: 1rem 0;
+            flex: 1;
+        }
+
+        .nav-item {
+            margin: 0.25rem 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: #555;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .nav-link i {
+            margin-right: 1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .logout-section {
+            padding: 1rem;
+            margin-top: auto;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logout-btn:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .logout-btn i {
+            margin-right: 0.5rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .back-btn {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(107, 114, 128, 0.4);
+        }
+
+        .back-btn i {
+            margin-right: 0.5rem;
+        }
+
+        /* Form */
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-grid-full {
+            grid-column: 1 / -1;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-section h3 i {
+            margin-right: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .required {
+            color: #ef4444;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-control select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23667eea' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-group .currency {
+            padding: 1rem;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            font-weight: 600;
+            color: #667eea;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .input-group input {
+            flex: 1;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #667eea;
+        }
+
+        .checkbox-item label {
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary i {
+            margin-right: 0.5rem;
+        }
+
+        .btn-secondary {
+            padding: 1rem 2rem;
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-secondary i {
+            margin-right: 0.5rem;
+        }
+
+        .help-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .info-card {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card h4 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .info-card h4 i {
+            margin-right: 0.5rem;
+        }
+
+        .info-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .product-preview {
+            background: rgba(102, 126, 234, 0.05);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .product-preview.show {
+            display: block;
+        }
+
+        .product-preview h4 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-preview p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .form-container {
+                padding: 2rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1><i class="fas fa-pills"></i> Alive Pharma</h1>
+                <p>Warehouse Management</p>
+            </div>
+            
+            <nav class="nav-menu">
+                <div class="nav-item">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        Dashboard
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/categories" class="nav-link">
+                        <i class="fas fa-tags"></i>
+                        Categories
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/products" class="nav-link">
+                        <i class="fas fa-pills"></i>
+                        Products
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/customers" class="nav-link">
+                        <i class="fas fa-building"></i>
+                        Customers
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/inventory" class="nav-link active">
+                        <i class="fas fa-boxes"></i>
+                        Inventory
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/purchase-orders" class="nav-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        Purchase Orders
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/sales-orders" class="nav-link">
+                        <i class="fas fa-truck"></i>
+                        Sales Orders
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/vendors" class="nav-link">
+                        <i class="fas fa-industry"></i>
+                        Vendors
+                    </a>
+                </div>
+            </nav>
+            
+            <!-- Logout Button -->
+            <div class="logout-section">
+                <form method="POST" action="/auth/logout" style="width: 100%;">
+                    <button type="submit" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div>
+                    <h1>Receive Stock</h1>
+                    <p>Add new inventory items to your warehouse</p>
+                </div>
+                <a href="/inventory" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Inventory
+                </a>
+            </div>
+
+            <!-- Form -->
+            <div class="form-container">
+                <div class="info-card">
+                    <h4><i class="fas fa-truck"></i> Stock Receipt Instructions</h4>
+                    <p>Please verify all information before adding items to inventory. Ensure batch numbers, expiry dates, and quantities are accurate for pharmaceutical compliance.</p>
+                </div>
+
+                {% if error %}
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i> {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="/inventory/receive" id="receiveForm">
+                    <!-- Product Selection -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-pills"></i> Product Information</h3>
+                        <div class="form-grid">
+                            <div class="form-group form-grid-full">
+                                <label for="product_id">Select Product <span class="required">*</span></label>
+                                <select id="product_id" name="product_id" class="form-control" required onchange="showProductPreview()">
+                                    <option value="">Choose a product to receive</option>
+                                    {% for product in products %}
+                                    <option value="{{ product.id }}" 
+                                            data-name="{{ product.name }}"
+                                            data-category="{{ product.category.name if product.category else 'Uncategorized' }}"
+                                            data-vendor="{{ product.vendor.name if product.vendor else 'Unknown' }}"
+                                            data-unit="{{ product.unit_of_measure }}"
+                                            data-reorder="{{ product.reorder_point }}"
+                                            data-cold-chain="{{ product.requires_cold_chain }}">
+                                        {{ product.name }} ({{ product.sku }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="help-text">Select the product you are receiving into inventory</div>
+                                
+                                <div id="productPreview" class="product-preview">
+                                    <h4 id="previewName"></h4>
+                                    <p><strong>Category:</strong> <span id="previewCategory"></span></p>
+                                    <p><strong>Vendor:</strong> <span id="previewVendor"></span></p>
+                                    <p><strong>Unit:</strong> <span id="previewUnit"></span></p>
+                                    <p><strong>Reorder Point:</strong> <span id="previewReorder"></span></p>
+                                    <p id="previewColdChain" style="display: none;"><strong>⚠️ Requires Cold Chain Storage</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Batch Information -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-barcode"></i> Batch Information</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="batch_number">Batch/Lot Number <span class="required">*</span></label>
+                                <input type="text" id="batch_number" name="batch_number" class="form-control" 
+                                       placeholder="e.g., LOT2024-001" required>
+                                <div class="help-text">Manufacturer's batch or lot number</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="quantity">Quantity Received <span class="required">*</span></label>
+                                <input type="number" id="quantity" name="quantity" class="form-control" 
+                                       placeholder="0" min="1" required>
+                                <div class="help-text">Number of units received</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="manufacture_date">Manufacture Date</label>
+                                <input type="date" id="manufacture_date" name="manufacture_date" class="form-control">
+                                <div class="help-text">Date the product was manufactured</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="expiry_date">Expiry Date</label>
+                                <input type="date" id="expiry_date" name="expiry_date" class="form-control">
+                                <div class="help-text">Product expiration date</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pricing Information -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-money-bill-wave"></i> Pricing Information</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="cost_price">Cost Price <span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="currency">₵</span>
+                                    <input type="number" id="cost_price" name="cost_price" class="form-control" 
+                                           placeholder="0.00" min="0" step="0.01" required>
+                                </div>
+                                <div class="help-text">Unit cost price from vendor</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="selling_price">Selling Price <span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="currency">₵</span>
+                                    <input type="number" id="selling_price" name="selling_price" class="form-control" 
+                                           placeholder="0.00" min="0" step="0.01" required>
+                                </div>
+                                <div class="help-text">Unit selling price to customers</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Storage Information -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-warehouse"></i> Storage Information</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="location">Storage Location</label>
+                                <input type="text" id="location" name="location" class="form-control" 
+                                       placeholder="e.g., A1-B2, Cold Room 1">
+                                <div class="help-text">Warehouse location where item is stored</div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="requires_cold_chain" name="requires_cold_chain" value="true">
+                                        <label for="requires_cold_chain">Requires Cold Chain Storage</label>
+                                    </div>
+                                </div>
+                                <div class="help-text">Check if this item requires temperature-controlled storage</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="/inventory" class="btn-secondary">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-check"></i>
+                            Receive Stock
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showProductPreview() {
+            const select = document.getElementById('product_id');
+            const preview = document.getElementById('productPreview');
+            
+            if (select.value) {
+                const option = select.options[select.selectedIndex];
+                document.getElementById('previewName').textContent = option.dataset.name;
+                document.getElementById('previewCategory').textContent = option.dataset.category;
+                document.getElementById('previewVendor').textContent = option.dataset.vendor;
+                document.getElementById('previewUnit').textContent = option.dataset.unit;
+                document.getElementById('previewReorder').textContent = option.dataset.reorder;
+                
+                const coldChainElement = document.getElementById('previewColdChain');
+                if (option.dataset.coldChain === 'True') {
+                    coldChainElement.style.display = 'block';
+                    document.getElementById('requires_cold_chain').checked = true;
+                } else {
+                    coldChainElement.style.display = 'none';
+                    document.getElementById('requires_cold_chain').checked = false;
+                }
+                
+                preview.classList.add('show');
+            } else {
+                preview.classList.remove('show');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('receiveForm');
+            const costPriceInput = document.getElementById('cost_price');
+            const sellingPriceInput = document.getElementById('selling_price');
+            
+            // Auto-calculate selling price with 30% markup
+            costPriceInput.addEventListener('input', function() {
+                if (this.value && !sellingPriceInput.value) {
+                    const costPrice = parseFloat(this.value);
+                    const sellingPrice = (costPrice * 1.3).toFixed(2);
+                    sellingPriceInput.value = sellingPrice;
+                }
+            });
+
+            // Form validation
+            form.addEventListener('submit', function(e) {
+                const productId = document.getElementById('product_id').value;
+                const batchNumber = document.getElementById('batch_number').value.trim();
+                const quantity = document.getElementById('quantity').value;
+                const costPrice = document.getElementById('cost_price').value;
+                const sellingPrice = document.getElementById('selling_price').value;
+                
+                if (!productId) {
+                    e.preventDefault();
+                    alert('Please select a product');
+                    return false;
+                }
+                
+                if (!batchNumber) {
+                    e.preventDefault();
+                    alert('Please enter a batch number');
+                    return false;
+                }
+                
+                if (!quantity || quantity <= 0) {
+                    e.preventDefault();
+                    alert('Please enter a valid quantity');
+                    return false;
+                }
+                
+                if (!costPrice || costPrice <= 0) {
+                    e.preventDefault();
+                    alert('Please enter a valid cost price');
+                    return false;
+                }
+                
+                if (!sellingPrice || sellingPrice <= 0) {
+                    e.preventDefault();
+                    alert('Please enter a valid selling price');
+                    return false;
+                }
+                
+                if (parseFloat(sellingPrice) <= parseFloat(costPrice)) {
+                    if (!confirm('Selling price is not higher than cost price. Continue anyway?')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

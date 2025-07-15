@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Customer - Alive Pharmaceuticals</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border-right: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .logo {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .nav-menu {
+            padding: 1rem 0;
+            flex: 1;
+        }
+
+        .nav-item {
+            margin: 0.25rem 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: #555;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .nav-link i {
+            margin-right: 1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .logout-section {
+            padding: 1rem;
+            margin-top: auto;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logout-btn:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .logout-btn i {
+            margin-right: 0.5rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .back-btn {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(107, 114, 128, 0.4);
+        }
+
+        .back-btn i {
+            margin-right: 0.5rem;
+        }
+
+        /* Form */
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-grid-full {
+            grid-column: 1 / -1;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .required {
+            color: #ef4444;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-control select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23667eea' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        .form-control textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-group .currency {
+            padding: 1rem;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            font-weight: 600;
+            color: #667eea;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .input-group input {
+            flex: 1;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary i {
+            margin-right: 0.5rem;
+        }
+
+        .btn-secondary {
+            padding: 1rem 2rem;
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-secondary i {
+            margin-right: 0.5rem;
+        }
+
+        .help-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .info-card {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card h4 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .form-container {
+                padding: 2rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1><i class="fas fa-pills"></i> Alive Pharma</h1>
+                <p>Warehouse Management</p>
+            </div>
+            
+            <nav class="nav-menu">
+                <div class="nav-item">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        Dashboard
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/categories" class="nav-link">
+                        <i class="fas fa-tags"></i>
+                        Categories
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/products" class="nav-link">
+                        <i class="fas fa-pills"></i>
+                        Products
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/customers" class="nav-link active">
+                        <i class="fas fa-building"></i>
+                        Customers
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/inventory" class="nav-link">
+                        <i class="fas fa-boxes"></i>
+                        Inventory
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/purchase-orders" class="nav-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        Purchase Orders
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/sales-orders" class="nav-link">
+                        <i class="fas fa-truck"></i>
+                        Sales Orders
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/vendors" class="nav-link">
+                        <i class="fas fa-industry"></i>
+                        Vendors
+                    </a>
+                </div>
+            </nav>
+            
+            <!-- Logout Button -->
+            <div class="logout-section">
+                <form method="POST" action="/auth/logout" style="width: 100%;">
+                    <button type="submit" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div>
+                    <h1>Add New Customer</h1>
+                    <p>Register a new hospital or healthcare facility</p>
+                </div>
+                <a href="/customers" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Customers
+                </a>
+            </div>
+
+            <!-- Form -->
+            <div class="form-container">
+                <div class="info-card">
+                    <h4><i class="fas fa-info-circle"></i> Customer Information</h4>
+                    <p>Add details for hospitals, clinics, and healthcare facilities that purchase dialysis consumables from your warehouse.</p>
+                </div>
+
+                {% if error %}
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i> {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="/customers/add" id="customerForm">
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-building"></i> Basic Information</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="name">Customer Name <span class="required">*</span></label>
+                                <input type="text" id="name" name="name" class="form-control" 
+                                       placeholder="e.g., Greater Accra Regional Hospital" required>
+                                <div class="help-text">Full name of the hospital or healthcare facility</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="contact_person">Contact Person</label>
+                                <input type="text" id="contact_person" name="contact_person" class="form-control" 
+                                       placeholder="e.g., Dr. John Mensah">
+                                <div class="help-text">Primary contact at the facility</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" name="email" class="form-control" 
+                                       placeholder="e.g., procurement@hospital.com">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" name="phone" class="form-control" 
+                                       placeholder="e.g., +233 30 123 4567">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location Information -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-map-marker-alt"></i> Location Information</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="city">City</label>
+                                <input type="text" id="city" name="city" class="form-control" 
+                                       placeholder="e.g., Accra">
+                            </div>
+
+                            <div class="form-group form-grid-full">
+                                <label for="address">Full Address</label>
+                                <textarea id="address" name="address" class="form-control" 
+                                          placeholder="Enter complete address including street, district, and postal code"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment & Credit Information -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-credit-card"></i> Payment & Credit Information</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="credit_limit">Credit Limit</label>
+                                <div class="input-group">
+                                    <span class="currency">₵</span>
+                                    <input type="number" id="credit_limit" name="credit_limit" class="form-control" 
+                                           placeholder="0.00" min="0" step="0.01">
+                                </div>
+                                <div class="help-text">Maximum credit amount allowed for this customer</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="payment_terms">Payment Terms</label>
+                                <select id="payment_terms" name="payment_terms" class="form-control">
+                                    <option value="Net 15">Net 15 Days</option>
+                                    <option value="Net 30" selected>Net 30 Days</option>
+                                    <option value="Net 45">Net 45 Days</option>
+                                    <option value="Net 60">Net 60 Days</option>
+                                    <option value="COD">Cash on Delivery</option>
+                                    <option value="Prepaid">Prepaid</option>
+                                </select>
+                                <div class="help-text">Standard payment terms for this customer</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="/customers" class="btn-secondary">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i>
+                            Save Customer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('customerForm');
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+            const phoneInput = document.getElementById('phone');
+            
+            // Form validation
+            form.addEventListener('submit', function(e) {
+                const name = nameInput.value.trim();
+                const email = emailInput.value.trim();
+                const phone = phoneInput.value.trim();
+                
+                if (!name) {
+                    e.preventDefault();
+                    alert('Please enter the customer name');
+                    nameInput.focus();
+                    return false;
+                }
+                
+                if (name.length < 3) {
+                    e.preventDefault();
+                    alert('Customer name must be at least 3 characters long');
+                    nameInput.focus();
+                    return false;
+                }
+
+                // Email validation if provided
+                if (email && !email.includes('@')) {
+                    e.preventDefault();
+                    alert('Please enter a valid email address');
+                    emailInput.focus();
+                    return false;
+                }
+
+                // Phone validation if provided
+                if (phone && phone.length < 10) {
+                    e.preventDefault();
+                    alert('Please enter a valid phone number');
+                    phoneInput.focus();
+                    return false;
+                }
+            });
+
+            // Auto-focus on name input
+            nameInput.focus();
+
+            // Format phone number
+            phoneInput.addEventListener('input', function() {
+                let value = this.value.replace(/\D/g, '');
+                if (value.length >= 10) {
+                    if (value.startsWith('233')) {
+                        value = '+233 ' + value.substring(3, 5) + ' ' + value.substring(5, 8) + ' ' + value.substring(8, 12);
+                    } else if (value.startsWith('0')) {
+                        value = '+233 ' + value.substring(1, 3) + ' ' + value.substring(3, 6) + ' ' + value.substring(6, 10);
+                    }
+                }
+                this.value = value;
+            });
+        });
+    </script>
+</body>
+</html>

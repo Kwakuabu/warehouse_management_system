@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Overview - Alive Pharmaceuticals</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border-right: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .logo {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .nav-menu {
+            padding: 1rem 0;
+            flex: 1;
+        }
+
+        .nav-item {
+            margin: 0.25rem 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: #555;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .nav-link i {
+            margin-right: 1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .logout-section {
+            padding: 1rem;
+            margin-top: auto;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logout-btn:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .logout-btn i {
+            margin-right: 0.5rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .action-btn {
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-receive {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-adjust {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .btn-movements {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-btn i {
+            margin-right: 0.5rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-icon.inventory { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stat-icon.value { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .stat-icon.low { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .stat-icon.expiring { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+
+        .stat-info h3 {
+            color: #333;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-subtitle {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Alert Cards */
+        .alerts-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            color: #333;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title i {
+            margin-right: 0.5rem;
+        }
+
+        .alerts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        .alert-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            overflow: hidden;
+        }
+
+        .alert-header {
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .alert-header.low-stock {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .alert-header.expiring {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .alert-header h3 {
+            display: flex;
+            align-items: center;
+            font-size: 1.1rem;
+        }
+
+        .alert-header h3 i {
+            margin-right: 0.5rem;
+        }
+
+        .alert-count {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .alert-content {
+            padding: 1.5rem 2rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .alert-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .alert-item-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            color: white;
+        }
+
+        .alert-item-info h4 {
+            color: #333;
+            margin-bottom: 0.25rem;
+            font-size: 1rem;
+        }
+
+        .alert-item-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .alert-item-value {
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .quantity {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .batch-info {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* Inventory Table */
+        .inventory-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 1.5rem 2rem;
+            background: rgba(102, 126, 234, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .table-header h3 {
+            color: #333;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .table-header h3 i {
+            margin-right: 0.5rem;
+        }
+
+        .table-search {
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            background: white;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .table th {
+            background: rgba(102, 126, 234, 0.05);
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .table td {
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .product-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .product-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .product-details h4 {
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .product-details p {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .badge-available { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+        .badge-low { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
+        .badge-expired { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
+        .badge-cold { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .header-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .alerts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1><i class="fas fa-pills"></i> Alive Pharma</h1>
+                <p>Warehouse Management</p>
+            </div>
+            
+            <nav class="nav-menu">
+                <div class="nav-item">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        Dashboard
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/categories" class="nav-link">
+                        <i class="fas fa-tags"></i>
+                        Categories
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/products" class="nav-link">
+                        <i class="fas fa-pills"></i>
+                        Products
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/customers" class="nav-link">
+                        <i class="fas fa-building"></i>
+                        Customers
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/inventory" class="nav-link active">
+                        <i class="fas fa-boxes"></i>
+                        Inventory
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/purchase-orders" class="nav-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        Purchase Orders
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/sales-orders" class="nav-link">
+                        <i class="fas fa-truck"></i>
+                        Sales Orders
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/vendors" class="nav-link">
+                        <i class="fas fa-industry"></i>
+                        Vendors
+                    </a>
+                </div>
+            </nav>
+            
+            <!-- Logout Button -->
+            <div class="logout-section">
+                <form method="POST" action="/auth/logout" style="width: 100%;">
+                    <button type="submit" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div>
+                    <h1>Inventory Overview</h1>
+                    <p>Real-time stock levels and warehouse operations</p>
+                </div>
+                <div class="header-actions">
+                    <a href="/inventory/receive" class="action-btn btn-receive">
+                        <i class="fas fa-plus"></i>
+                        Receive Stock
+                    </a>
+                    <a href="/inventory/adjust" class="action-btn btn-adjust">
+                        <i class="fas fa-edit"></i>
+                        Adjust Stock
+                    </a>
+                    <a href="/inventory/movements" class="action-btn btn-movements">
+                        <i class="fas fa-history"></i>
+                        View Movements
+                    </a>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon inventory">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Inventory Items</h3>
+                        </div>
+                    </div>
+                    <div class="stat-value">{{ inventory_items|length }}</div>
+                    <div class="stat-subtitle">Active stock items</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon value">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Inventory Value</h3>
+                        </div>
+                    </div>
+                    <div class="stat-value">₵{{ "%.0f"|format(total_value) }}</div>
+                    <div class="stat-subtitle">Current stock value</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon low">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Low Stock Alerts</h3>
+                        </div>
+                    </div>
+                    <div class="stat-value">{{ low_stock_items|length }}</div>
+                    <div class="stat-subtitle">Items need reordering</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon expiring">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Expiring Soon</h3>
+                        </div>
+                    </div>
+                    <div class="stat-value">{{ expiring_soon|length }}</div>
+                    <div class="stat-subtitle">Items expiring in 30 days</div>
+                </div>
+            </div>
+
+            <!-- Alerts Section -->
+            {% if low_stock_items or expiring_soon %}
+            <div class="alerts-section">
+                <h2 class="section-title">
+                    <i class="fas fa-bell"></i>
+                    Critical Alerts
+                </h2>
+                
+                <div class="alerts-grid">
+                    <!-- Low Stock Alert -->
+                    {% if low_stock_items %}
+                    <div class="alert-card">
+                        <div class="alert-header low-stock">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Low Stock Items</h3>
+                            <span class="alert-count">{{ low_stock_items|length }}</span>
+                        </div>
+                        <div class="alert-content">
+                            {% for item in low_stock_items[:5] %}
+                            <div class="alert-item">
+                                <div class="alert-item-icon">
+                                    <i class="fas fa-pills"></i>
+                                </div>
+                                <div class="alert-item-info">
+                                    <h4>{{ item.product.name }}</h4>
+                                    <p>Batch: {{ item.batch_number }} | Location: {{ item.location or 'Not specified' }}</p>
+                                </div>
+                                <div class="alert-item-value">
+                                    <div class="quantity">{{ item.quantity_available }}</div>
+                                    <div class="batch-info">Reorder at: {{ item.product.reorder_point }}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% if low_stock_items|length > 5 %}
+                            <p style="text-align: center; color: #666; margin-top: 1rem;">
+                                And {{ low_stock_items|length - 5 }} more items...
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Expiring Items Alert -->
+                    {% if expiring_soon %}
+                    <div class="alert-card">
+                        <div class="alert-header expiring">
+                            <h3><i class="fas fa-clock"></i> Expiring Soon</h3>
+                            <span class="alert-count">{{ expiring_soon|length }}</span>
+                        </div>
+                        <div class="alert-content">
+                            {% for item in expiring_soon[:5] %}
+                            <div class="alert-item">
+                                <div class="alert-item-icon">
+                                    <i class="fas fa-calendar-times"></i>
+                                </div>
+                                <div class="alert-item-info">
+                                    <h4>{{ item.product.name }}</h4>
+                                    <p>Batch: {{ item.batch_number }} | Expires: {{ item.expiry_date.strftime('%Y-%m-%d') if item.expiry_date else 'N/A' }}</p>
+                                </div>
+                                <div class="alert-item-value">
+                                    <div class="quantity">{{ item.quantity_available }}</div>
+                                    <div class="batch-info">{{ item.product.unit_of_measure }}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% if expiring_soon|length > 5 %}
+                            <p style="text-align: center; color: #666; margin-top: 1rem;">
+                                And {{ expiring_soon|length - 5 }} more items...
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Inventory Table -->
+            <div class="inventory-section">
+                <div class="table-header">
+                    <h3><i class="fas fa-list"></i> Current Stock Levels</h3>
+                    <input type="text" class="table-search" placeholder="Search inventory...">
+                </div>
+                
+                {% if inventory_items %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Batch Number</th>
+                            <th>Available Qty</th>
+                            <th>Location</th>
+                            <th>Expiry Date</th>
+                            <th>Cost Price</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in inventory_items %}
+                        <tr>
+                            <td>
+                                <div class="product-info">
+                                    <div class="product-icon">
+                                        <i class="fas fa-pills"></i>
+                                    </div>
+                                    <div class="product-details">
+                                        <h4>{{ item.product.name }}</h4>
+                                        <p>{{ item.product.category.name if item.product.category else 'Uncategorized' }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><strong>{{ item.batch_number }}</strong></td>
+                            <td>
+                                <strong>{{ item.quantity_available }}</strong> {{ item.product.unit_of_measure }}
+                                {% if item.quantity_reserved > 0 %}
+                                <br><small style="color: #f59e0b;">{{ item.quantity_reserved }} reserved</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.location or 'Not specified' }}</td>
+                            <td>
+                                {% if item.expiry_date %}
+                                    {{ item.expiry_date.strftime('%Y-%m-%d') }}
+                                    {% set days_to_expiry = (item.expiry_date - now()).days %}
+                                    {% if days_to_expiry <= 30 %}
+                                        <br><small style="color: #ef4444;">{{ days_to_expiry }} days left</small>
+                                    {% endif %}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>₵{{ "%.2f"|format(item.cost_price) }}</td>
+                            <td>
+                                {% if item.quantity_available <= item.product.reorder_point %}
+                                    <span class="badge badge-low">Low Stock</span>
+                                {% elif item.expiry_date and item.expiry_date <= now() %}
+                                    <span class="badge badge-expired">Expired</span>
+                                {% else %}
+                                    <span class="badge badge-available">Available</span>
+                                {% endif %}
+                                
+                                {% if item.product.requires_cold_chain %}
+                                    <span class="badge badge-cold">Cold Chain</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-boxes"></i>
+                    <h3>No Inventory Items</h3>
+                    <p>Your warehouse is empty. Start by receiving some stock.</p>
+                    <a href="/inventory/receive" class="action-btn btn-receive">
+                        <i class="fas fa-plus"></i>
+                        Receive Your First Stock
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Search functionality
+        document.querySelector('.table-search').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const tableRows = document.querySelectorAll('.table tbody tr');
+            
+            tableRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        // Auto-refresh alerts every 5 minutes
+        setInterval(function() {
+            // In a real application, you would fetch updated data
+            console.log('Refreshing inventory data...');
+        }, 300000);
+    </script>
+</body>
+</html>
