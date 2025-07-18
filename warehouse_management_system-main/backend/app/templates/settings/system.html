@@ -1,0 +1,404 @@
+{% extends "base.html" %}
+
+{% block title %}System Settings - Alive Pharmaceuticals{% endblock %}
+
+{% block additional_styles %}
+<style>
+    .settings-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 2rem;
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        margin-bottom: 2rem;
+    }
+
+    .settings-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .settings-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1.5rem;
+    }
+
+    .settings-icon i {
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .settings-info h1 {
+        color: #333;
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .settings-info p {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .settings-section {
+        background: rgba(255, 255, 255, 0.7);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .section-title i {
+        margin-right: 0.5rem;
+        color: #667eea;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-checkbox {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .form-checkbox input[type="checkbox"] {
+        margin-right: 0.5rem;
+        width: 18px;
+        height: 18px;
+    }
+
+    .form-checkbox label {
+        font-weight: 500;
+        color: #333;
+        cursor: pointer;
+    }
+
+    .settings-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .action-btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border: 1px solid #667eea;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(102, 126, 234, 0.2);
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .action-btn i {
+        margin-right: 0.5rem;
+    }
+
+    .info-text {
+        color: #666;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+
+    .warning-text {
+        color: #d97706;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="header">
+    <div>
+        <h1>System Settings</h1>
+        <p>Configure system-wide settings and preferences</p>
+    </div>
+</div>
+
+<!-- System Settings Card -->
+<div class="settings-card">
+    <div class="settings-header">
+        <div class="settings-icon">
+            <i class="fas fa-cogs"></i>
+        </div>
+        <div class="settings-info">
+            <h1>System Configuration</h1>
+            <p>Manage system settings, database configuration, and application preferences</p>
+        </div>
+    </div>
+
+    <form method="POST" action="/settings/system">
+        <div class="settings-grid">
+            <div class="settings-section">
+                <div class="section-title">
+                    <i class="fas fa-database"></i>
+                    Database Settings
+                </div>
+                
+                <div class="form-group">
+                    <label for="db_host" class="form-label">Database Host</label>
+                    <input type="text" id="db_host" name="db_host" class="form-input" 
+                           value="{{ settings.db_host if settings else 'localhost' }}" required>
+                    <div class="info-text">Database server hostname or IP address</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="db_port" class="form-label">Database Port</label>
+                    <input type="number" id="db_port" name="db_port" class="form-input" 
+                           value="{{ settings.db_port if settings else 5432 }}" min="1" max="65535">
+                    <div class="info-text">Database server port number</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="db_name" class="form-label">Database Name</label>
+                    <input type="text" id="db_name" name="db_name" class="form-input" 
+                           value="{{ settings.db_name if settings else 'warehouse_db' }}" required>
+                    <div class="info-text">Name of the database to connect to</div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="section-title">
+                    <i class="fas fa-shield-alt"></i>
+                    Security Settings
+                </div>
+                
+                <div class="form-group">
+                    <label for="session_timeout" class="form-label">Session Timeout (minutes)</label>
+                    <input type="number" id="session_timeout" name="session_timeout" class="form-input" 
+                           value="{{ settings.session_timeout if settings else 30 }}" min="5" max="1440">
+                    <div class="info-text">How long before user sessions expire</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="max_login_attempts" class="form-label">Max Login Attempts</label>
+                    <input type="number" id="max_login_attempts" name="max_login_attempts" class="form-input" 
+                           value="{{ settings.max_login_attempts if settings else 5 }}" min="3" max="10">
+                    <div class="info-text">Maximum failed login attempts before account lockout</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password_min_length" class="form-label">Minimum Password Length</label>
+                    <input type="number" id="password_min_length" name="password_min_length" class="form-input" 
+                           value="{{ settings.password_min_length if settings else 8 }}" min="6" max="20">
+                    <div class="info-text">Minimum required password length</div>
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" id="require_strong_password" name="require_strong_password" 
+                           {% if settings and settings.require_strong_password %}checked{% endif %}>
+                    <label for="require_strong_password">Require Strong Passwords</label>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="section-title">
+                    <i class="fas fa-bell"></i>
+                    Notification Settings
+                </div>
+                
+                <div class="form-group">
+                    <label for="email_notifications" class="form-label">Email Notifications</label>
+                    <select id="email_notifications" name="email_notifications" class="form-select">
+                        <option value="enabled" {% if settings and settings.email_notifications == 'enabled' %}selected{% endif %}>Enabled</option>
+                        <option value="disabled" {% if settings and settings.email_notifications == 'disabled' %}selected{% endif %}>Disabled</option>
+                    </select>
+                    <div class="info-text">Enable or disable email notifications</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="alert_threshold" class="form-label">Low Stock Alert Threshold</label>
+                    <input type="number" id="alert_threshold" name="alert_threshold" class="form-input" 
+                           value="{{ settings.alert_threshold if settings else 10 }}" min="1" max="100">
+                    <div class="info-text">Percentage of reorder point to trigger low stock alerts</div>
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" id="auto_backup" name="auto_backup" 
+                           {% if settings and settings.auto_backup %}checked{% endif %}>
+                    <label for="auto_backup">Enable Automatic Backups</label>
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" id="maintenance_mode" name="maintenance_mode" 
+                           {% if settings and settings.maintenance_mode %}checked{% endif %}>
+                    <label for="maintenance_mode">Maintenance Mode</label>
+                    <div class="warning-text">When enabled, only administrators can access the system</div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="section-title">
+                    <i class="fas fa-chart-line"></i>
+                    Performance Settings
+                </div>
+                
+                <div class="form-group">
+                    <label for="cache_timeout" class="form-label">Cache Timeout (seconds)</label>
+                    <input type="number" id="cache_timeout" name="cache_timeout" class="form-input" 
+                           value="{{ settings.cache_timeout if settings else 300 }}" min="60" max="3600">
+                    <div class="info-text">How long to cache frequently accessed data</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="max_upload_size" class="form-label">Max Upload Size (MB)</label>
+                    <input type="number" id="max_upload_size" name="max_upload_size" class="form-input" 
+                           value="{{ settings.max_upload_size if settings else 10 }}" min="1" max="100">
+                    <div class="info-text">Maximum file upload size in megabytes</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="log_level" class="form-label">Log Level</label>
+                    <select id="log_level" name="log_level" class="form-select">
+                        <option value="DEBUG" {% if settings and settings.log_level == 'DEBUG' %}selected{% endif %}>Debug</option>
+                        <option value="INFO" {% if settings and settings.log_level == 'INFO' %}selected{% endif %}>Info</option>
+                        <option value="WARNING" {% if settings and settings.log_level == 'WARNING' %}selected{% endif %}>Warning</option>
+                        <option value="ERROR" {% if settings and settings.log_level == 'ERROR' %}selected{% endif %}>Error</option>
+                    </select>
+                    <div class="info-text">Level of detail for system logs</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-actions">
+            <a href="/settings" class="action-btn btn-secondary">
+                <i class="fas fa-times"></i>
+                Cancel
+            </a>
+            <button type="submit" class="action-btn btn-success">
+                <i class="fas fa-save"></i>
+                Save Settings
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const dbHost = document.getElementById('db_host').value.trim();
+        const dbName = document.getElementById('db_name').value.trim();
+        
+        if (!dbHost) {
+            e.preventDefault();
+            alert('Database host is required.');
+            return;
+        }
+        
+        if (!dbName) {
+            e.preventDefault();
+            alert('Database name is required.');
+            return;
+        }
+        
+        // Confirm before saving system settings
+        if (!confirm('Are you sure you want to save these system settings? Some changes may require a system restart.')) {
+            e.preventDefault();
+            return;
+        }
+    });
+</script>
+{% endblock %} 

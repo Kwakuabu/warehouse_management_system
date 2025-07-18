@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Issue/Adjust Stock - Warehouse Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Issue/Adjust Stock
+                    </h2>
+                    <a href="/inventory/" class="back-btn">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Inventory
+                    </a>
+                </div>
+
+                {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+                </div>
+                {% endif %}
+
+                <!-- Stock Adjustment Form -->
+                <form method="POST" action="/inventory/issue" id="issueForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="inventory_item_id" class="form-label">Select Inventory Item *</label>
+                                <select name="inventory_item_id" id="inventory_item_id" class="form-control" required>
+                                    <option value="">Choose an inventory item...</option>
+                                    {% for item in inventory_items %}
+                                    <option value="{{ item.id }}" data-current="{{ item.quantity_available }}" data-product="{{ item.product.name }}" data-batch="{{ item.batch_number }}">
+                                        {{ item.product.name }} - Batch: {{ item.batch_number }} (Available: {{ item.quantity_available }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="movement_type" class="form-label">Adjustment Type *</label>
+                                <select name="movement_type" id="movement_type" class="form-control" required>
+                                    <option value="">Select adjustment type...</option>
+                                    <option value="issue">Issue Stock (Reduce quantity)</option>
+                                    <option value="adjustment_positive">Adjustment - Increase</option>
+                                    <option value="adjustment_negative">Adjustment - Decrease</option>
+                                    <option value="damage">Damaged Stock</option>
+                                    <option value="expired">Expired Stock</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label for="quantity" class="form-label">Quantity *</label>
+                                <input type="number" name="quantity" id="quantity" class="form-control" min="1" required>
+                                <small class="form-text text-muted">Current available: <span id="current-stock">-</span></small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label for="reference_number" class="form-label">Reference Number</label>
+                                <input type="text" name="reference_number" id="reference_number" class="form-control" placeholder="e.g., ADJ-001">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label for="reason" class="form-label">Reason</label>
+                                <select name="reason" id="reason" class="form-control">
+                                    <option value="">Select reason...</option>
+                                    <option value="sale">Sale to customer</option>
+                                    <option value="internal_use">Internal use</option>
+                                    <option value="damaged">Damaged goods</option>
+                                    <option value="expired">Expired products</option>
+                                    <option value="count_adjustment">Stock count adjustment</option>
+                                    <option value="transfer">Transfer to another location</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea name="notes" id="notes" class="form-control" rows="3" placeholder="Enter any additional notes about this stock movement..."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="/inventory/" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Process Stock Movement
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inventorySelect = document.getElementById('inventory_item_id');
+    const movementTypeSelect = document.getElementById('movement_type');
+    const quantityInput = document.getElementById('quantity');
+    const currentStockSpan = document.getElementById('current-stock');
+    const form = document.getElementById('issueForm');
+
+    // Update current stock display when inventory item is selected
+    inventorySelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption.value) {
+            const currentStock = selectedOption.getAttribute('data-current');
+            currentStockSpan.textContent = currentStock;
+            quantityInput.max = currentStock;
+        } else {
+            currentStockSpan.textContent = '-';
+            quantityInput.removeAttribute('max');
+        }
+    });
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const selectedItem = inventorySelect.options[inventorySelect.selectedIndex];
+        const movementType = movementTypeSelect.value;
+        const quantity = parseInt(quantityInput.value);
+        
+        if (!selectedItem.value) {
+            e.preventDefault();
+            alert('Please select an inventory item');
+            inventorySelect.focus();
+            return false;
+        }
+
+        if (!movementType) {
+            e.preventDefault();
+            alert('Please select an adjustment type');
+            movementTypeSelect.focus();
+            return false;
+        }
+
+        if (!quantity || quantity <= 0) {
+            e.preventDefault();
+            alert('Please enter a valid quantity');
+            quantityInput.focus();
+            return false;
+        }
+
+        // Check if trying to issue more than available (for issue/reduction operations)
+        if (['issue', 'adjustment_negative', 'damage', 'expired'].includes(movementType)) {
+            const currentStock = parseInt(selectedItem.getAttribute('data-current'));
+            if (quantity > currentStock) {
+                e.preventDefault();
+                alert(`Cannot issue ${quantity} units. Only ${currentStock} units available.`);
+                quantityInput.focus();
+                return false;
+            }
+        }
+
+        // Confirm the action
+        const productName = selectedItem.getAttribute('data-product');
+        const batchNumber = selectedItem.getAttribute('data-batch');
+        const action = movementType.replace('_', ' ');
+        
+        if (!confirm(`Confirm ${action} of ${quantity} units from ${productName} (Batch: ${batchNumber})?`)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %} 

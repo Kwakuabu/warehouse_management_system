@@ -1,0 +1,404 @@
+{% extends "base.html" %}
+
+{% block title %}Alert Details - Alive Pharmaceuticals{% endblock %}
+
+{% block additional_styles %}
+<style>
+    .alert-detail-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 2rem;
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        margin-bottom: 2rem;
+    }
+
+    .alert-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .alert-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1.5rem;
+    }
+
+    .alert-icon.critical {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .alert-icon.high {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .alert-icon.medium {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+
+    .alert-icon.low {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .alert-icon i {
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .alert-info h1 {
+        color: #333;
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .alert-meta {
+        display: flex;
+        gap: 2rem;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .alert-content {
+        margin-bottom: 2rem;
+    }
+
+    .alert-message {
+        background: rgba(102, 126, 234, 0.1);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border-left: 4px solid #667eea;
+        margin-bottom: 1.5rem;
+    }
+
+    .alert-message h3 {
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .alert-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .detail-item {
+        background: rgba(255, 255, 255, 0.7);
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .detail-value {
+        color: #333;
+        font-size: 1rem;
+    }
+
+    .alert-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border: 1px solid #667eea;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(102, 126, 234, 0.2);
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+    }
+
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    .action-btn i {
+        margin-right: 0.5rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .back-link:hover {
+        transform: translateX(-5px);
+    }
+
+    .back-link i {
+        margin-right: 0.5rem;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-acknowledged {
+        background: rgba(16, 185, 129, 0.2);
+        color: #059669;
+    }
+
+    .status-unacknowledged {
+        background: rgba(239, 68, 68, 0.2);
+        color: #dc2626;
+    }
+
+    .severity-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .severity-critical {
+        background: rgba(239, 68, 68, 0.2);
+        color: #dc2626;
+    }
+
+    .severity-high {
+        background: rgba(245, 158, 11, 0.2);
+        color: #d97706;
+    }
+
+    .severity-medium {
+        background: rgba(59, 130, 246, 0.2);
+        color: #2563eb;
+    }
+
+    .severity-low {
+        background: rgba(16, 185, 129, 0.2);
+        color: #059669;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="header">
+    <div>
+        <a href="/alerts" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            Back to Alerts
+        </a>
+        <h1>Alert Details</h1>
+        <p>View and manage alert information</p>
+    </div>
+</div>
+
+<!-- Alert Detail Card -->
+<div class="alert-detail-card">
+    {% if alert %}
+    <div class="alert-header">
+        <div class="alert-icon {{ alert.severity }}">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="alert-info">
+            <h1>{{ alert.alert_type.replace('_', ' ').title() }}</h1>
+            <div class="alert-meta">
+                <span><i class="fas fa-calendar"></i> {{ alert.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                <span class="severity-badge severity-{{ alert.severity }}">{{ alert.severity.title() }}</span>
+                <span class="status-badge status-{% if alert.is_acknowledged %}acknowledged{% else %}unacknowledged{% endif %}">
+                    {% if alert.is_acknowledged %}Acknowledged{% else %}Unacknowledged{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert-content">
+        <div class="alert-message">
+            <h3><i class="fas fa-info-circle"></i> Alert Message</h3>
+            <p>{{ alert.message }}</p>
+        </div>
+
+        <div class="alert-details">
+            <div class="detail-item">
+                <div class="detail-label">Alert Type</div>
+                <div class="detail-value">{{ alert.alert_type.replace('_', ' ').title() }}</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">Severity</div>
+                <div class="detail-value">
+                    <span class="severity-badge severity-{{ alert.severity }}">{{ alert.severity.title() }}</span>
+                </div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">Status</div>
+                <div class="detail-value">
+                    <span class="status-badge status-{% if alert.is_acknowledged %}acknowledged{% else %}unacknowledged{% endif %}">
+                        {% if alert.is_acknowledged %}Acknowledged{% else %}Unacknowledged{% endif %}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">Created</div>
+                <div class="detail-value">{{ alert.created_at.strftime('%B %d, %Y at %I:%M %p') }}</div>
+            </div>
+            
+            {% if alert.is_acknowledged %}
+            <div class="detail-item">
+                <div class="detail-label">Acknowledged By</div>
+                <div class="detail-value">{{ alert.acknowledged_by_user.full_name if alert.acknowledged_by_user else 'Unknown' }}</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">Acknowledged At</div>
+                <div class="detail-value">{{ alert.acknowledged_at.strftime('%B %d, %Y at %I:%M %p') if alert.acknowledged_at else 'Unknown' }}</div>
+            </div>
+            {% endif %}
+            
+            {% if alert.product %}
+            <div class="detail-item">
+                <div class="detail-label">Related Product</div>
+                <div class="detail-value">
+                    <a href="/products/{{ alert.product.id }}" style="color: #667eea; text-decoration: none;">
+                        {{ alert.product.name }}
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if alert.inventory_item %}
+            <div class="detail-item">
+                <div class="detail-label">Inventory Item</div>
+                <div class="detail-value">Batch: {{ alert.inventory_item.batch_number }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="alert-actions">
+            {% if not alert.is_acknowledged %}
+            <form method="POST" action="/alerts/{{ alert.id }}/acknowledge" style="display: inline;">
+                <button type="submit" class="action-btn btn-success">
+                    <i class="fas fa-check"></i>
+                    Acknowledge Alert
+                </button>
+            </form>
+            {% endif %}
+            
+            <a href="/alerts" class="action-btn btn-secondary">
+                <i class="fas fa-list"></i>
+                Back to Alerts
+            </a>
+            
+            {% if current_user.role in ['admin', 'manager'] %}
+            <button class="action-btn btn-danger" onclick="deleteAlert({{ alert.id }})">
+                <i class="fas fa-trash"></i>
+                Delete Alert
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert-content">
+        <div class="alert-message">
+            <h3><i class="fas fa-exclamation-circle"></i> Alert Not Found</h3>
+            <p>The requested alert could not be found or you don't have permission to view it.</p>
+        </div>
+        
+        <div class="alert-actions">
+            <a href="/alerts" class="action-btn btn-primary">
+                <i class="fas fa-list"></i>
+                Back to Alerts
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+    function deleteAlert(alertId) {
+        if (confirm('Are you sure you want to delete this alert? This action cannot be undone.')) {
+            fetch(`/alerts/${alertId}/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/alerts';
+                } else {
+                    alert('Error deleting alert. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting alert. Please try again.');
+            });
+        }
+    }
+</script>
+{% endblock %} 

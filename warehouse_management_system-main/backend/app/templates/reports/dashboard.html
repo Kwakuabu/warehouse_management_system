@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Reports Dashboard - Alive Pharmaceuticals{% endblock %}
+
+{% block content %}
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>Reports Dashboard</h1>
+            <p>Comprehensive analytics and reporting</p>
+        </div>
+        <div class="header-actions">
+            <a href="/reports/financial" class="btn-secondary">
+                <i class="fas fa-chart-line"></i>
+                Financial Reports
+            </a>
+        </div>
+    </div>
+
+    <!-- Reports Grid -->
+    <div class="reports-grid">
+        <!-- Sales Reports -->
+        <div class="report-card">
+            <div class="report-header">
+                <h3><i class="fas fa-chart-bar"></i> Sales Reports</h3>
+            </div>
+            <div class="report-content">
+                <p>View sales performance, trends, and customer analytics</p>
+                <div class="report-actions">
+                    <a href="/reports/sales" class="btn-primary">View Sales Report</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Reports -->
+        <div class="report-card">
+            <div class="report-header">
+                <h3><i class="fas fa-boxes"></i> Inventory Reports</h3>
+            </div>
+            <div class="report-content">
+                <p>Track stock levels, movement, and inventory valuation</p>
+                <div class="report-actions">
+                    <a href="/reports/inventory" class="btn-primary">View Inventory Report</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Reports -->
+        <div class="report-card">
+            <div class="report-header">
+                <h3><i class="fas fa-dollar-sign"></i> Financial Reports</h3>
+            </div>
+            <div class="report-content">
+                <p>Revenue, profit margins, and financial performance</p>
+                <div class="report-actions">
+                    <a href="/reports/financial" class="btn-primary">View Financial Report</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Reports -->
+        <div class="report-card">
+            <div class="report-header">
+                <h3><i class="fas fa-users"></i> Customer Reports</h3>
+            </div>
+            <div class="report-content">
+                <p>Customer behavior, preferences, and satisfaction metrics</p>
+                <div class="report-actions">
+                    <a href="/reports/customers" class="btn-primary">View Customer Report</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stats-section">
+        <h2>Quick Statistics</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ total_orders }}</h3>
+                    <p>Total Orders</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>₵{{ total_revenue }}</h3>
+                    <p>Total Revenue</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ total_products }}</h3>
+                    <p>Total Products</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ total_customers }}</h3>
+                    <p>Total Customers</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %} 

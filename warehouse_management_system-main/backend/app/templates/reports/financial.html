@@ -1,0 +1,473 @@
+{% extends "base.html" %}
+
+{% block title %}Financial Reports - Alive Pharmaceuticals{% endblock %}
+
+{% block additional_styles %}
+<style>
+    .reports-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 2rem;
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        margin-bottom: 2rem;
+    }
+
+    .reports-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .reports-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1.5rem;
+    }
+
+    .reports-icon i {
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .reports-info h1 {
+        color: #333;
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .reports-info p {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .filters-section {
+        background: rgba(255, 255, 255, 0.7);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .form-group {
+        margin-bottom: 0;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .filter-btn {
+        padding: 0.75rem 1.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .filter-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .chart-section {
+        background: rgba(255, 255, 255, 0.7);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .section-title i {
+        margin-right: 0.5rem;
+        color: #667eea;
+    }
+
+    .chart-container {
+        height: 400px;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        font-size: 1.1rem;
+    }
+
+    .table-section {
+        background: rgba(255, 255, 255, 0.7);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .data-table th {
+        background: rgba(102, 126, 234, 0.1);
+        font-weight: 600;
+        color: #333;
+    }
+
+    .data-table tr:hover {
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    .export-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        margin-top: 1rem;
+    }
+
+    .action-btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-secondary {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border: 1px solid #667eea;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(102, 126, 234, 0.2);
+    }
+
+    .action-btn i {
+        margin-right: 0.5rem;
+    }
+
+    .positive-value {
+        color: #10b981;
+        font-weight: 600;
+    }
+
+    .negative-value {
+        color: #ef4444;
+        font-weight: 600;
+    }
+
+    .neutral-value {
+        color: #6b7280;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="header">
+    <div>
+        <h1>Financial Reports</h1>
+        <p>View financial analytics and performance metrics</p>
+    </div>
+</div>
+
+<!-- Financial Reports Card -->
+<div class="reports-card">
+    <div class="reports-header">
+        <div class="reports-icon">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="reports-info">
+            <h1>Financial Analytics</h1>
+            <p>Comprehensive financial reports and performance analysis</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <form method="GET" action="/reports/financial">
+            <div class="filters-grid">
+                <div class="form-group">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" id="start_date" name="start_date" class="form-input" 
+                           value="{{ request.args.get('start_date', '') }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" id="end_date" name="end_date" class="form-input" 
+                           value="{{ request.args.get('end_date', '') }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="report_type" class="form-label">Report Type</label>
+                    <select id="report_type" name="report_type" class="form-select">
+                        <option value="revenue" {% if request.args.get('report_type') == 'revenue' %}selected{% endif %}>Revenue Analysis</option>
+                        <option value="expenses" {% if request.args.get('report_type') == 'expenses' %}selected{% endif %}>Expense Analysis</option>
+                        <option value="profit" {% if request.args.get('report_type') == 'profit' %}selected{% endif %}>Profit & Loss</option>
+                        <option value="cashflow" {% if request.args.get('report_type') == 'cashflow' %}selected{% endif %}>Cash Flow</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="period" class="form-label">Period</label>
+                    <select id="period" name="period" class="form-select">
+                        <option value="daily" {% if request.args.get('period') == 'daily' %}selected{% endif %}>Daily</option>
+                        <option value="weekly" {% if request.args.get('period') == 'weekly' %}selected{% endif %}>Weekly</option>
+                        <option value="monthly" {% if request.args.get('period') == 'monthly' %}selected{% endif %}>Monthly</option>
+                        <option value="quarterly" {% if request.args.get('period') == 'quarterly' %}selected{% endif %}>Quarterly</option>
+                        <option value="yearly" {% if request.args.get('period') == 'yearly' %}selected{% endif %}>Yearly</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="filter-btn">
+                        <i class="fas fa-filter"></i>
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Financial Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">₵{{ "%.2f"|format(financial_data.total_revenue) if financial_data else 0 }}</div>
+            <div class="stat-label">Total Revenue</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">₵{{ "%.2f"|format(financial_data.total_expenses) if financial_data else 0 }}</div>
+            <div class="stat-label">Total Expenses</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">₵{{ "%.2f"|format(financial_data.net_profit) if financial_data else 0 }}</div>
+            <div class="stat-label">Net Profit</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ "%.1f"|format(financial_data.profit_margin) if financial_data else 0 }}%</div>
+            <div class="stat-label">Profit Margin</div>
+        </div>
+    </div>
+
+    <!-- Revenue Chart -->
+    <div class="chart-section">
+        <div class="section-title">
+            <i class="fas fa-chart-area"></i>
+            Revenue Trend
+        </div>
+        <div class="chart-container">
+            <div>
+                <i class="fas fa-chart-area" style="font-size: 3rem; color: #667eea; margin-bottom: 1rem;"></i>
+                <p>Revenue trend chart will be displayed here</p>
+                <p style="font-size: 0.9rem; color: #999;">Chart integration requires Chart.js or similar library</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Summary Table -->
+    <div class="table-section">
+        <div class="section-title">
+            <i class="fas fa-table"></i>
+            Financial Summary
+        </div>
+        
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Period</th>
+                    <th>Revenue</th>
+                    <th>Expenses</th>
+                    <th>Profit</th>
+                    <th>Margin</th>
+                    <th>Growth</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if financial_summary %}
+                {% for period in financial_summary %}
+                <tr>
+                    <td>{{ period.period }}</td>
+                    <td class="positive-value">₵{{ "%.2f"|format(period.revenue) }}</td>
+                    <td class="negative-value">₵{{ "%.2f"|format(period.expenses) }}</td>
+                    <td class="{% if period.profit >= 0 %}positive-value{% else %}negative-value{% endif %}">
+                        ₵{{ "%.2f"|format(period.profit) }}
+                    </td>
+                    <td class="neutral-value">{{ "%.1f"|format(period.margin) }}%</td>
+                    <td class="{% if period.growth >= 0 %}positive-value{% else %}negative-value{% endif %}">
+                        {{ "%.1f"|format(period.growth) }}%
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #666; padding: 2rem;">
+                        <i class="fas fa-chart-line" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                        No financial data available for the selected period
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+        <div class="export-actions">
+            <a href="/reports/financial/export?{{ request.query_string.decode() }}" class="action-btn btn-success">
+                <i class="fas fa-download"></i>
+                Export Report
+            </a>
+            <a href="/reports" class="action-btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Reports
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+    // Set default dates if not provided
+    document.addEventListener('DOMContentLoaded', function() {
+        const startDate = document.getElementById('start_date');
+        const endDate = document.getElementById('end_date');
+        
+        if (!startDate.value) {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            startDate.value = thirtyDaysAgo.toISOString().split('T')[0];
+        }
+        
+        if (!endDate.value) {
+            const today = new Date();
+            endDate.value = today.toISOString().split('T')[0];
+        }
+    });
+
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+        
+        if (startDate && endDate && startDate > endDate) {
+            e.preventDefault();
+            alert('Start date cannot be after end date.');
+            return;
+        }
+    });
+</script>
+{% endblock %} 

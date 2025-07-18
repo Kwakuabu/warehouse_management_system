@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Add Product - Alive Pharmaceuticals{% endblock %}
+
+{% block content %}
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>Add New Product</h1>
+            <p>Create a new product for inventory management</p>
+        </div>
+        <a href="/products" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Products
+        </a>
+    </div>
+
+    <!-- Form -->
+    <div class="form-container">
+        {% if error %}
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i> {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/products/add" id="productForm" enctype="multipart/form-data">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="name">Product Name *</label>
+                    <input type="text" id="name" name="name" class="form-control" 
+                           placeholder="Enter product name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="sku">SKU *</label>
+                    <input type="text" id="sku" name="sku" class="form-control" 
+                           placeholder="Enter SKU (e.g., DIAL-001)" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="category_id">Category *</label>
+                    <select id="category_id" name="category_id" class="form-control" required>
+                        <option value="">Select a category</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="vendor_id">Vendor</label>
+                    <select id="vendor_id" name="vendor_id" class="form-control">
+                        <option value="">Select a vendor (optional)</option>
+                        {% for vendor in vendors %}
+                        <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="unit_price">Unit Price (GHS) *</label>
+                    <input type="number" id="unit_price" name="unit_price" class="form-control" 
+                           placeholder="0.00" step="0.01" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cost_price">Cost Price (GHS) *</label>
+                    <input type="number" id="cost_price" name="cost_price" class="form-control" 
+                           placeholder="0.00" step="0.01" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="reorder_point">Reorder Point *</label>
+                    <input type="number" id="reorder_point" name="reorder_point" class="form-control" 
+                           placeholder="10" min="0" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" 
+                          placeholder="Enter product description..."></textarea>
+            </div>
+
+            <div class="form-actions">
+                <a href="/products" class="btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i>
+                    Save Product
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('productForm');
+            const nameInput = document.getElementById('name');
+            const skuInput = document.getElementById('sku');
+            const unitPriceInput = document.getElementById('unit_price');
+            const costPriceInput = document.getElementById('cost_price');
+            
+            // Form validation
+            form.addEventListener('submit', function(e) {
+                const name = nameInput.value.trim();
+                const sku = skuInput.value.trim();
+                const unitPrice = parseFloat(unitPriceInput.value);
+                const costPrice = parseFloat(costPriceInput.value);
+                
+                if (!name) {
+                    e.preventDefault();
+                    alert('Please enter a product name');
+                    nameInput.focus();
+                    return false;
+                }
+                
+                if (!sku) {
+                    e.preventDefault();
+                    alert('Please enter a SKU');
+                    skuInput.focus();
+                    return false;
+                }
+                
+                if (unitPrice < 0) {
+                    e.preventDefault();
+                    alert('Unit price cannot be negative');
+                    unitPriceInput.focus();
+                    return false;
+                }
+                
+                if (costPrice < 0) {
+                    e.preventDefault();
+                    alert('Cost price cannot be negative');
+                    costPriceInput.focus();
+                    return false;
+                }
+            });
+
+            // Auto-focus on name input
+            nameInput.focus();
+        });
+    </script>
+{% endblock %}

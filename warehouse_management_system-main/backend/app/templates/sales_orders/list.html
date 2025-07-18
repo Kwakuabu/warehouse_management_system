@@ -1,0 +1,658 @@
+{% extends "base.html" %}
+
+{% block title %}Sales Orders - Warehouse Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #666;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .action-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-analytics {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-icon.total { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stat-icon.pending { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .stat-icon.revenue { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .stat-icon.shipped { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+
+        .stat-info h3 {
+            color: #333;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-subtitle {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Table */
+        .table-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 1.5rem 2rem;
+            background: rgba(102, 126, 234, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .table-header h3 {
+            color: #333;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .table-header h3 i {
+            margin-right: 0.5rem;
+        }
+
+        .table-filters {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            background: white;
+        }
+
+        .table-search {
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            background: white;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .table th {
+            background: rgba(102, 126, 234, 0.05);
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .table td {
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .so-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .so-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .so-details h4 {
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .so-details p {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .customer-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .customer-flag {
+            width: 30px;
+            height: 20px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .badge {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .badge-pending { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
+        .badge-confirmed { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; }
+        .badge-shipped { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; }
+        .badge-delivered { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+        .badge-cancelled { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
+
+        .amount {
+            font-weight: 600;
+            color: #10b981;
+        }
+
+        .date-info {
+            text-align: center;
+        }
+
+        .date-value {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .date-status {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .date-normal { background: #e5e7eb; color: #374151; }
+        .date-soon { background: #fef3c7; color: #d97706; }
+        .date-overdue { background: #fee2e2; color: #dc2626; }
+
+        .action-btns {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .table-action-btn {
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-view { background: #f3f4f6; color: #374151; }
+        .btn-edit { background: #dbeafe; color: #1d4ed8; }
+        .btn-cancel { background: #fee2e2; color: #dc2626; }
+        .btn-ship { background: #ecfdf5; color: #059669; }
+
+        .table-action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #e5e7eb;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            margin-bottom: 2rem;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .header-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-container {
+                overflow-x: auto;
+            }
+
+            .table th,
+            .table td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.8rem;
+            }
+
+            .table-filters {
+                flex-direction: column;
+                gap: 0.5rem;
+                width: 100%;
+            }
+        }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>Sales Orders</h1>
+            <p>Manage customer orders and deliveries</p>
+        </div>
+        <div class="header-actions">
+            <a href="/sales-orders/create" class="action-btn btn-create">
+                <i class="fas fa-plus"></i>
+                Create Order
+            </a>
+            <a href="/sales-orders/analytics" class="action-btn btn-analytics">
+                <i class="fas fa-chart-bar"></i>
+                Analytics
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon total">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Total Sales Orders</h3>
+                </div>
+            </div>
+            <div class="stat-value">{{ sales_orders|length }}</div>
+            <div class="stat-subtitle">All time orders</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon pending">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Pending Orders</h3>
+                </div>
+            </div>
+            <div class="stat-value">
+                {{ sales_orders|selectattr("status", "equalto", "pending")|list|length }}
+            </div>
+            <div class="stat-subtitle">Awaiting confirmation</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon revenue">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Total Revenue</h3>
+                </div>
+            </div>
+            <div class="stat-value">₵{{ "%.0f"|format((sales_orders|sum(attribute='total_amount')) if sales_orders else 0) }}</div>
+            <div class="stat-subtitle">All sales orders</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon shipped">
+                    <i class="fas fa-shipping-fast"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Shipped Orders</h3>
+                </div>
+            </div>
+            <div class="stat-value">
+                {{ sales_orders|selectattr("status", "equalto", "shipped")|list|length }}
+            </div>
+            <div class="stat-subtitle">In transit</div>
+        </div>
+    </div>
+
+    <!-- Sales Orders Table -->
+    <div class="table-container">
+        <div class="table-header">
+            <h3><i class="fas fa-list"></i> Sales Orders</h3>
+            <div class="table-filters">
+                <select id="statusFilter" class="filter-select">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+                <input type="text" class="table-search" placeholder="Search orders...">
+            </div>
+        </div>
+        
+        {% if sales_orders %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Order Details</th>
+                    <th>Customer</th>
+                    <th>Order Date</th>
+                    <th>Expected Delivery</th>
+                    <th>Total Amount</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in sales_orders %}
+                <tr data-status="{{ order.status }}">
+                    <td>
+                        <div class="so-info">
+                            <div class="so-icon">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                            <div class="so-details">
+                                <h4>{{ order.so_number }}</h4>
+                                <p>{{ order.items|length }} items</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="customer-info">
+                            <div class="customer-flag">
+                                {{ order.customer.name[:2].upper() if order.customer.name else "CU" }}
+                            </div>
+                            <div>
+                                <strong>{{ order.customer.name }}</strong>
+                                <br><small>{{ order.customer.contact_person or 'N/A' }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="date-info">
+                            <div class="date-value">{{ order.order_date.strftime('%Y-%m-%d') }}</div>
+                            <div class="date-status date-normal">{{ order.order_date.strftime('%b %d') }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="date-info">
+                            {% if order.expected_delivery_date %}
+                                {% set now = current_datetime %}
+                                <div class="date-value">{{ order.expected_delivery_date.strftime('%Y-%m-%d') }}</div>
+                                {% set days_diff = (order.expected_delivery_date - now).days %}
+                                {% if days_diff < 0 %}
+                                    <div class="date-status date-overdue">{{ -days_diff }} days overdue</div>
+                                {% elif days_diff <= 7 %}
+                                    <div class="date-status date-soon">{{ days_diff }} days left</div>
+                                {% else %}
+                                    <div class="date-status date-normal">{{ days_diff }} days</div>
+                                {% endif %}
+                            {% else %}
+                                <div class="date-value">Not set</div>
+                                <div class="date-status date-normal">-</div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="amount">₵{{ "%.2f"|format(order.total_amount) }}</div>
+                    </td>
+                    <td>
+                        <span class="badge badge-{{ order.status }}">
+                            {{ order.status.title() }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-btns">
+                            <a href="/sales-orders/{{ order.id }}" class="table-action-btn btn-view">
+                                <i class="fas fa-eye"></i>
+                                View
+                            </a>
+                            {% if order.status in ['pending', 'confirmed'] %}
+                            <a href="/sales-orders/{{ order.id }}/edit" class="table-action-btn btn-edit">
+                                <i class="fas fa-edit"></i>
+                                Edit
+                            </a>
+                            {% endif %}
+                            {% if order.status == 'confirmed' %}
+                            <button class="table-action-btn btn-ship" onclick="shipOrder({{ order.id }})">
+                                <i class="fas fa-truck"></i>
+                                Ship
+                            </button>
+                            {% endif %}
+                            {% if order.status == 'pending' %}
+                            <button class="table-action-btn btn-cancel" onclick="cancelOrder({{ order.id }})">
+                                <i class="fas fa-times"></i>
+                                Cancel
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-truck"></i>
+            <h3>No Sales Orders Found</h3>
+            <p>You haven't created any sales orders yet. Start by creating your first order for a customer.</p>
+            <a href="/sales-orders/create" class="action-btn btn-create">
+                <i class="fas fa-plus"></i>
+                Create Your First Order
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function shipOrder(orderId) {
+        if (confirm('Are you sure you want to ship this sales order?')) {
+            fetch('/sales-orders/' + orderId + '/update-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'status=shipped'
+            })
+            .then(function(response) {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error shipping order');
+                }
+            });
+        }
+    }
+
+    function cancelOrder(orderId) {
+        if (confirm('Are you sure you want to cancel this sales order?')) {
+            fetch('/sales-orders/' + orderId + '/update-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'status=cancelled'
+            })
+            .then(function(response) {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error cancelling order');
+                }
+            });
+        }
+    }
+
+    // Filter functionality
+    document.getElementById('statusFilter').addEventListener('change', function() {
+        var status = this.value;
+        var rows = document.querySelectorAll('.table tbody tr');
+        
+        rows.forEach(function(row) {
+            if (!status || row.dataset.status === status) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // Search functionality
+    document.querySelector('.table-search').addEventListener('input', function(e) {
+        var searchTerm = e.target.value.toLowerCase();
+        var tableRows = document.querySelectorAll('.table tbody tr');
+        
+        tableRows.forEach(function(row) {
+            var text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

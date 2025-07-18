@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Alerts - Alive Pharmaceuticals{% endblock %}
+
+{% block content %}
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>System Alerts</h1>
+            <p>Monitor and manage system notifications</p>
+        </div>
+        <div class="header-actions">
+            <a href="/alerts/clear-all" class="btn-secondary" onclick="return confirm('Clear all alerts?')">
+                <i class="fas fa-trash"></i>
+                Clear All
+            </a>
+        </div>
+    </div>
+
+    <!-- Alerts List -->
+    <div class="alerts-container">
+        {% if alerts %}
+            <div class="alerts-list">
+                {% for alert in alerts %}
+                <div class="alert-item {{ alert.type }}">
+                    <div class="alert-icon">
+                        {% if alert.type == 'error' %}
+                            <i class="fas fa-exclamation-circle"></i>
+                        {% elif alert.type == 'warning' %}
+                            <i class="fas fa-exclamation-triangle"></i>
+                        {% elif alert.type == 'info' %}
+                            <i class="fas fa-info-circle"></i>
+                        {% else %}
+                            <i class="fas fa-check-circle"></i>
+                        {% endif %}
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-header">
+                            <h3>{{ alert.title }}</h3>
+                            <span class="alert-time">{{ alert.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                        </div>
+                        <p>{{ alert.message }}</p>
+                        {% if alert.details %}
+                        <div class="alert-details">
+                            <strong>Details:</strong> {{ alert.details }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="alert-actions">
+                        <a href="/alerts/{{ alert.id }}/dismiss" class="btn-dismiss" 
+                           onclick="return confirm('Dismiss this alert?')">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if pagination.pages > 1 %}
+            <div class="pagination">
+                {% if pagination.has_prev %}
+                <a href="{{ url_for('alerts_list', page=pagination.prev_num) }}" class="page-link">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+                {% endif %}
+                
+                <span class="page-info">
+                    Page {{ pagination.page }} of {{ pagination.pages }}
+                </span>
+                
+                {% if pagination.has_next %}
+                <a href="{{ url_for('alerts_list', page=pagination.next_num) }}" class="page-link">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-bell-slash"></i>
+                </div>
+                <h3>No Alerts</h3>
+                <p>You're all caught up! No system alerts at the moment.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Alert Statistics -->
+    <div class="stats-section">
+        <h2>Alert Statistics</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon error">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ stats.error_count }}</h3>
+                    <p>Error Alerts</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ stats.warning_count }}</h3>
+                    <p>Warning Alerts</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon info">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ stats.info_count }}</h3>
+                    <p>Info Alerts</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ stats.success_count }}</h3>
+                    <p>Success Alerts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %} 

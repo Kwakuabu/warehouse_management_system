@@ -1,0 +1,562 @@
+{% extends "base.html" %}
+
+{% block title %}Product Details - Alive Pharmaceuticals{% endblock %}
+
+{% block additional_styles %}
+<style>
+    .product-detail-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 2rem;
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        margin-bottom: 2rem;
+    }
+
+    .product-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .product-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 2rem;
+    }
+
+    .product-icon i {
+        color: white;
+        font-size: 2rem;
+    }
+
+    .product-info h1 {
+        color: #333;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .product-meta {
+        display: flex;
+        gap: 2rem;
+        color: #666;
+        font-size: 0.9rem;
+        flex-wrap: wrap;
+    }
+
+    .product-content {
+        margin-bottom: 2rem;
+    }
+
+    .product-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .detail-section {
+        background: rgba(255, 255, 255, 0.7);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .section-title i {
+        margin-right: 0.5rem;
+        color: #667eea;
+    }
+
+    .detail-item {
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .detail-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .detail-value {
+        color: #333;
+        font-size: 1rem;
+    }
+
+    .product-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .product-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border: 1px solid #667eea;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(102, 126, 234, 0.2);
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+    }
+
+    .btn-warning:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+    }
+
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    .action-btn i {
+        margin-right: 0.5rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .back-link:hover {
+        transform: translateX(-5px);
+    }
+
+    .back-link i {
+        margin-right: 0.5rem;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-active {
+        background: rgba(16, 185, 129, 0.2);
+        color: #059669;
+    }
+
+    .status-inactive {
+        background: rgba(239, 68, 68, 0.2);
+        color: #dc2626;
+    }
+
+    .badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        margin-right: 0.5rem;
+    }
+
+    .badge-cold {
+        background: rgba(59, 130, 246, 0.2);
+        color: #2563eb;
+    }
+
+    .badge-controlled {
+        background: rgba(239, 68, 68, 0.2);
+        color: #dc2626;
+    }
+
+    .inventory-section {
+        background: rgba(255, 255, 255, 0.7);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        margin-top: 2rem;
+    }
+
+    .inventory-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 10px;
+        margin-bottom: 0.5rem;
+    }
+
+    .inventory-info h4 {
+        color: #333;
+        margin-bottom: 0.25rem;
+    }
+
+    .inventory-meta {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .stock-level {
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .stock-high {
+        background: rgba(16, 185, 129, 0.2);
+        color: #059669;
+    }
+
+    .stock-medium {
+        background: rgba(245, 158, 11, 0.2);
+        color: #d97706;
+    }
+
+    .stock-low {
+        background: rgba(239, 68, 68, 0.2);
+        color: #dc2626;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="header">
+    <div>
+        <a href="/products" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            Back to Products
+        </a>
+        <h1>Product Details</h1>
+        <p>View product information and inventory</p>
+    </div>
+</div>
+
+<!-- Product Detail Card -->
+<div class="product-detail-card">
+    {% if product %}
+    <div class="product-header">
+        <div class="product-icon">
+            <i class="fas fa-pills"></i>
+        </div>
+        <div class="product-info">
+            <h1>{{ product.name }}</h1>
+            <div class="product-meta">
+                <span><i class="fas fa-barcode"></i> {{ product.sku }}</span>
+                <span><i class="fas fa-tags"></i> {{ product.category.name if product.category else 'No category' }}</span>
+                <span><i class="fas fa-industry"></i> {{ product.vendor.name if product.vendor else 'No vendor' }}</span>
+                <span class="status-badge status-{% if product.is_active %}active{% else %}inactive{% endif %}">
+                    {% if product.is_active %}Active{% else %}Inactive{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="product-content">
+        <!-- Product Statistics -->
+        <div class="product-stats">
+            <div class="stat-card">
+                <div class="stat-value">{{ product.inventory_items|length if product.inventory_items else 0 }}</div>
+                <div class="stat-label">Inventory Items</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ product.reorder_point }}</div>
+                <div class="stat-label">Reorder Point</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ product.max_stock_level }}</div>
+                <div class="stat-label">Max Stock Level</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ product.unit_of_measure }}</div>
+                <div class="stat-label">Unit</div>
+            </div>
+        </div>
+
+        <!-- Product Details -->
+        <div class="product-details">
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    Basic Information
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">SKU</div>
+                    <div class="detail-value">{{ product.sku }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Name</div>
+                    <div class="detail-value">{{ product.name }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Description</div>
+                    <div class="detail-value">{{ product.description or 'No description' }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Category</div>
+                    <div class="detail-value">
+                        {% if product.category %}
+                        <a href="/categories/{{ product.category.id }}" style="color: #667eea;">{{ product.category.name }}</a>
+                        {% else %}
+                        No category
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Vendor</div>
+                    <div class="detail-value">
+                        {% if product.vendor %}
+                        <a href="/vendors/{{ product.vendor.id }}" style="color: #667eea;">{{ product.vendor.name }}</a>
+                        {% else %}
+                        No vendor
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="fas fa-cog"></i>
+                    Stock Management
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Unit of Measure</div>
+                    <div class="detail-value">{{ product.unit_of_measure }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Reorder Point</div>
+                    <div class="detail-value">{{ product.reorder_point }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Max Stock Level</div>
+                    <div class="detail-value">{{ product.max_stock_level }}</div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="fas fa-thermometer-half"></i>
+                    Storage Requirements
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Temperature Range</div>
+                    <div class="detail-value">
+                        {% if product.storage_temperature_min and product.storage_temperature_max %}
+                        {{ product.storage_temperature_min }}°C to {{ product.storage_temperature_max }}°C
+                        {% else %}
+                        Not specified
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Cold Chain Required</div>
+                    <div class="detail-value">
+                        {% if product.requires_cold_chain %}
+                        <span class="badge badge-cold">Yes</span>
+                        {% else %}
+                        No
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Controlled Substance</div>
+                    <div class="detail-value">
+                        {% if product.is_controlled_substance %}
+                        <span class="badge badge-controlled">Yes</span>
+                        {% else %}
+                        No
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Items -->
+        {% if product.inventory_items %}
+        <div class="inventory-section">
+            <div class="section-title">
+                <i class="fas fa-boxes"></i>
+                Inventory Items
+            </div>
+            {% for item in product.inventory_items %}
+            <div class="inventory-item">
+                <div class="inventory-info">
+                    <h4>Batch: {{ item.batch_number }}</h4>
+                    <div class="inventory-meta">
+                        Available: {{ item.quantity_available }} {{ product.unit_of_measure }} • 
+                        Reserved: {{ item.quantity_reserved }} {{ product.unit_of_measure }} • 
+                        Location: {{ item.location or 'Not specified' }}
+                    </div>
+                </div>
+                <div class="stock-level stock-{% if item.quantity_available > product.reorder_point %}high{% elif item.quantity_available > 0 %}medium{% else %}low{% endif %}">
+                    {{ item.quantity_available }} {{ product.unit_of_measure }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="product-actions">
+            {% if current_user.role in ['admin', 'manager'] %}
+            <a href="/products/edit/{{ product.id }}" class="action-btn btn-warning">
+                <i class="fas fa-edit"></i>
+                Edit Product
+            </a>
+            <a href="/purchase-orders/create?product_id={{ product.id }}" class="action-btn btn-success">
+                <i class="fas fa-plus"></i>
+                Order Product
+            </a>
+            {% endif %}
+            
+            <a href="/products" class="action-btn btn-secondary">
+                <i class="fas fa-list"></i>
+                Back to Products
+            </a>
+            
+            {% if current_user.role in ['admin', 'manager'] %}
+            <button class="action-btn btn-danger" onclick="deleteProduct({{ product.id }}, '{{ product.name }}')">
+                <i class="fas fa-trash"></i>
+                Delete Product
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="product-content">
+        <div class="detail-section">
+            <h3><i class="fas fa-exclamation-circle"></i> Product Not Found</h3>
+            <p>The requested product could not be found or you don't have permission to view it.</p>
+        </div>
+        
+        <div class="product-actions">
+            <a href="/products" class="action-btn btn-primary">
+                <i class="fas fa-list"></i>
+                Back to Products
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+    function deleteProduct(productId, productName) {
+        if (confirm(`Are you sure you want to delete the product "${productName}"? This action cannot be undone.`)) {
+            fetch(`/products/${productId}/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/products';
+                } else {
+                    alert('Error deleting product. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting product. Please try again.');
+            });
+        }
+    }
+</script>
+{% endblock %} 

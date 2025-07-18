@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Category - Warehouse Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Edit Category
+                    </h2>
+                    <a href="/categories/" class="back-btn">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Categories
+                    </a>
+                </div>
+
+                {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+                </div>
+                {% endif %}
+
+                <!-- Edit Category Form -->
+                <form method="POST" action="/categories/{{ category.id }}/edit" id="editCategoryForm">
+                    <div class="form-group mb-3">
+                        <label for="name" class="form-label">Category Name *</label>
+                        <input type="text" name="name" id="name" class="form-control" 
+                               value="{{ category.name }}" placeholder="Enter category name" required>
+                        <small class="form-text text-muted">Enter a unique name for this category</small>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea name="description" id="description" class="form-control" rows="4" 
+                                  placeholder="Enter category description...">{{ category.description or '' }}</textarea>
+                        <small class="form-text text-muted">Provide a detailed description of this category</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="/categories/" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update Category
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editCategoryForm');
+    const nameInput = document.getElementById('name');
+    const descriptionInput = document.getElementById('description');
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const name = nameInput.value.trim();
+        
+        if (!name) {
+            e.preventDefault();
+            alert('Please enter a category name');
+            nameInput.focus();
+            return false;
+        }
+        
+        if (name.length < 2) {
+            e.preventDefault();
+            alert('Category name must be at least 2 characters long');
+            nameInput.focus();
+            return false;
+        }
+        
+        if (name.length > 50) {
+            e.preventDefault();
+            alert('Category name must be less than 50 characters');
+            nameInput.focus();
+            return false;
+        }
+        
+        // Confirm the update
+        if (!confirm(`Are you sure you want to update the category "${name}"?`)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    
+    // Auto-focus on name field
+    nameInput.focus();
+    nameInput.select();
+});
+</script>
+{% endblock %} 

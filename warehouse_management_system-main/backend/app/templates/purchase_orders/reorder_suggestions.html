@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}Reorder Suggestions - Warehouse Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">
+                        <i class="fas fa-magic me-2"></i>Auto Reorder Suggestions
+                    </h2>
+                    <a href="/purchase-orders/" class="back-btn">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Purchase Orders
+                    </a>
+                </div>
+
+                <!-- Summary Stats -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="stat-card bg-warning text-white">
+                            <div class="stat-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>{{ total_products_needing_reorder }}</h3>
+                                <p>Products Need Reordering</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card bg-info text-white">
+                            <div class="stat-icon">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>{{ vendors_with_suggestions|length }}</h3>
+                                <p>Vendors to Contact</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card bg-success text-white">
+                            <div class="stat-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Ready</h3>
+                                <p>Auto Generate Orders</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if vendors_with_suggestions %}
+                    <!-- Reorder Suggestions by Vendor -->
+                    {% for vendor_key, vendor_data in vendors_with_suggestions.items() %}
+                    <div class="vendor-suggestions mb-4">
+                        <div class="vendor-header">
+                            <h4 class="mb-3">
+                                {% if vendor_data.vendor %}
+                                <i class="fas fa-building me-2"></i>{{ vendor_data.vendor.name }}
+                                <small class="text-muted">
+                                    ({{ vendor_data.vendor.contact_person or 'No contact' }} - 
+                                    {{ vendor_data.vendor.email or 'No email' }})
+                                </small>
+                                {% else %}
+                                <i class="fas fa-question-circle me-2"></i>No Vendor Assigned
+                                {% endif %}
+                            </h4>
+                            
+                            {% if vendor_data.vendor %}
+                            <div class="vendor-actions mb-3">
+                                <a href="/purchase-orders/create?vendor={{ vendor_data.vendor.id }}" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus me-1"></i>Create Purchase Order
+                                </a>
+                                <button type="button" class="btn btn-success btn-sm" 
+                                        onclick="selectAllProducts('{{ vendor_key }}')">
+                                    <i class="fas fa-check-double me-1"></i>Select All
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            <input type="checkbox" class="vendor-select-all" 
+                                                   data-vendor="{{ vendor_key }}">
+                                        </th>
+                                        <th>Product</th>
+                                        <th>SKU</th>
+                                        <th>Current Stock</th>
+                                        <th>Reorder Point</th>
+                                        <th>Suggested Qty</th>
+                                        <th>Unit Cost</th>
+                                        <th>Estimated Total</th>
+                                        <th>Priority</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in vendor_data.products %}
+                                    <tr class="product-row" data-vendor="{{ vendor_key }}">
+                                        <td>
+                                            <input type="checkbox" class="product-select" 
+                                                   name="selected_products" 
+                                                   value="{{ item.product.id }}"
+                                                   data-vendor="{{ vendor_key }}">
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div>
+                                                    <strong>{{ item.product.name }}</strong>
+                                                    {% if item.product.category %}
+                                                    <br><small class="text-muted">{{ item.product.category.name }}</small>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td><code>{{ item.product.sku }}</code></td>
+                                        <td>
+                                            <span class="badge bg-danger">{{ item.current_stock }} units</span>
+                                        </td>
+                                        <td>{{ item.reorder_point }} units</td>
+                                        <td>
+                                            <input type="number" class="form-control form-control-sm quantity-input" 
+                                                   value="{{ item.suggested_quantity }}" 
+                                                   min="1" style="width: 80px;"
+                                                   data-product="{{ item.product.id }}">
+                                        </td>
+                                        <td>GHS {{ "%.2f"|format(item.product.cost_price or 0) }}</td>
+                                        <td class="estimated-total">
+                                            GHS {{ "%.2f"|format((item.product.cost_price or 0) * item.suggested_quantity) }}
+                                        </td>
+                                        <td>
+                                            {% set stock_ratio = item.current_stock / item.reorder_point if item.reorder_point > 0 else 0 %}
+                                            {% if stock_ratio == 0 %}
+                                            <span class="badge bg-danger">Critical</span>
+                                            {% elif stock_ratio <= 0.5 %}
+                                            <span class="badge bg-warning">High</span>
+                                            {% else %}
+                                            <span class="badge bg-info">Medium</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <div>
+                            <span id="selected-count">0</span> products selected
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-secondary" onclick="clearSelection()">
+                                <i class="fas fa-times me-2"></i>Clear Selection
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="createSelectedOrders()" 
+                                    id="create-orders-btn" disabled>
+                                <i class="fas fa-shopping-cart me-2"></i>Create Purchase Orders
+                            </button>
+                        </div>
+                    </div>
+
+                {% else %}
+                    <!-- No Reorder Needed -->
+                    <div class="text-center py-5">
+                        <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                        <h3 class="text-success">All Good!</h3>
+                        <p class="text-muted">No products currently need reordering. All stock levels are above their reorder points.</p>
+                        <a href="/inventory/" class="btn btn-primary">
+                            <i class="fas fa-boxes me-2"></i>View Inventory
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update selected count
+    function updateSelectedCount() {
+        const selectedProducts = document.querySelectorAll('.product-select:checked');
+        const count = selectedProducts.length;
+        document.getElementById('selected-count').textContent = count;
+        document.getElementById('create-orders-btn').disabled = count === 0;
+    }
+
+    // Select all products for a vendor
+    window.selectAllProducts = function(vendorKey) {
+        const checkboxes = document.querySelectorAll(`.product-select[data-vendor="${vendorKey}"]`);
+        const selectAllCheckbox = document.querySelector(`.vendor-select-all[data-vendor="${vendorKey}"]`);
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+        
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = true;
+        }
+        
+        updateSelectedCount();
+    };
+
+    // Clear all selections
+    window.clearSelection = function() {
+        document.querySelectorAll('.product-select').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        document.querySelectorAll('.vendor-select-all').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        updateSelectedCount();
+    };
+
+    // Create purchase orders for selected products
+    window.createSelectedOrders = function() {
+        const selectedProducts = document.querySelectorAll('.product-select:checked');
+        
+        if (selectedProducts.length === 0) {
+            alert('Please select at least one product to create purchase orders.');
+            return;
+        }
+
+        if (confirm(`Create purchase orders for ${selectedProducts.length} selected products?`)) {
+            // For now, redirect to create purchase order page
+            // In a full implementation, this would group by vendor and create multiple orders
+            window.location.href = '/purchase-orders/create';
+        }
+    };
+
+    // Handle vendor select all checkboxes
+    document.querySelectorAll('.vendor-select-all').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const vendorKey = this.dataset.vendor;
+            const productCheckboxes = document.querySelectorAll(`.product-select[data-vendor="${vendorKey}"]`);
+            
+            productCheckboxes.forEach(productCheckbox => {
+                productCheckbox.checked = this.checked;
+            });
+            
+            updateSelectedCount();
+        });
+    });
+
+    // Handle individual product checkboxes
+    document.querySelectorAll('.product-select').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updateSelectedCount();
+            
+            // Update vendor select all checkbox
+            const vendorKey = this.dataset.vendor;
+            const vendorCheckboxes = document.querySelectorAll(`.product-select[data-vendor="${vendorKey}"]`);
+            const checkedVendorCheckboxes = document.querySelectorAll(`.product-select[data-vendor="${vendorKey}"]:checked`);
+            const vendorSelectAll = document.querySelector(`.vendor-select-all[data-vendor="${vendorKey}"]`);
+            
+            if (vendorSelectAll) {
+                vendorSelectAll.checked = vendorCheckboxes.length === checkedVendorCheckboxes.length;
+            }
+        });
+    });
+
+    // Handle quantity changes
+    document.querySelectorAll('.quantity-input').forEach(input => {
+        input.addEventListener('change', function() {
+            const quantity = parseFloat(this.value) || 0;
+            const row = this.closest('tr');
+            const costCell = row.querySelector('td:nth-child(7)').textContent;
+            const cost = parseFloat(costCell.replace('GHS ', '')) || 0;
+            const total = quantity * cost;
+            
+            row.querySelector('.estimated-total').textContent = `GHS ${total.toFixed(2)}`;
+        });
+    });
+
+    // Initial count update
+    updateSelectedCount();
+});
+</script>
+{% endblock %} 

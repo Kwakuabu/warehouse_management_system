@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Settings Dashboard - Alive Pharmaceuticals{% endblock %}
+
+{% block content %}
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>Settings Dashboard</h1>
+            <p>Manage system configuration and preferences</p>
+        </div>
+        <div class="header-actions">
+            <a href="/settings/system" class="btn-secondary">
+                <i class="fas fa-cog"></i>
+                System Settings
+            </a>
+        </div>
+    </div>
+
+    <!-- Settings Grid -->
+    <div class="settings-grid">
+        <!-- System Settings -->
+        <div class="setting-card">
+            <div class="setting-header">
+                <h3><i class="fas fa-cog"></i> System Settings</h3>
+            </div>
+            <div class="setting-content">
+                <p>Configure system preferences, database settings, and application parameters</p>
+                <div class="setting-actions">
+                    <a href="/settings/system" class="btn-primary">Configure System</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Management -->
+        <div class="setting-card">
+            <div class="setting-header">
+                <h3><i class="fas fa-users"></i> User Management</h3>
+            </div>
+            <div class="setting-content">
+                <p>Manage user accounts, roles, and permissions</p>
+                <div class="setting-actions">
+                    <a href="/settings/users" class="btn-primary">Manage Users</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Settings -->
+        <div class="setting-card">
+            <div class="setting-header">
+                <h3><i class="fas fa-shield-alt"></i> Security Settings</h3>
+            </div>
+            <div class="setting-content">
+                <p>Configure security policies, authentication, and access controls</p>
+                <div class="setting-actions">
+                    <a href="/settings/security" class="btn-primary">Security Config</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Backup & Restore -->
+        <div class="setting-card">
+            <div class="setting-header">
+                <h3><i class="fas fa-database"></i> Backup & Restore</h3>
+            </div>
+            <div class="setting-content">
+                <p>Manage data backups, restore points, and system recovery</p>
+                <div class="setting-actions">
+                    <a href="/settings/backup" class="btn-primary">Backup Settings</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Info -->
+    <div class="system-info-section">
+        <h2>System Information</h2>
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-icon">
+                    <i class="fas fa-server"></i>
+                </div>
+                <div class="info-content">
+                    <h3>System Status</h3>
+                    <p>All systems operational</p>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <div class="info-content">
+                    <h3>Database</h3>
+                    <p>Connected and healthy</p>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="info-content">
+                    <h3>Last Backup</h3>
+                    <p>{{ last_backup or 'Never' }}</p>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-icon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="info-content">
+                    <h3>Active Users</h3>
+                    <p>{{ active_users or 0 }} users</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %} 

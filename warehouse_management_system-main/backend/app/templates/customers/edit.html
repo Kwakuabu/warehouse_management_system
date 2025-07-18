@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Customer - Alive Pharmaceuticals{% endblock %}
+
+{% block content %}
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>Edit Customer</h1>
+            <p>Update customer information</p>
+        </div>
+        <a href="/customers" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Customers
+        </a>
+    </div>
+
+    <!-- Form -->
+    <div class="form-container">
+        {% if error %}
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i> {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/customers/{{ customer.id }}/edit" id="customerForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="name">Customer Name *</label>
+                    <input type="text" id="name" name="name" class="form-control" 
+                           value="{{ customer.name }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" name="email" class="form-control" 
+                           value="{{ customer.email }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone *</label>
+                    <input type="tel" id="phone" name="phone" class="form-control" 
+                           value="{{ customer.phone }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="contact_person">Contact Person</label>
+                    <input type="text" id="contact_person" name="contact_person" class="form-control" 
+                           value="{{ customer.contact_person }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="address">Address</label>
+                <textarea id="address" name="address" class="form-control">{{ customer.address }}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <a href="/customers" class="btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i>
+                    Update Customer
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('customerForm');
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+            const phoneInput = document.getElementById('phone');
+            
+            // Form validation
+            form.addEventListener('submit', function(e) {
+                const name = nameInput.value.trim();
+                const email = emailInput.value.trim();
+                const phone = phoneInput.value.trim();
+                
+                if (!name) {
+                    e.preventDefault();
+                    alert('Please enter a customer name');
+                    nameInput.focus();
+                    return false;
+                }
+                
+                if (!email) {
+                    e.preventDefault();
+                    alert('Please enter an email address');
+                    emailInput.focus();
+                    return false;
+                }
+                
+                if (!phone) {
+                    e.preventDefault();
+                    alert('Please enter a phone number');
+                    phoneInput.focus();
+                    return false;
+                }
+                
+                // Basic email validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    e.preventDefault();
+                    alert('Please enter a valid email address');
+                    emailInput.focus();
+                    return false;
+                }
+            });
+
+            // Auto-focus on name input
+            nameInput.focus();
+        });
+    </script>
+{% endblock %} 

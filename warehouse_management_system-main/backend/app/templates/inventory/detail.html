@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory Item Details - Warehouse Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">
+                        <i class="fas fa-box me-2"></i>Inventory Item Details
+                    </h2>
+                    <a href="/inventory/" class="back-btn">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Inventory
+                    </a>
+                </div>
+
+                <!-- Item Information -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="info-card">
+                            <h4 class="mb-3">
+                                <i class="fas fa-info-circle me-2"></i>Item Information
+                            </h4>
+                            <table class="table table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Product:</strong></td>
+                                        <td>{{ item.product.name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>SKU:</strong></td>
+                                        <td><code>{{ item.product.sku }}</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Category:</strong></td>
+                                        <td>
+                                            <span class="badge bg-info">{{ item.product.category.name }}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Batch Number:</strong></td>
+                                        <td><code>{{ item.batch_number }}</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Location:</strong></td>
+                                        <td>
+                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                            {{ item.location or 'Not specified' }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-card">
+                            <h4 class="mb-3">
+                                <i class="fas fa-chart-bar me-2"></i>Stock Information
+                            </h4>
+                            <table class="table table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Available Quantity:</strong></td>
+                                        <td>
+                                            <span class="badge bg-success fs-6">{{ item.quantity_available }} units</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Reserved Quantity:</strong></td>
+                                        <td>{{ item.quantity_reserved }} units</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status:</strong></td>
+                                        <td>
+                                            {% if item.status == 'available' %}
+                                            <span class="badge bg-success">Available</span>
+                                            {% elif item.status == 'reserved' %}
+                                            <span class="badge bg-warning">Reserved</span>
+                                            {% elif item.status == 'expired' %}
+                                            <span class="badge bg-danger">Expired</span>
+                                            {% elif item.status == 'damaged' %}
+                                            <span class="badge bg-dark">Damaged</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">{{ item.status|title }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Cost Price:</strong></td>
+                                        <td>GHS {{ "%.2f"|format(item.cost_price) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Selling Price:</strong></td>
+                                        <td>GHS {{ "%.2f"|format(item.selling_price) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dates Information -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="info-card">
+                            <h4 class="mb-3">
+                                <i class="fas fa-calendar me-2"></i>Important Dates
+                            </h4>
+                            <table class="table table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Received Date:</strong></td>
+                                        <td>{{ item.received_date.strftime('%B %d, %Y') if item.received_date else 'Not recorded' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Manufacture Date:</strong></td>
+                                        <td>{{ item.manufacture_date.strftime('%B %d, %Y') if item.manufacture_date else 'Not specified' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Expiry Date:</strong></td>
+                                        <td>
+                                            {% if item.expiry_date %}
+                                                {% set days_to_expiry = (item.expiry_date - item.received_date).days if item.received_date else 0 %}
+                                                {% if days_to_expiry <= 30 %}
+                                                <span class="text-danger">
+                                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                                    {{ item.expiry_date.strftime('%B %d, %Y') }}
+                                                </span>
+                                                {% elif days_to_expiry <= 90 %}
+                                                <span class="text-warning">
+                                                    <i class="fas fa-clock me-1"></i>
+                                                    {{ item.expiry_date.strftime('%B %d, %Y') }}
+                                                </span>
+                                                {% else %}
+                                                <span class="text-success">
+                                                    {{ item.expiry_date.strftime('%B %d, %Y') }}
+                                                </span>
+                                                {% endif %}
+                                            {% else %}
+                                                Not specified
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Last Updated:</strong></td>
+                                        <td>{{ item.updated_at.strftime('%B %d, %Y at %I:%M %p') if item.updated_at else 'Not available' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-card">
+                            <h4 class="mb-3">
+                                <i class="fas fa-thermometer-half me-2"></i>Storage Requirements
+                            </h4>
+                            <table class="table table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Requires Cold Chain:</strong></td>
+                                        <td>
+                                            {% if item.product.requires_cold_chain %}
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-snowflake me-1"></i>Yes
+                                            </span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">No</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Temperature Range:</strong></td>
+                                        <td>
+                                            {% if item.product.storage_temperature_min and item.product.storage_temperature_max %}
+                                            {{ item.product.storage_temperature_min }}°C - {{ item.product.storage_temperature_max }}°C
+                                            {% else %}
+                                            Not specified
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Controlled Substance:</strong></td>
+                                        <td>
+                                            {% if item.product.is_controlled_substance %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-lock me-1"></i>Yes
+                                            </span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">No</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Stock Movements -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="info-card">
+                            <h4 class="mb-3">
+                                <i class="fas fa-history me-2"></i>Recent Stock Movements
+                            </h4>
+                            {% if stock_movements %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Type</th>
+                                            <th>Quantity</th>
+                                            <th>Reference</th>
+                                            <th>Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for movement in stock_movements %}
+                                        <tr>
+                                            <td>{{ movement.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>
+                                                {% if movement.movement_type == 'receipt' %}
+                                                <span class="badge bg-success">Receipt</span>
+                                                {% elif movement.movement_type == 'issue' %}
+                                                <span class="badge bg-warning">Issue</span>
+                                                {% elif movement.movement_type == 'adjustment' %}
+                                                <span class="badge bg-info">Adjustment</span>
+                                                {% elif movement.movement_type == 'transfer' %}
+                                                <span class="badge bg-primary">Transfer</span>
+                                                {% else %}
+                                                <span class="badge bg-secondary">{{ movement.movement_type|title }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ movement.quantity }}</td>
+                                            <td><code>{{ movement.reference_number or '-' }}</code></td>
+                                            <td>{{ movement.notes or '-' }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No stock movements recorded for this item.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="/inventory/" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Inventory
+                    </a>
+                    {% if current_user.role in ['admin', 'manager'] %}
+                    <div>
+                        <a href="/inventory/issue" class="btn btn-warning">
+                            <i class="fas fa-edit me-2"></i>Adjust Stock
+                        </a>
+                        <a href="/inventory/receive" class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>Receive Stock
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
