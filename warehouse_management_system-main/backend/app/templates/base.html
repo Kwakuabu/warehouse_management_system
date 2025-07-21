@@ -31,6 +31,19 @@
                         </div>
                     </div>
 
+                    <!-- User Profile Card -->
+                    <div class="user-profile-card mb-3 p-2 text-center bg-light rounded shadow-sm" style="max-width: 180px; margin-left: auto; margin-right: auto;">
+                        <div class="d-flex flex-column align-items-center">
+                            <div class="profile-avatar bg-primary text-white rounded-circle mb-1 d-flex align-items-center justify-content-center" style="width:36px; height:36px; font-size:1.2rem;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark" style="font-size:1rem;">{{ current_user.full_name or current_user.username }}</div>
+                                <div class="text-uppercase text-secondary small" style="letter-spacing:1px; font-size:0.7rem;">{{ current_user.role|upper }}</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Navigation Menu -->
                     <ul class="nav flex-column">
                         <!-- Main Navigation -->
