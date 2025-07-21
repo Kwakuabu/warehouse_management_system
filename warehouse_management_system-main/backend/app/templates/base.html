@@ -93,8 +93,8 @@
                         <!-- Separator -->
                         <hr class="text-muted my-3">
                         
-                        <!-- Admin/Manager Only Items -->
-                        {% if current_user.role in ['admin', 'manager'] %}
+                        <!-- Admin/Manager/Staff Items -->
+                        {% if current_user.role in ['admin', 'manager', 'staff'] %}
                         <li class="nav-item">
                             <a class="nav-link text-white {% if request.url.path.startswith('/alerts') %}active{% endif %}" href="/alerts/">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
@@ -108,7 +108,9 @@
                                 Reports
                             </a>
                         </li>
-                        
+                        {% endif %}
+                        <!-- Settings still admin/manager only -->
+                        {% if current_user.role in ['admin', 'manager'] %}
                         <li class="nav-item">
                             <a class="nav-link text-white {% if request.url.path.startswith('/settings') %}active{% endif %}" href="/settings/">
                                 <i class="fas fa-cog me-2"></i>

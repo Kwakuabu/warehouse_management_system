@@ -1,6 +1,6 @@
 # app/routes/settings.py
-from fastapi import APIRouter, Depends, HTTPException, Request, Form
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, Request, Form, UploadFile, File
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -9,6 +9,8 @@ from app.utils.auth import check_user_role_from_cookie, get_current_active_user_
 from datetime import datetime
 from typing import Optional, Dict, Any
 import json
+import shutil
+import os
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -221,7 +223,8 @@ async def security_settings_page(
     
     return templates.TemplateResponse("settings/security.html", {
         "request": request,
-        "settings": settings
+        "settings": settings,
+        "current_user": current_user
     })
 
 @router.post("/security")
@@ -328,6 +331,128 @@ async def update_notification_settings(
         return RedirectResponse(url="/settings/notifications", status_code=302)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error updating notification settings: {str(e)}")
+
+# User management - Admin only
+@router.get("/users", response_class=HTMLResponse)
+async def users_list_page(
+    request: Request,
+    current_user: User = Depends(check_user_role_from_cookie("admin")),
+    db: Session = Depends(get_db)
+):
+    """Display user management page - Admin only"""
+    users = db.query(User).order_by(User.created_at.desc()).all()
+    return templates.TemplateResponse("settings/users.html", {
+        "request": request,
+        "users": users,
+        "current_user": current_user
+    })
+
+@router.get("/users/add", response_class=HTMLResponse)
+async def add_user_form(
+    request: Request,
+    current_user: User = Depends(check_user_role_from_cookie("admin"))
+):
+    return templates.TemplateResponse("settings/users_add.html", {"request": request, "current_user": current_user})
+
+@router.post("/users/add")
+async def add_user_submit(
+    request: Request,
+    username: str = Form(...),
+    email: str = Form(...),
+    full_name: str = Form(...),
+    password: str = Form(...),
+    role: str = Form("staff"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(check_user_role_from_cookie("admin"))
+):
+    # Check if username or email exists
+    if db.query(User).filter(User.username == username).first():
+        return templates.TemplateResponse("settings/users_add.html", {"request": request, "current_user": current_user, "error": "Username already exists"})
+    if db.query(User).filter(User.email == email).first():
+        return templates.TemplateResponse("settings/users_add.html", {"request": request, "current_user": current_user, "error": "Email already exists"})
+    from app.utils.auth import get_password_hash
+    hashed_password = get_password_hash(password)
+    user = User(
+        username=username,
+        email=email,
+        full_name=full_name,
+        hashed_password=hashed_password,
+        role=role,
+        is_active=True
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return RedirectResponse(url="/settings/users", status_code=302)
+
+@router.get("/users/{user_id}/edit", response_class=HTMLResponse)
+async def edit_user_form(
+    request: Request,
+    user_id: int,
+    current_user: User = Depends(check_user_role_from_cookie("admin")),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return RedirectResponse(url="/settings/users", status_code=302)
+    return templates.TemplateResponse("settings/users_edit.html", {"request": request, "user": user, "current_user": current_user})
+
+@router.post("/users/{user_id}/edit")
+async def edit_user_submit(
+    request: Request,
+    user_id: int,
+    username: str = Form(...),
+    email: str = Form(...),
+    full_name: str = Form(...),
+    role: str = Form(...),
+    is_active: Optional[bool] = Form(False),
+    password: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(check_user_role_from_cookie("admin"))
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return RedirectResponse(url="/settings/users", status_code=302)
+    # Check for username/email conflicts
+    if db.query(User).filter(User.username == username, User.id != user_id).first():
+        return templates.TemplateResponse("settings/users_edit.html", {"request": request, "user": user, "current_user": current_user, "error": "Username already exists"})
+    if db.query(User).filter(User.email == email, User.id != user_id).first():
+        return templates.TemplateResponse("settings/users_edit.html", {"request": request, "user": user, "current_user": current_user, "error": "Email already exists"})
+    user.username = username
+    user.email = email
+    user.full_name = full_name
+    user.role = role
+    user.is_active = is_active
+    if password:
+        from app.utils.auth import get_password_hash
+        user.hashed_password = get_password_hash(password)
+    db.commit()
+    db.refresh(user)
+    return RedirectResponse(url="/settings/users", status_code=302)
+
+@router.post("/users/{user_id}/toggle")
+async def toggle_user_active(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(check_user_role_from_cookie("admin"))
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if user:
+        user.is_active = not user.is_active
+        db.commit()
+    return RedirectResponse(url="/settings/users", status_code=302)
+
+@router.post("/users/{user_id}/delete")
+async def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(check_user_role_from_cookie("admin"))
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if user:
+        db.delete(user)
+        db.commit()
+    return RedirectResponse(url="/settings/users", status_code=302)
 
 # API endpoints - Admin only
 @router.get("/api/system-settings")
@@ -462,3 +587,38 @@ def save_notification_settings(settings: Dict[str, Any]):
     """Save notification settings (placeholder)"""
     # In a real system, this would save to a database table
     print(f"Saving notification settings: {settings}") 
+
+@router.get("/backup", response_class=HTMLResponse)
+async def backup_page(
+    request: Request,
+    current_user: User = Depends(check_user_role_from_cookie("admin"))
+):
+    return templates.TemplateResponse("settings/backup.html", {"request": request, "current_user": current_user})
+
+@router.get("/backup/download")
+async def download_backup(
+    current_user: User = Depends(check_user_role_from_cookie("admin"))
+):
+    # Only works for SQLite
+    db_path = os.getenv("DATABASE_URL", "sqlite:///./warehouse_db.sqlite")
+    if db_path.startswith("sqlite:///"):
+        file_path = db_path.replace("sqlite:///", "")
+        return FileResponse(file_path, filename="warehouse_db_backup.sqlite", media_type="application/octet-stream")
+    else:
+        raise HTTPException(status_code=400, detail="Backup only supported for SQLite in this implementation.")
+
+@router.post("/backup")
+async def restore_backup(
+    request: Request,
+    file: UploadFile = File(...),
+    current_user: User = Depends(check_user_role_from_cookie("admin"))
+):
+    db_path = os.getenv("DATABASE_URL", "sqlite:///./warehouse_db.sqlite")
+    if db_path.startswith("sqlite:///"):
+        file_path = db_path.replace("sqlite:///", "")
+        # Save uploaded file as new database
+        with open(file_path, "wb") as out_file:
+            shutil.copyfileobj(file.file, out_file)
+        return templates.TemplateResponse("settings/backup.html", {"request": request, "current_user": current_user, "success": "Database restored successfully. Please restart the application."})
+    else:
+        return templates.TemplateResponse("settings/backup.html", {"request": request, "current_user": current_user, "error": "Restore only supported for SQLite in this implementation."}) 

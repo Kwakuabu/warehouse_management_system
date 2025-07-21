@@ -138,3 +138,14 @@ def check_user_role_from_cookie(required_role: str):
             )
         return current_user
     return role_checker
+
+def check_user_roles_from_cookie(allowed_roles: list):
+    """Decorator to check if user role is in allowed_roles (from cookie)"""
+    def role_checker(current_user: User = Depends(get_current_active_user_from_cookie)):
+        if current_user.role not in allowed_roles and current_user.role != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions"
+            )
+        return current_user
+    return role_checker

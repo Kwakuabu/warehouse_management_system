@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory Reports - Alive Pharmaceuticals{% endblock %}
+
+{% block content %}
+<div class="header">
+    <div>
+        <h1>Inventory Reports</h1>
+        <p>Track stock levels, movement, and inventory valuation</p>
+    </div>
+</div>
+
+<div class="reports-card">
+    <div class="reports-header">
+        <div class="reports-icon">
+            <i class="fas fa-boxes"></i>
+        </div>
+        <div class="reports-info">
+            <h1>Inventory Analytics</h1>
+            <p>Comprehensive inventory analytics and trends</p>
+        </div>
+    </div>
+
+    <div class="filters-section">
+        <form method="GET" action="/reports/inventory">
+            <div class="filters-grid">
+                <div class="form-group">
+                    <label for="report_type" class="form-label">Report Type</label>
+                    <select id="report_type" name="report_type" class="form-select">
+                        <option value="overview" {% if report_type == 'overview' %}selected{% endif %}>Overview</option>
+                        <option value="low_stock" {% if report_type == 'low_stock' %}selected{% endif %}>Low Stock</option>
+                        <option value="expiry" {% if report_type == 'expiry' %}selected{% endif %}>Expiry</option>
+                        <option value="movements" {% if report_type == 'movements' %}selected{% endif %}>Movements</option>
+                        <option value="value" {% if report_type == 'value' %}selected{% endif %}>Value</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="category_id" class="form-label">Category</label>
+                    <select id="category_id" name="category_id" class="form-select">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if selected_category == category.id %}selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="filter-btn">
+                        <i class="fas fa-filter"></i>
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-section">
+        <div class="section-title">
+            <i class="fas fa-table"></i>
+            Inventory Data
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if inventory_data %}
+                {% for key, value in inventory_data.items() %}
+                <tr>
+                    <td>{{ key|replace('_', ' ')|title }}</td>
+                    <td>{{ value }}</td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="2" style="text-align: center; color: #666; padding: 2rem;">
+                        <i class="fas fa-boxes" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                        No inventory data available for the selected report type
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <div class="export-actions">
+            <a href="/reports" class="action-btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Reports
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

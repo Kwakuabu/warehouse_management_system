@@ -9,7 +9,7 @@ from app.models.models import (
     Product, InventoryItem, PurchaseOrder, SalesOrder, 
     Customer, Vendor, StockMovement, Category, User
 )
-from app.utils.auth import check_user_role_from_cookie, get_current_active_user_from_cookie
+from app.utils.auth import check_user_role_from_cookie, get_current_active_user_from_cookie, check_user_roles_from_cookie
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 import json
@@ -21,7 +21,7 @@ templates = Jinja2Templates(directory="app/templates")
 @router.get("/", response_class=HTMLResponse)
 async def reports_dashboard(
     request: Request, 
-    current_user: User = Depends(check_user_role_from_cookie("manager")),
+    current_user: User = Depends(check_user_roles_from_cookie(["staff", "manager"])),
     db: Session = Depends(get_db)
 ):
     """Display reports dashboard with overview and quick reports - Manager and Admin only"""
@@ -58,6 +58,7 @@ async def financial_reports(
     start_date: str = Query(None),
     end_date: str = Query(None),
     report_type: str = Query("summary"),
+    current_user: User = Depends(check_user_roles_from_cookie(["staff", "manager"])),
     db: Session = Depends(get_db)
 ):
     """Display financial reports"""
@@ -100,6 +101,7 @@ async def inventory_reports(
     request: Request,
     report_type: str = Query("overview"),
     category_id: int = Query(None),
+    current_user: User = Depends(check_user_roles_from_cookie(["staff", "manager"])),
     db: Session = Depends(get_db)
 ):
     """Display inventory reports"""
@@ -135,6 +137,7 @@ async def customer_analytics(
     request: Request,
     start_date: str = Query(None),
     end_date: str = Query(None),
+    current_user: User = Depends(check_user_roles_from_cookie(["staff", "manager"])),
     db: Session = Depends(get_db)
 ):
     """Display customer analytics"""
@@ -166,6 +169,7 @@ async def vendor_analytics(
     request: Request,
     start_date: str = Query(None),
     end_date: str = Query(None),
+    current_user: User = Depends(check_user_roles_from_cookie(["staff", "manager"])),
     db: Session = Depends(get_db)
 ):
     """Display vendor analytics"""
@@ -188,6 +192,48 @@ async def vendor_analytics(
         "vendor_data": vendor_data,
         "start_date": start_date,
         "end_date": end_date,
+        "current_user": current_user
+    })
+
+# Sales reports
+@router.get("/sales", response_class=HTMLResponse)
+async def sales_report(
+    request: Request,
+    start_date: str = Query(None),
+    end_date: str = Query(None),
+    current_user: User = Depends(check_user_roles_from_cookie(["staff", "manager"])),
+    db: Session = Depends(get_db)
+):
+    """Display sales report with summary and recent sales orders"""
+    # Parse dates
+    if start_date:
+        start_date_dt = datetime.strptime(start_date, "%Y-%m-%d")
+    else:
+        start_date_dt = datetime.utcnow() - timedelta(days=30)
+    if end_date:
+        end_date_dt = datetime.strptime(end_date, "%Y-%m-%d")
+    else:
+        end_date_dt = datetime.utcnow()
+
+    # Total sales and revenue in period
+    total_sales_orders = db.query(SalesOrder).filter(
+        SalesOrder.order_date.between(start_date_dt, end_date_dt)
+    ).count()
+    total_revenue = db.query(func.sum(SalesOrder.total_amount)).filter(
+        SalesOrder.order_date.between(start_date_dt, end_date_dt),
+        SalesOrder.status.in_(["delivered", "shipped"])
+    ).scalar() or 0
+
+    # Recent sales orders
+    recent_sales = get_recent_sales(db, limit=10)
+
+    return templates.TemplateResponse("reports/sales.html", {
+        "request": request,
+        "total_sales_orders": total_sales_orders,
+        "total_revenue": total_revenue,
+        "recent_sales": recent_sales,
+        "start_date": start_date_dt,
+        "end_date": end_date_dt,
         "current_user": current_user
     })
 

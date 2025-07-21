@@ -305,33 +305,33 @@
                 <div class="form-group">
                     <label for="start_date" class="form-label">Start Date</label>
                     <input type="date" id="start_date" name="start_date" class="form-input" 
-                           value="{{ request.args.get('start_date', '') }}">
+                           value="{{ request.query_params.get('start_date', '') }}">
                 </div>
                 
                 <div class="form-group">
                     <label for="end_date" class="form-label">End Date</label>
                     <input type="date" id="end_date" name="end_date" class="form-input" 
-                           value="{{ request.args.get('end_date', '') }}">
+                           value="{{ request.query_params.get('end_date', '') }}">
                 </div>
                 
                 <div class="form-group">
                     <label for="report_type" class="form-label">Report Type</label>
                     <select id="report_type" name="report_type" class="form-select">
-                        <option value="revenue" {% if request.args.get('report_type') == 'revenue' %}selected{% endif %}>Revenue Analysis</option>
-                        <option value="expenses" {% if request.args.get('report_type') == 'expenses' %}selected{% endif %}>Expense Analysis</option>
-                        <option value="profit" {% if request.args.get('report_type') == 'profit' %}selected{% endif %}>Profit & Loss</option>
-                        <option value="cashflow" {% if request.args.get('report_type') == 'cashflow' %}selected{% endif %}>Cash Flow</option>
+                        <option value="revenue" {% if request.query_params.get('report_type') == 'revenue' %}selected{% endif %}>Revenue Analysis</option>
+                        <option value="expenses" {% if request.query_params.get('report_type') == 'expenses' %}selected{% endif %}>Expense Analysis</option>
+                        <option value="profit" {% if request.query_params.get('report_type') == 'profit' %}selected{% endif %}>Profit & Loss</option>
+                        <option value="cashflow" {% if request.query_params.get('report_type') == 'cashflow' %}selected{% endif %}>Cash Flow</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
                     <label for="period" class="form-label">Period</label>
                     <select id="period" name="period" class="form-select">
-                        <option value="daily" {% if request.args.get('period') == 'daily' %}selected{% endif %}>Daily</option>
-                        <option value="weekly" {% if request.args.get('period') == 'weekly' %}selected{% endif %}>Weekly</option>
-                        <option value="monthly" {% if request.args.get('period') == 'monthly' %}selected{% endif %}>Monthly</option>
-                        <option value="quarterly" {% if request.args.get('period') == 'quarterly' %}selected{% endif %}>Quarterly</option>
-                        <option value="yearly" {% if request.args.get('period') == 'yearly' %}selected{% endif %}>Yearly</option>
+                        <option value="daily" {% if request.query_params.get('period') == 'daily' %}selected{% endif %}>Daily</option>
+                        <option value="weekly" {% if request.query_params.get('period') == 'weekly' %}selected{% endif %}>Weekly</option>
+                        <option value="monthly" {% if request.query_params.get('period') == 'monthly' %}selected{% endif %}>Monthly</option>
+                        <option value="quarterly" {% if request.query_params.get('period') == 'quarterly' %}selected{% endif %}>Quarterly</option>
+                        <option value="yearly" {% if request.query_params.get('period') == 'yearly' %}selected{% endif %}>Yearly</option>
                     </select>
                 </div>
                 
@@ -348,19 +348,19 @@
     <!-- Financial Statistics -->
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-value">₵{{ "%.2f"|format(financial_data.total_revenue) if financial_data else 0 }}</div>
+            <div class="stat-value">₵{{ "%.2f"|format(financial_data.get('total_revenue', 0)) }}</div>
             <div class="stat-label">Total Revenue</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value">₵{{ "%.2f"|format(financial_data.total_expenses) if financial_data else 0 }}</div>
+            <div class="stat-value">₵{{ "%.2f"|format(financial_data.get('total_expenses', 0)) }}</div>
             <div class="stat-label">Total Expenses</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value">₵{{ "%.2f"|format(financial_data.net_profit) if financial_data else 0 }}</div>
+            <div class="stat-value">₵{{ "%.2f"|format(financial_data.get('net_profit', 0)) }}</div>
             <div class="stat-label">Net Profit</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value">{{ "%.1f"|format(financial_data.profit_margin) if financial_data else 0 }}%</div>
+            <div class="stat-value">{{ "%.1f"|format(financial_data.get('profit_margin', 0)) }}%</div>
             <div class="stat-label">Profit Margin</div>
         </div>
     </div>

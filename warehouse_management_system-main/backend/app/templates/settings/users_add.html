@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Add User - Alive Pharmaceuticals{% endblock %}
+
+{% block content %}
+<div class="header">
+    <div>
+        <h1>Add User</h1>
+        <p>Create a new user account.</p>
+    </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+<div class="card mt-4">
+    <div class="card-body">
+        <form method="post" action="/settings/users/add">
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <div class="mb-3">
+                <label for="full_name" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="full_name" name="full_name" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <div class="mb-3">
+                <label for="role" class="form-label">Role</label>
+                <select class="form-select" id="role" name="role">
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="staff" selected>Staff</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-success"><i class="fas fa-user-plus"></i> Add User</button>
+            <a href="/settings/users" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Backup & Restore - Alive Pharmaceuticals{% endblock %}
+
+{% block content %}
+<div class="header">
+    <div>
+        <h1>Backup & Restore</h1>
+        <p>Manage backup and restore operations for your warehouse management system.</p>
+    </div>
+</div>
+
+{% if success %}
+<div class="alert alert-success">{{ success }}</div>
+{% endif %}
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h5 class="card-title">Download Backup</h5>
+        <p class="card-text">Download a backup of the current database (SQLite only).</p>
+        <a href="/settings/backup/download" class="btn btn-primary"><i class="fas fa-download"></i> Download Backup</a>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h5 class="card-title">Restore Backup</h5>
+        <p class="card-text">Restore the database from a backup file (SQLite only). <strong>This will overwrite all current data.</strong></p>
+        <form method="post" action="/settings/backup" enctype="multipart/form-data" onsubmit="return confirm('Restoring a backup will overwrite all current data. Continue?');">
+            <div class="mb-3">
+                <input type="file" class="form-control" name="file" accept=".sqlite" required>
+            </div>
+            <button type="submit" class="btn btn-danger"><i class="fas fa-upload"></i> Restore Backup</button>
+        </form>
+    </div>
+</div>
+{% endblock %} 

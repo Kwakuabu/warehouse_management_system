@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Analytics - Alive Pharmaceuticals{% endblock %}
+
+{% block content %}
+<div class="header">
+    <div>
+        <h1>Customer Analytics</h1>
+        <p>Analyze customer behavior, preferences, and satisfaction metrics</p>
+    </div>
+</div>
+
+<div class="reports-card">
+    <div class="reports-header">
+        <div class="reports-icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="reports-info">
+            <h1>Customer Analytics</h1>
+            <p>Comprehensive customer analytics and trends</p>
+        </div>
+    </div>
+
+    <div class="filters-section">
+        <form method="GET" action="/reports/customers">
+            <div class="filters-grid">
+                <div class="form-group">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" id="start_date" name="start_date" class="form-input" value="{{ start_date.strftime('%Y-%m-%d') if start_date else '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" id="end_date" name="end_date" class="form-input" value="{{ end_date.strftime('%Y-%m-%d') if end_date else '' }}">
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="filter-btn">
+                        <i class="fas fa-filter"></i>
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-section">
+        <div class="section-title">
+            <i class="fas fa-table"></i>
+            Customer Analytics Data
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Orders</th>
+                    <th>Total Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if customer_data and customer_data.customers %}
+                {% for customer in customer_data.customers %}
+                <tr>
+                    <td>{{ customer.name }}</td>
+                    <td>{{ customer.total_orders }}</td>
+                    <td>&#8373;{{ '%.2f'|format(customer.total_revenue) }}</td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="3" style="text-align: center; color: #666; padding: 2rem;">
+                        <i class="fas fa-users" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                        No customer analytics data available for the selected period
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <div class="export-actions">
+            <a href="/reports" class="action-btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Reports
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

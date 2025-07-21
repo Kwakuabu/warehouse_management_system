@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, desc
 from app.database import get_db
 from app.models.models import Alert, InventoryItem, Product, User
-from app.utils.auth import check_user_role_from_cookie, get_current_active_user_from_cookie
+from app.utils.auth import check_user_role_from_cookie, get_current_active_user_from_cookie, check_user_roles_from_cookie
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 
@@ -17,7 +17,7 @@ templates = Jinja2Templates(directory="app/templates")
 @router.get("/", response_class=HTMLResponse)
 async def alerts_list(
     request: Request, 
-    current_user: User = Depends(check_user_role_from_cookie("manager")),
+    current_user: User = Depends(check_user_roles_from_cookie(["staff", "manager"])),
     severity: str = Query(None),
     alert_type: str = Query(None),
     status: str = Query(None),
