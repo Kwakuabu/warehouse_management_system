@@ -145,10 +145,10 @@
                                     <span class="fw-bold">{{ item.quantity_available }}</span>
                                     <small class="text-muted">units</small>
                                 </td>
-                                <td>{{ item.reorder_point }}</td>
+                                <td>{{ item.product.reorder_point }}</td>
                                 <td>
-                                    {% if item.last_updated %}
-                                    {{ item.last_updated.strftime('%Y-%m-%d %H:%M') }}
+                                    {% if item.updated_at %}
+                                    {{ item.updated_at.strftime('%Y-%m-%d %H:%M') }}
                                     {% else %}
                                     <span class="text-muted">Never</span>
                                     {% endif %}
@@ -259,22 +259,36 @@
 
 {% block scripts %}
 <script>
+console.log('Inventory overview script loaded');
 let currentItemId = null;
 
 function receiveStock(itemId) {
+    console.log('receiveStock called with itemId:', itemId);
     currentItemId = itemId;
-    const modal = new bootstrap.Modal(document.getElementById('receiveStockModal'));
-    modal.show();
+    const modalElement = document.getElementById('receiveStockModal');
+    console.log('Modal element:', modalElement);
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    } else {
+        console.error('Modal element not found!');
+        alert('Modal not found. Please refresh the page.');
+    }
 }
 
 document.getElementById('confirmReceive').addEventListener('click', function() {
+    console.log('Confirm receive clicked');
     const quantity = document.getElementById('quantity').value;
     const notes = document.getElementById('notes').value;
+    
+    console.log('Quantity:', quantity, 'Notes:', notes, 'CurrentItemId:', currentItemId);
     
     if (!quantity || quantity < 1) {
         alert('Please enter a valid quantity');
         return;
     }
+    
+    console.log('Sending request to:', `/inventory/${currentItemId}/receive`);
     
     fetch(`/inventory/${currentItemId}/receive`, {
         method: 'POST',
@@ -287,15 +301,20 @@ document.getElementById('confirmReceive').addEventListener('click', function() {
         })
     })
     .then(response => {
+        console.log('Response status:', response.status);
         if (response.ok) {
-            location.reload();
+            return response.json();
         } else {
-            alert('Error receiving stock');
+            throw new Error(`HTTP ${response.status}`);
         }
+    })
+    .then(data => {
+        console.log('Success:', data);
+        location.reload();
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error receiving stock');
+        alert('Error receiving stock: ' + error.message);
     });
 });
 

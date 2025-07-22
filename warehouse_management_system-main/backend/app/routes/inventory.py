@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from app.database import get_db
-from app.models.models import InventoryItem, Product, StockMovement, User
+from app.models.models import InventoryItem, Product, StockMovement, User, Category
 from app.utils.auth import get_current_active_user_from_cookie, check_user_role_from_cookie
 from datetime import datetime
 from typing import Optional
@@ -44,6 +44,9 @@ async def inventory_overview(
     # Calculate total inventory value
     total_value = sum([item.quantity_available * float(item.cost_price) for item in inventory_items if item.cost_price])
     
+    # Get categories for filter dropdown
+    categories = db.query(Category).all()
+    
     return templates.TemplateResponse("inventory/overview.html", {
         "request": request,
         "inventory_items": inventory_items,
@@ -52,9 +55,18 @@ async def inventory_overview(
         "in_stock_items": in_stock_items, 
         "low_stock_items": low_stock_items,
         "out_of_stock_items": out_of_stock_items,
+        "categories": categories,
         "current_user": current_user,
         "user_role": current_user.role,
-        "pagination": {"pages": 1, "page": 1, "has_prev": False, "has_next": False}  # Simple pagination placeholder
+        "pagination": {
+            "pages": 1, 
+            "page": 1, 
+            "has_prev": False, 
+            "has_next": False,
+            "prev_num": None,
+            "next_num": None,
+            "iter_pages": lambda: [1]
+        }  # Simple pagination placeholder
     })
 
 # Receive inventory page - Admin and Manager only
@@ -80,8 +92,9 @@ async def receive_inventory(
     product_id: int = Form(...),
     quantity: int = Form(...),
     cost_price: float = Form(...),
+    selling_price: float = Form(...),
     expiry_date: Optional[str] = Form(None),
-    batch_number: Optional[str] = Form(None),
+    batch_number: str = Form(...),
     current_user: User = Depends(check_user_role_from_cookie("manager")),
     db: Session = Depends(get_db)
 ):
@@ -117,10 +130,10 @@ async def receive_inventory(
         # Update existing inventory
         inventory_item.quantity_available += quantity
         inventory_item.cost_price = cost_price  # Update cost price
+        inventory_item.selling_price = selling_price  # Update selling price
         if parsed_expiry_date:
             inventory_item.expiry_date = parsed_expiry_date
-        if batch_number:
-            inventory_item.batch_number = batch_number
+        inventory_item.batch_number = batch_number
         inventory_item.updated_at = datetime.utcnow()
     else:
         # Create new inventory item
@@ -128,6 +141,7 @@ async def receive_inventory(
             product_id=product_id,
             quantity_available=quantity,
             cost_price=cost_price,
+            selling_price=selling_price,
             expiry_date=parsed_expiry_date,
             batch_number=batch_number
         )
@@ -138,7 +152,7 @@ async def receive_inventory(
         product_id=product_id,
         movement_type="in",
         quantity=quantity,
-        reference_number=batch_number or f"REC-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
+        reference_number=batch_number,
         notes=f"Received {quantity} units of {product.name}"
     )
     db.add(movement)
@@ -212,6 +226,49 @@ async def issue_inventory(
     
     return RedirectResponse(url="/inventory", status_code=302)
 
+# Receive stock API endpoint - Must come before detail route to avoid conflicts
+@router.post("/{inventory_item_id}/receive")
+async def receive_stock_api(
+    inventory_item_id: int,
+    request: Request,
+    current_user: User = Depends(check_user_role_from_cookie("manager")),
+    db: Session = Depends(get_db)
+):
+    """Receive stock for existing inventory item via API"""
+    try:
+        data = await request.json()
+        quantity = data.get("quantity", 0)
+        notes = data.get("notes", "")
+        
+        if quantity <= 0:
+            raise HTTPException(status_code=400, detail="Quantity must be greater than 0")
+        
+        inventory_item = db.query(InventoryItem).filter(InventoryItem.id == inventory_item_id).first()
+        if not inventory_item:
+            raise HTTPException(status_code=404, detail="Inventory item not found")
+        
+        # Update inventory quantity
+        inventory_item.quantity_available += quantity
+        inventory_item.updated_at = datetime.utcnow()
+        
+        # Create stock movement record
+        movement = StockMovement(
+            product_id=inventory_item.product_id,
+            movement_type="in",
+            quantity=quantity,
+            reference_number=inventory_item.batch_number,
+            notes=f"Received {quantity} units via API. {notes}"
+        )
+        db.add(movement)
+        
+        db.commit()
+        
+        return {"message": "Stock received successfully", "new_quantity": inventory_item.quantity_available}
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Inventory item detail page - All authenticated users can view
 @router.get("/{inventory_item_id}", response_class=HTMLResponse)
 async def inventory_item_detail(
@@ -259,3 +316,50 @@ async def get_inventory_item_api(
     if not inventory_item:
         raise HTTPException(status_code=404, detail="Inventory item not found")
     return inventory_item
+
+@router.get("/export")
+async def export_inventory(
+    current_user: User = Depends(get_current_active_user_from_cookie),
+    db: Session = Depends(get_db)
+):
+    """Export inventory data as CSV"""
+    from fastapi.responses import StreamingResponse
+    import io
+    import csv
+    
+    # Get all inventory items
+    inventory_items = db.query(InventoryItem).all()
+    
+    # Create CSV data
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow([
+        "Product Name", "SKU", "Category", "Batch Number", 
+        "Quantity Available", "Cost Price", "Selling Price", 
+        "Status", "Received Date", "Expiry Date"
+    ])
+    
+    # Write data
+    for item in inventory_items:
+        writer.writerow([
+            item.product.name,
+            item.product.sku,
+            item.product.category.name if item.product.category else "",
+            item.batch_number,
+            item.quantity_available,
+            float(item.cost_price),
+            float(item.selling_price),
+            item.status,
+            item.received_date.strftime("%Y-%m-%d") if item.received_date else "",
+            item.expiry_date.strftime("%Y-%m-%d") if item.expiry_date else ""
+        ])
+    
+    output.seek(0)
+    
+    return StreamingResponse(
+        io.BytesIO(output.getvalue().encode()),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=inventory_export.csv"}
+    )

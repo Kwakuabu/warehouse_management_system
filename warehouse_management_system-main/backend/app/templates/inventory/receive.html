@@ -42,9 +42,21 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="batch_number">Batch Number</label>
+                    <label for="cost_price">Cost Price *</label>
+                    <input type="number" id="cost_price" name="cost_price" class="form-control" 
+                           placeholder="Enter cost price" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="selling_price">Selling Price *</label>
+                    <input type="number" id="selling_price" name="selling_price" class="form-control" 
+                           placeholder="Enter selling price" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="batch_number">Batch Number *</label>
                     <input type="text" id="batch_number" name="batch_number" class="form-control" 
-                           placeholder="Enter batch number">
+                           placeholder="Enter batch number" required>
                 </div>
 
                 <div class="form-group">
@@ -82,6 +94,9 @@
             form.addEventListener('submit', function(e) {
                 const productId = productSelect.value;
                 const quantity = parseInt(quantityInput.value);
+                const costPrice = parseFloat(document.getElementById('cost_price').value);
+                const sellingPrice = parseFloat(document.getElementById('selling_price').value);
+                const batchNumber = document.getElementById('batch_number').value.trim();
                 
                 if (!productId) {
                     e.preventDefault();
@@ -94,6 +109,27 @@
                     e.preventDefault();
                     alert('Please enter a valid quantity (minimum 1)');
                     quantityInput.focus();
+                    return false;
+                }
+                
+                if (!costPrice || costPrice < 0) {
+                    e.preventDefault();
+                    alert('Please enter a valid cost price (minimum 0)');
+                    document.getElementById('cost_price').focus();
+                    return false;
+                }
+                
+                if (!sellingPrice || sellingPrice < 0) {
+                    e.preventDefault();
+                    alert('Please enter a valid selling price (minimum 0)');
+                    document.getElementById('selling_price').focus();
+                    return false;
+                }
+                
+                if (!batchNumber) {
+                    e.preventDefault();
+                    alert('Please enter a batch number');
+                    document.getElementById('batch_number').focus();
                     return false;
                 }
             });

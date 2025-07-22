@@ -155,16 +155,21 @@ async def delete_category(
     current_user: User = Depends(check_user_role_from_cookie("manager")),
     db: Session = Depends(get_db)
 ):
-    """Soft delete a category"""
+    """Delete a category"""
     category = db.query(Category).filter(Category.id == category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
     
-    # Soft delete
-    category.is_active = False
+    # Check if category has products
+    if category.products:
+        raise HTTPException(status_code=400, detail="Cannot delete category that has products. Please remove or reassign products first.")
+    
+    # Hard delete the category
+    db.delete(category)
     db.commit()
     
-    return RedirectResponse(url="/categories", status_code=302)
+    # Return JSON response for AJAX calls
+    return {"message": "Category deleted successfully", "category_id": category_id}
 
 # API endpoints for AJAX calls
 @router.get("/api/categories")

@@ -180,15 +180,23 @@ async def delete_product(
     db: Session = Depends(get_db)
 ):
     """Soft delete a product"""
+    print(f"Delete product called for product_id: {product_id}")  # Debug log
+    
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
+        print(f"Product {product_id} not found")  # Debug log
         raise HTTPException(status_code=404, detail="Product not found")
+    
+    print(f"Deleting product: {product.name}")  # Debug log
     
     # Soft delete
     product.is_active = False
     db.commit()
     
-    return RedirectResponse(url="/products", status_code=302)
+    print(f"Product {product_id} deleted successfully")  # Debug log
+    
+    # Return JSON response for AJAX calls
+    return {"message": "Product deleted successfully", "product_id": product_id}
 
 # API endpoints for AJAX calls
 @router.get("/api/products")
