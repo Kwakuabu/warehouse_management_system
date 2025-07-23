@@ -133,9 +133,9 @@
                                                    min="1" style="width: 80px;"
                                                    data-product="{{ item.product.id }}">
                                         </td>
-                                        <td>GHS {{ "%.2f"|format(item.product.cost_price or 0) }}</td>
+                                        <td>${{ "%.2f"|format(item.product.cost_price or 0) }}</td>
                                         <td class="estimated-total">
-                                            GHS {{ "%.2f"|format((item.product.cost_price or 0) * item.suggested_quantity) }}
+                                            ${{ "%.2f"|format((item.product.cost_price or 0) * item.suggested_quantity) }}
                                         </td>
                                         <td>
                                             {% set stock_ratio = item.current_stock / item.reorder_point if item.reorder_point > 0 else 0 %}
@@ -277,10 +277,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const quantity = parseFloat(this.value) || 0;
             const row = this.closest('tr');
             const costCell = row.querySelector('td:nth-child(7)').textContent;
-            const cost = parseFloat(costCell.replace('GHS ', '')) || 0;
+            const cost = parseFloat(costCell.replace('$', '')) || 0;
             const total = quantity * cost;
             
-            row.querySelector('.estimated-total').textContent = `GHS ${total.toFixed(2)}`;
+            row.querySelector('.estimated-total').textContent = `$${total.toFixed(2)}`;
         });
     });
 

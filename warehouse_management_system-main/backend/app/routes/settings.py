@@ -66,7 +66,7 @@ async def update_system_settings(
     system_email: str = Form(...),
     timezone: str = Form("UTC"),
     date_format: str = Form("YYYY-MM-DD"),
-    currency: str = Form("GHS"),
+    currency: str = Form("USD"),
     language: str = Form("en"),
     max_file_size: int = Form(10485760),
     session_timeout: int = Form(30),
@@ -183,7 +183,7 @@ async def update_company_settings(
     company_size: str = Form("Medium"),
     founded_year: int = Form(2020),
     timezone: str = Form("UTC"),
-    currency: str = Form("GHS"),
+    currency: str = Form("USD"),
     fiscal_year_start: str = Form("01-01"),
     db: Session = Depends(get_db)
 ):
@@ -484,7 +484,7 @@ def get_default_system_settings() -> Dict[str, Any]:
         "system_email": "admin@alivepharma.com",
         "timezone": "UTC",
         "date_format": "YYYY-MM-DD",
-        "currency": "GHS",
+        "currency": "USD",
         "language": "en",
         "max_file_size": 10485760,
         "session_timeout": 30,
@@ -522,7 +522,7 @@ def get_default_company_settings() -> Dict[str, Any]:
         "company_size": "Medium",
         "founded_year": 2020,
         "timezone": "UTC",
-        "currency": "GHS",
+        "currency": "USD",
         "fiscal_year_start": "01-01"
     }
 

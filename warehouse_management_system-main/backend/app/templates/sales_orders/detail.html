@@ -749,7 +749,7 @@
                                     </div>
                                     <div class="detail-item">
                                         <span class="detail-label">Order Value:</span>
-                                        <span class="detail-value">₵{{ "%.2f"|format(sales_order.total_amount) }}</span>
+                                        <span class="detail-value">${{ "%.2f"|format(sales_order.total_amount) }}</span>
                                     </div>
                                     <div class="detail-item">
                                         <span class="detail-label">Status:</span>
@@ -812,12 +812,12 @@
                                         </td>
                                         <td>
                                             <div class="price-info">
-                                                <div class="unit-price">₵{{ "%.2f"|format(item.unit_price) }}</div>
+                                                <div class="unit-price">${{ "%.2f"|format(item.unit_price) }}</div>
                                             </div>
                                         </td>
                                         <td>
                                             <div class="price-info">
-                                                <div class="total-price">₵{{ "%.2f"|format(item.total_price) }}</div>
+                                                <div class="total-price">${{ "%.2f"|format(item.total_price) }}</div>
                                             </div>
                                         </td>
                                         <td>
@@ -839,20 +839,20 @@
                                 <div class="summary-row">
                                     <span class="summary-label">Subtotal:</span>
                                     <span class="summary-value">
-                                        ₵{{ "%.2f"|format(sales_order.total_amount / (1 - sales_order.discount_percentage/100) if sales_order.discount_percentage > 0 else sales_order.total_amount) }}
+                                        ${{ "%.2f"|format(sales_order.total_amount / (1 - sales_order.discount_percentage/100) if sales_order.discount_percentage > 0 else sales_order.total_amount) }}
                                     </span>
                                 </div>
                                 {% if sales_order.discount_percentage > 0 %}
                                 <div class="summary-row">
                                     <span class="summary-label">Discount ({{ sales_order.discount_percentage }}%):</span>
                                     <span class="summary-value">
-                                        -₵{{ "%.2f"|format((sales_order.total_amount / (1 - sales_order.discount_percentage/100)) * (sales_order.discount_percentage/100)) }}
+                                        -${{ "%.2f"|format((sales_order.total_amount / (1 - sales_order.discount_percentage/100)) * (sales_order.discount_percentage/100)) }}
                                     </span>
                                 </div>
                                 {% endif %}
                                 <div class="summary-row total-row">
                                     <span class="summary-label">Total Amount:</span>
-                                    <span class="total-value">₵{{ "%.2f"|format(sales_order.total_amount) }}</span>
+                                    <span class="total-value">${{ "%.2f"|format(sales_order.total_amount) }}</span>
                                 </div>
                             </div>
                         </div>

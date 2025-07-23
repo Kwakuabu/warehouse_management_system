@@ -436,7 +436,7 @@
                     <h3>Total Value</h3>
                 </div>
             </div>
-            <div class="stat-value">₵{{ "%.0f"|format((purchase_orders|sum(attribute='total_amount')) if purchase_orders else 0) }}</div>
+            <div class="stat-value">${{ "%.0f"|format((purchase_orders|sum(attribute='total_amount')) if purchase_orders else 0) }}</div>
             <div class="stat-subtitle">All purchase orders</div>
         </div>
 
@@ -541,7 +541,7 @@
                         </div>
                     </td>
                     <td>
-                        <div class="amount">₵{{ "%.2f"|format(order.total_amount) }}</div>
+                        <div class="amount">${{ "%.2f"|format(order.total_amount) }}</div>
                     </td>
                     <td>
                         <span class="badge badge-{{ order.status }}">

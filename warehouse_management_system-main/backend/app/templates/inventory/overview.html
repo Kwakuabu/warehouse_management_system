@@ -77,6 +77,7 @@
                                 <i class="fas fa-search"></i>
                             </span>
                             <input type="text" id="searchInput" class="form-control" placeholder="Search inventory...">
+                            <button id="clearSearchBtn" class="btn btn-outline-secondary" type="button" style="display:none;"><i class="fas fa-times"></i></button>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -180,6 +181,11 @@
                             </tr>
                             {% endfor %}
                         </tbody>
+                        <tbody id="noResultsRow" style="display:none;">
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">No inventory items found.</td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
 
@@ -257,7 +263,7 @@
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_js %}
 <script>
 console.log('Inventory overview script loaded');
 let currentItemId = null;
@@ -322,40 +328,67 @@ function exportInventory() {
     window.open('/inventory/export', '_blank');
 }
 
-// Search and filter functionality
-document.getElementById('searchInput').addEventListener('input', filterInventory);
-document.getElementById('categoryFilter').addEventListener('change', filterInventory);
-document.getElementById('stockFilter').addEventListener('change', filterInventory);
+// Enhanced Inventory Search, Filter, and UX
 
-function filterInventory() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const categoryFilter = document.getElementById('categoryFilter').value;
-    const stockFilter = document.getElementById('stockFilter').value;
-    const rows = document.querySelectorAll('#inventoryTableBody tr');
+document.addEventListener('DOMContentLoaded', function() {
+    var searchInput = document.getElementById('searchInput');
+    var categoryFilter = document.getElementById('categoryFilter');
+    var stockFilter = document.getElementById('stockFilter');
+    var clearSearchBtn = document.getElementById('clearSearchBtn');
+    var noResultsRow = document.getElementById('noResultsRow');
 
-    rows.forEach(row => {
-        const name = row.cells[0].textContent.toLowerCase();
-        const category = row.getAttribute('data-category');
-        const stock = parseInt(row.getAttribute('data-stock'));
-        const reorderPoint = parseInt(row.cells[4].textContent);
-        
-        let stockLevel = 'in_stock';
-        if (stock === 0) {
-            stockLevel = 'out_of_stock';
-        } else if (stock <= reorderPoint) {
-            stockLevel = 'low_stock';
-        }
-        
-        const matchesSearch = name.includes(searchTerm);
-        const matchesCategory = !categoryFilter || category === categoryFilter;
-        const matchesStock = !stockFilter || stockLevel === stockFilter;
+    function updateClearBtn() {
+        clearSearchBtn.style.display = searchInput.value ? '' : 'none';
+    }
 
-        if (matchesSearch && matchesCategory && matchesStock) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-}
+    function filterInventory() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const categoryVal = categoryFilter.value;
+        const stockVal = stockFilter.value;
+        const rows = document.querySelectorAll('#inventoryTableBody tr');
+        let visibleCount = 0;
+        rows.forEach(row => {
+            const name = row.cells[0].textContent.toLowerCase();
+            const category = row.getAttribute('data-category');
+            const stock = parseInt(row.getAttribute('data-stock'));
+            const reorderPoint = parseInt(row.cells[4].textContent);
+            let stockLevel = 'in_stock';
+            if (stock === 0) {
+                stockLevel = 'out_of_stock';
+            } else if (stock <= reorderPoint) {
+                stockLevel = 'low_stock';
+            }
+            const matchesSearch = name.includes(searchTerm);
+            const matchesCategory = !categoryVal || category === categoryVal;
+            const matchesStock = !stockVal || stockLevel === stockVal;
+            if (matchesSearch && matchesCategory && matchesStock) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        if (noResultsRow) noResultsRow.style.display = visibleCount === 0 ? '' : 'none';
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            filterInventory();
+            updateClearBtn();
+        });
+    }
+    if (categoryFilter) categoryFilter.addEventListener('change', filterInventory);
+    if (stockFilter) stockFilter.addEventListener('change', filterInventory);
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            updateClearBtn();
+            filterInventory();
+        });
+    }
+    // Initial state
+    updateClearBtn();
+    filterInventory();
+});
 </script>
 {% endblock %}

@@ -348,15 +348,15 @@
     <!-- Financial Statistics -->
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-value">₵{{ "%.2f"|format(financial_data.get('total_revenue', 0)) }}</div>
+            <div class="stat-value">${{ "%.2f"|format(financial_data.get('total_revenue', 0)) }}</div>
             <div class="stat-label">Total Revenue</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value">₵{{ "%.2f"|format(financial_data.get('total_expenses', 0)) }}</div>
+            <div class="stat-value">${{ "%.2f"|format(financial_data.get('total_expenses', 0)) }}</div>
             <div class="stat-label">Total Expenses</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value">₵{{ "%.2f"|format(financial_data.get('net_profit', 0)) }}</div>
+            <div class="stat-value">${{ "%.2f"|format(financial_data.get('net_profit', 0)) }}</div>
             <div class="stat-label">Net Profit</div>
         </div>
         <div class="stat-card">
@@ -403,8 +403,8 @@
                 {% for period in financial_summary %}
                 <tr>
                     <td>{{ period.period }}</td>
-                    <td class="positive-value">₵{{ "%.2f"|format(period.revenue) }}</td>
-                    <td class="negative-value">₵{{ "%.2f"|format(period.expenses) }}</td>
+                    <td class="positive-value">${{ "%.2f"|format(period.revenue) }}</td>
+                    <td class="negative-value">${{ "%.2f"|format(period.expenses) }}</td>
                     <td class="{% if period.profit >= 0 %}positive-value{% else %}negative-value{% endif %}">
                         ₵{{ "%.2f"|format(period.profit) }}
                     </td>

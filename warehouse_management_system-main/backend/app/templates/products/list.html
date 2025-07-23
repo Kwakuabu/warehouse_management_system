@@ -24,6 +24,7 @@
                                 <i class="fas fa-search"></i>
                             </span>
                             <input type="text" id="searchInput" class="form-control" placeholder="Search products...">
+                            <button id="clearSearchBtn" class="btn btn-outline-secondary" type="button" style="display:none;"><i class="fas fa-times"></i></button>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -119,6 +120,11 @@
                             </tr>
                             {% endfor %}
                         </tbody>
+                        <tbody id="noResultsRow" style="display:none;">
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">No products found.</td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
 
@@ -170,63 +176,62 @@
 <!-- Delete confirmation now uses browser's built-in confirm dialog -->
 {% endblock %}
 
-{% block scripts %}
+{% block extra_js %}
 <script>
-console.log('Products script loaded');
-
-function confirmDeleteProduct(productId, productName) {
-    if (confirm('Are you sure you want to delete "' + productName + '"? This action cannot be undone.')) {
-        fetch('/products/' + productId + '/delete', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(function(response) {
-            if (response.ok) {
-                location.reload();
-            } else {
-                alert('Error deleting product');
-            }
-        })
-        .catch(function(error) {
-            console.error('Error:', error);
-            alert('Error deleting product');
-        });
-    }
-}
-
-function filterProducts() {
-    var searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    var categoryFilter = document.getElementById('categoryFilter').value;
-    var statusFilter = document.getElementById('statusFilter').value;
-    var rows = document.querySelectorAll('#productsTableBody tr');
-
-    rows.forEach(function(row) {
-        var name = row.cells[1].textContent.toLowerCase();
-        var category = row.getAttribute('data-category');
-        var status = row.getAttribute('data-status') === 'True' ? 'active' : 'inactive';
-        
-        var matchesSearch = name.includes(searchTerm);
-        var matchesCategory = !categoryFilter || category === categoryFilter;
-        var matchesStatus = !statusFilter || status === statusFilter;
-
-        if (matchesSearch && matchesCategory && matchesStatus) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-}
+// Enhanced Product Search, Filter, and UX
 
 document.addEventListener('DOMContentLoaded', function() {
     var searchInput = document.getElementById('searchInput');
     var categoryFilter = document.getElementById('categoryFilter');
     var statusFilter = document.getElementById('statusFilter');
-    
-    if (searchInput) searchInput.addEventListener('input', filterProducts);
+    var clearSearchBtn = document.getElementById('clearSearchBtn');
+    var noResultsRow = document.getElementById('noResultsRow');
+
+    function updateClearBtn() {
+        clearSearchBtn.style.display = searchInput.value ? '' : 'none';
+    }
+
+    function filterProducts() {
+        var searchTerm = searchInput.value.toLowerCase();
+        var categoryVal = categoryFilter.value;
+        var statusVal = statusFilter.value;
+        var rows = document.querySelectorAll('#productsTableBody tr');
+        var visibleCount = 0;
+        rows.forEach(function(row) {
+            var name = row.cells[1].textContent.toLowerCase();
+            var category = row.getAttribute('data-category');
+            var status = row.getAttribute('data-status') === 'True' ? 'active' : 'inactive';
+            var matchesSearch = name.includes(searchTerm);
+            var matchesCategory = !categoryVal || category === categoryVal;
+            var matchesStatus = !statusVal || status === statusVal;
+            if (matchesSearch && matchesCategory && matchesStatus) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        if (noResultsRow) noResultsRow.style.display = visibleCount === 0 ? '' : 'none';
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            filterProducts();
+            updateClearBtn();
+        });
+    }
     if (categoryFilter) categoryFilter.addEventListener('change', filterProducts);
     if (statusFilter) statusFilter.addEventListener('change', filterProducts);
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            updateClearBtn();
+            filterProducts();
+        });
+    }
+    // Initial state
+    updateClearBtn();
+    filterProducts();
 });
 </script>
 {% endblock %}

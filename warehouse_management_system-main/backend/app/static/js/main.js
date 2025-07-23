@@ -521,7 +521,7 @@ function updateDashboardStats(data) {
 function formatStatValue(key, value) {
     switch (key) {
         case 'inventory-value':
-            return `₵${(value / 1000000).toFixed(1)}M`;
+            return `$${(value / 1000000).toFixed(1)}M`;
         case 'low-stock-alerts':
         case 'expiring-soon':
             return value > 0 ? value.toString() : '0';
