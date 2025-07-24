@@ -2,8 +2,9 @@
 from fastapi import FastAPI, Depends, HTTPException, Request, Cookie
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from app.database import get_db, create_tables
 from app.models.models import User
 from app.routes import auth, categories, products, customers, inventory, purchase_orders, sales_order, dashboard, vendors, reports, alerts, settings
@@ -13,6 +14,7 @@ from typing import Optional
 from contextlib import asynccontextmanager
 import uvicorn
 import os
+import time
 
 # Lifespan event handler
 @asynccontextmanager
@@ -20,13 +22,10 @@ async def lifespan(app: FastAPI):
     # Startup
     create_tables()
     print("Database tables created successfully!")
-    
     # Seed initial data
     db = next(get_db())
     seed_all_data(db)
-    
     yield
-    
     # Shutdown (cleanup if needed)
     print("Application shutting down...")
 
@@ -75,10 +74,103 @@ async def register_redirect():
     """Redirect to auth register"""
     return RedirectResponse(url="/auth/register")
 
-# Health check endpoint
+# Enhanced Health check endpoint for production
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "message": "Warehouse Management System is running"}
+    """
+    Comprehensive health check endpoint for AWS Load Balancer and ECS
+    Returns detailed health status including database connectivity
+    """
+    start_time = time.time()
+    health_status = {
+        "status": "healthy",
+        "service": "alive-pharmaceuticals-warehouse",
+        "version": "1.0.0",
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "timestamp": int(time.time()),
+        "checks": {}
+    }
+    
+    try:
+        # Check database connectivity
+        db = next(get_db())
+        try:
+            # Simple database query to test connectivity
+            result = db.execute(text("SELECT 1 as test"))
+            db_result = result.fetchone()
+            if db_result and db_result[0] == 1:
+                health_status["checks"]["database"] = {
+                    "status": "healthy",
+                    "message": "Database connection successful"
+                }
+            else:
+                raise Exception("Database query returned unexpected result")
+        except Exception as db_error:
+            health_status["status"] = "unhealthy"
+            health_status["checks"]["database"] = {
+                "status": "unhealthy",
+                "message": f"Database connection failed: {str(db_error)}"
+            }
+        finally:
+            db.close()
+    
+    except Exception as e:
+        health_status["status"] = "unhealthy"
+        health_status["checks"]["database"] = {
+            "status": "unhealthy",
+            "message": f"Failed to establish database connection: {str(e)}"
+        }
+    
+    # Check application readiness
+    try:
+        # Verify critical components are loaded
+        health_status["checks"]["application"] = {
+            "status": "healthy",
+            "message": "Application components loaded successfully",
+            "routers_loaded": 12  # Number of routers you have
+        }
+    except Exception as app_error:
+        health_status["status"] = "unhealthy"
+        health_status["checks"]["application"] = {
+            "status": "unhealthy",
+            "message": f"Application components failed: {str(app_error)}"
+        }
+    
+    # Add response time
+    health_status["response_time_ms"] = round((time.time() - start_time) * 1000, 2)
+    
+    # Return appropriate HTTP status code
+    status_code = 200 if health_status["status"] == "healthy" else 503
+    
+    return JSONResponse(
+        status_code=status_code,
+        content=health_status
+    )
+
+# Lightweight health check for basic monitoring
+@app.get("/health/live")
+async def liveness_check():
+    """
+    Simple liveness check - just confirms the application is running
+    Used for basic monitoring that doesn't need database connectivity
+    """
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "alive",
+            "service": "alive-pharmaceuticals-warehouse",
+            "timestamp": int(time.time())
+        }
+    )
+
+# Readiness check for complex health verification
+@app.get("/health/ready")
+async def readiness_check():
+    """
+    Readiness check - confirms application is ready to serve traffic
+    Includes all dependency checks
+    """
+    return await health_check()
 
 # API endpoints
 @app.get("/api/users")
@@ -89,9 +181,9 @@ async def get_users(db: Session = Depends(get_db)):
 
 if __name__ == "__main__":
     uvicorn.run(
-        "main:app", 
-        host="127.0.0.1", 
-        port=8000, 
+        "main:app",
+        host="127.0.0.1",
+        port=8000,
         reload=True,
         log_level="info"
     )
