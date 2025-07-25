@@ -189,6 +189,7 @@ class SalesOrderItem(Base):
     # Relationships
     sales_order = relationship("SalesOrder", back_populates="items")
     product = relationship("Product", back_populates="sales_order_items")
+    inventory_item = relationship("InventoryItem")
 
 class StockMovement(Base):
     __tablename__ = "stock_movements"

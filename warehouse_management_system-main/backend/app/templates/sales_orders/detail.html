@@ -27,7 +27,7 @@
         /* Sidebar */
         .sidebar {
             width: 280px;
-            background: rgba(255, 255, 255, 0.95);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
             border-right: 1px solid rgba(255, 255, 255, 0.18);
@@ -40,25 +40,72 @@
 
         .logo {
             padding: 2rem 1.5rem;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             text-align: center;
         }
 
         .logo h1 {
-            color: #667eea;
+            color: white;
             font-size: 1.5rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
         }
 
         .logo p {
-            color: #666;
+            color: rgba(255, 255, 255, 0.8);
             font-size: 0.9rem;
+        }
+
+        /* User Profile Card */
+        .user-profile-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .profile-avatar {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-name {
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .profile-role {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .nav-menu {
             padding: 1rem 0;
             flex: 1;
+        }
+
+        .nav-separator {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 1rem;
         }
 
         .nav-item {
@@ -69,7 +116,7 @@
             display: flex;
             align-items: center;
             padding: 1rem 1.5rem;
-            color: #555;
+            color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
             border-radius: 12px;
             transition: all 0.3s ease;
@@ -77,13 +124,13 @@
         }
 
         .nav-link:hover {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: rgba(255, 255, 255, 0.2);
             color: white;
             transform: translateX(5px);
         }
 
         .nav-link.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: rgba(255, 255, 255, 0.3);
             color: white;
         }
 
@@ -175,7 +222,7 @@
         .status-shipped { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; }
         .status-delivered { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
         .status-cancelled { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
-
+        
         .action-btn {
             padding: 1rem 1.5rem;
             border: none;
@@ -188,22 +235,22 @@
             display: flex;
             align-items: center;
         }
-
+        
         .btn-back {
             background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
             color: white;
         }
-
+        
         .btn-edit {
             background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
         }
-
+        
         .btn-ship {
             background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
             color: white;
         }
-
+        
         .btn-cancel {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
@@ -330,7 +377,7 @@
             font-size: 0.9rem;
             margin-bottom: 0.25rem;
         }
-
+        
         /* Order Items Table */
         .items-table {
             width: 100%;
@@ -400,7 +447,32 @@
             color: #666;
             margin-top: 0.25rem;
         }
-
+        
+        .quantity-remaining {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .ship-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .ship-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+        
         .price-info {
             text-align: right;
         }
@@ -409,7 +481,7 @@
             font-weight: 500;
             color: #333;
         }
-
+        
         .total-price {
             font-weight: 700;
             color: #10b981;
@@ -597,56 +669,97 @@
                 <h1><i class="fas fa-pills"></i> Alive Pharma</h1>
                 <p>Warehouse Management</p>
             </div>
+
+            <!-- User Profile Card -->
+            <div class="user-profile-card">
+                <div class="profile-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="profile-info">
+                    <div class="profile-name">{{ current_user.full_name or current_user.username }}</div>
+                    <div class="profile-role">{{ current_user.role|upper }}</div>
+                </div>
+            </div>
             
             <nav class="nav-menu">
                 <div class="nav-item">
-                    <a href="/" class="nav-link">
+                    <a href="/dashboard/" class="nav-link">
                         <i class="fas fa-chart-line"></i>
                         Dashboard
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a href="/categories" class="nav-link">
+                    <a href="/categories/" class="nav-link">
                         <i class="fas fa-tags"></i>
                         Categories
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a href="/products" class="nav-link">
+                    <a href="/products/" class="nav-link">
                         <i class="fas fa-pills"></i>
                         Products
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a href="/customers" class="nav-link">
-                        <i class="fas fa-building"></i>
-                        Customers
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="/inventory" class="nav-link">
+                    <a href="/inventory/" class="nav-link">
                         <i class="fas fa-boxes"></i>
                         Inventory
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a href="/purchase-orders" class="nav-link">
+                    <a href="/purchase-orders/" class="nav-link">
                         <i class="fas fa-shopping-cart"></i>
                         Purchase Orders
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a href="/sales-orders" class="nav-link active">
+                    <a href="/sales-orders/" class="nav-link active">
                         <i class="fas fa-truck"></i>
                         Sales Orders
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a href="/vendors" class="nav-link">
+                    <a href="/customers/" class="nav-link">
+                        <i class="fas fa-hospital"></i>
+                        Customers
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/vendors/" class="nav-link">
                         <i class="fas fa-industry"></i>
                         Vendors
                     </a>
                 </div>
+                
+                <!-- Separator -->
+                <div class="nav-separator"></div>
+                
+                <!-- Admin/Manager/Staff Items -->
+                {% if current_user.role in ['admin', 'manager', 'staff'] %}
+                <div class="nav-item">
+                    <a href="/alerts/" class="nav-link">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Alerts
+                    </a>
+                </div>
+                
+                <div class="nav-item">
+                    <a href="/reports/" class="nav-link">
+                        <i class="fas fa-chart-bar"></i>
+                        Reports
+                    </a>
+                </div>
+                {% endif %}
+                
+                <!-- Settings still admin/manager only -->
+                {% if current_user.role in ['admin', 'manager'] %}
+                <div class="nav-item">
+                    <a href="/settings/" class="nav-link">
+                        <i class="fas fa-cog"></i>
+                        Settings
+                    </a>
+                </div>
+                {% endif %}
             </nav>
             
             <!-- Logout Button -->
@@ -796,8 +909,12 @@
                                                 <div class="product-details">
                                                     <h5>{{ item.product.name }}</h5>
                                                     <p>SKU: {{ item.product.sku }}</p>
-                                                    {% if item.inventory_item %}
+                                                    {% if item.inventory_item_id and item.inventory_item %}
                                                     <p>Batch: {{ item.inventory_item.batch_number }}</p>
+                                                    {% elif item.inventory_item_id %}
+                                                    <p>Batch: No batch assigned</p>
+                                                    {% else %}
+                                                    <p>Batch: No inventory assigned</p>
                                                     {% endif %}
                                                 </div>
                                             </div>
@@ -807,6 +924,9 @@
                                                 <div class="quantity-ordered">{{ item.quantity_ordered }}</div>
                                                 {% if item.quantity_shipped > 0 %}
                                                 <div class="quantity-shipped">Shipped: {{ item.quantity_shipped }}</div>
+                                                {% if item.quantity_shipped < item.quantity_ordered %}
+                                                <div class="quantity-remaining">Remaining: {{ item.quantity_ordered - item.quantity_shipped }}</div>
+                                                {% endif %}
                                                 {% endif %}
                                             </div>
                                         </td>
@@ -825,28 +945,40 @@
                                                 <span style="color: #10b981; font-weight: 600;">Shipped</span>
                                             {% elif item.quantity_shipped > 0 %}
                                                 <span style="color: #f59e0b; font-weight: 600;">Partial</span>
+                                                {% if item.quantity_shipped < item.quantity_ordered %}
+                                                <button onclick="showPartialShipment('{{ item.id }}', '{{ item.quantity_ordered - item.quantity_shipped }}')" 
+                                                        style="background: #f59e0b; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer; margin-top: 0.25rem;">
+                                                    Ship Remaining
+                                                </button>
+                                                {% endif %}
                                             {% else %}
                                                 <span style="color: #6b7280; font-weight: 600;">Pending</span>
+                                                {% if item.inventory_item_id %}
+                                                <button onclick="showPartialShipment('{{ item.id }}', '{{ item.quantity_ordered }}')" 
+                                                        style="background: #8b5cf6; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer; margin-top: 0.25rem;">
+                                                    Ship
+                                                </button>
+                                                {% endif %}
                                             {% endif %}
                                         </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
-
+                            
                             <!-- Order Summary -->
                             <div class="summary-section">
                                 <div class="summary-row">
                                     <span class="summary-label">Subtotal:</span>
                                     <span class="summary-value">
-                                        ${{ "%.2f"|format(sales_order.total_amount / (1 - sales_order.discount_percentage/100) if sales_order.discount_percentage > 0 else sales_order.total_amount) }}
+                                        ${{ "%.2f"|format(subtotal) }}
                                     </span>
                                 </div>
                                 {% if sales_order.discount_percentage > 0 %}
                                 <div class="summary-row">
                                     <span class="summary-label">Discount ({{ sales_order.discount_percentage }}%):</span>
                                     <span class="summary-value">
-                                        -${{ "%.2f"|format((sales_order.total_amount / (1 - sales_order.discount_percentage/100)) * (sales_order.discount_percentage/100)) }}
+                                        -${{ "%.2f"|format(discount_amount) }}
                                     </span>
                                 </div>
                                 {% endif %}
@@ -867,9 +999,18 @@
                             <h3><i class="fas fa-tasks"></i> Order Status</h3>
                         </div>
                         <div class="card-content">
+                            <!-- Current Status Display -->
+                            <div style="margin-bottom: 1rem; padding: 1rem; background: rgba(102, 126, 234, 0.1); border-radius: 8px;">
+                                <strong>Current Status:</strong> 
+                                <span class="status-badge status-{{ sales_order.status }}" style="margin-left: 0.5rem;">
+                                    {{ sales_order.status.title() }}
+                                </span>
+                            </div>
+                            
+                            <!-- Status Update Form -->
                             <form method="POST" action="/sales-orders/{{ sales_order.id }}/update-status">
                                 <div class="status-update">
-                                    <label for="status">Update Status:</label>
+                                    <label for="status"><strong>Update Status:</strong></label>
                                     <select name="status" id="status" class="status-select">
                                         <option value="pending" {{ 'selected' if sales_order.status == 'pending' else '' }}>Pending</option>
                                         <option value="confirmed" {{ 'selected' if sales_order.status == 'confirmed' else '' }}>Confirmed</option>
@@ -884,14 +1025,36 @@
                                 </div>
                             </form>
 
-                            {% if sales_order.status == 'confirmed' %}
+                            <!-- Quick Action Buttons -->
                             <div style="margin-top: 1rem;">
-                                <button class="action-btn btn-ship" onclick="markAsShipped()" style="width: 100%;">
+                                {% if sales_order.status == 'pending' %}
+                                <button class="action-btn btn-edit" onclick="updateStatus('confirmed')" style="width: 100%; margin-bottom: 0.5rem;">
+                                    <i class="fas fa-check"></i>
+                                    Confirm Order
+                                </button>
+                                {% endif %}
+
+                                {% if sales_order.status == 'confirmed' %}
+                                <button class="action-btn btn-ship" onclick="updateStatus('shipped')" style="width: 100%; margin-bottom: 0.5rem;">
                                     <i class="fas fa-shipping-fast"></i>
                                     Ship Order
                                 </button>
+                                {% endif %}
+
+                                {% if sales_order.status == 'shipped' %}
+                                <button class="action-btn btn-print" onclick="updateStatus('delivered')" style="width: 100%; margin-bottom: 0.5rem;">
+                                    <i class="fas fa-check-double"></i>
+                                    Mark as Delivered
+                                </button>
+                                {% endif %}
+
+                                {% if sales_order.status not in ['delivered', 'cancelled'] %}
+                                <button class="action-btn btn-cancel" onclick="updateStatus('cancelled')" style="width: 100%;">
+                                    <i class="fas fa-times"></i>
+                                    Cancel Order
+                                </button>
+                                {% endif %}
                             </div>
-                            {% endif %}
                         </div>
                     </div>
 
@@ -960,10 +1123,35 @@
             </div>
         </div>
     </div>
-
+    
     <script>
-        function markAsShipped() {
-            if (confirm('Mark this order as shipped? This will reduce inventory levels.')) {
+        function updateStatus(newStatus) {
+            let confirmMessage = '';
+            let actionName = '';
+            
+            switch(newStatus) {
+                case 'confirmed':
+                    confirmMessage = 'Confirm this order?';
+                    actionName = 'confirm';
+                    break;
+                case 'shipped':
+                    confirmMessage = 'Mark this order as shipped? This will reduce inventory levels.';
+                    actionName = 'ship';
+                    break;
+                case 'delivered':
+                    confirmMessage = 'Mark this order as delivered?';
+                    actionName = 'deliver';
+                    break;
+                case 'cancelled':
+                    confirmMessage = 'Cancel this order? This action cannot be undone.';
+                    actionName = 'cancel';
+                    break;
+                default:
+                    confirmMessage = `Update order status to ${newStatus}?`;
+                    actionName = 'update';
+            }
+            
+            if (confirm(confirmMessage)) {
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = `/sales-orders/{{ sales_order.id }}/update-status`;
@@ -971,9 +1159,37 @@
                 const statusInput = document.createElement('input');
                 statusInput.type = 'hidden';
                 statusInput.name = 'status';
-                statusInput.value = 'shipped';
+                statusInput.value = newStatus;
                 
                 form.appendChild(statusInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        
+        function markAsShipped() {
+            updateStatus('shipped');
+        }
+
+        function showPartialShipment(itemId, maxQuantity) {
+            const quantity = prompt(`Enter quantity to ship (max: ${maxQuantity}):`, maxQuantity);
+            if (quantity && !isNaN(quantity) && quantity > 0 && quantity <= maxQuantity) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/sales-orders/{{ sales_order.id }}/partial-shipment`;
+                
+                const itemIdInput = document.createElement('input');
+                itemIdInput.type = 'hidden';
+                itemIdInput.name = 'item_id';
+                itemIdInput.value = itemId;
+                
+                const quantityInput = document.createElement('input');
+                quantityInput.type = 'hidden';
+                quantityInput.name = 'quantity_shipped';
+                quantityInput.value = quantity;
+                
+                form.appendChild(itemIdInput);
+                form.appendChild(quantityInput);
                 document.body.appendChild(form);
                 form.submit();
             }

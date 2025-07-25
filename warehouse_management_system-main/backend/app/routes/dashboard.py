@@ -163,17 +163,17 @@ def get_recent_activities(db: Session, limit: int = 10):
         if product:
             activities.append({
                 "type": "stock_movement",
-                "message": f"{movement.movement_type.title()} {movement.quantity} units of {product.name}",
+                "message": f"{movement.movement_type.title()} {abs(movement.quantity)} units of {product.name}",
                 "timestamp": movement.created_at,
                 "icon": "fas fa-boxes"
             })
     
-    # Recent orders
-    recent_orders = db.query(PurchaseOrder).order_by(
+    # Recent purchase orders
+    recent_purchase_orders = db.query(PurchaseOrder).order_by(
         desc(PurchaseOrder.order_date)
     ).limit(5).all()
     
-    for order in recent_orders:
+    for order in recent_purchase_orders:
         vendor = db.query(Vendor).filter(Vendor.id == order.vendor_id).first()
         if vendor:
             activities.append({
@@ -181,6 +181,21 @@ def get_recent_activities(db: Session, limit: int = 10):
                 "message": f"Purchase order {order.po_number} created for {vendor.name}",
                 "timestamp": order.order_date,
                 "icon": "fas fa-shopping-cart"
+            })
+    
+    # Recent sales orders
+    recent_sales_orders = db.query(SalesOrder).order_by(
+        desc(SalesOrder.order_date)
+    ).limit(5).all()
+    
+    for order in recent_sales_orders:
+        customer = db.query(Customer).filter(Customer.id == order.customer_id).first()
+        if customer:
+            activities.append({
+                "type": "sales_order",
+                "message": f"Sales order {order.order_number} created for {customer.name}",
+                "timestamp": order.order_date,
+                "icon": "fas fa-truck"
             })
     
     # Sort by timestamp and return top activities
@@ -266,9 +281,24 @@ def get_staff_recent_activities(db: Session, limit: int = 10):
         if product:
             activities.append({
                 "type": "stock_movement",
-                "message": f"{movement.movement_type.title()} {movement.quantity} units of {product.name}",
+                "message": f"{movement.movement_type.title()} {abs(movement.quantity)} units of {product.name}",
                 "timestamp": movement.created_at,
                 "icon": "fas fa-boxes"
+            })
+    
+    # Recent sales orders (staff can see these)
+    recent_sales_orders = db.query(SalesOrder).order_by(
+        desc(SalesOrder.order_date)
+    ).limit(5).all()
+    
+    for order in recent_sales_orders:
+        customer = db.query(Customer).filter(Customer.id == order.customer_id).first()
+        if customer:
+            activities.append({
+                "type": "sales_order",
+                "message": f"Sales order {order.order_number} created for {customer.name}",
+                "timestamp": order.order_date,
+                "icon": "fas fa-truck"
             })
     
     # Sort by timestamp and return top activities
