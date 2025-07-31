@@ -109,7 +109,7 @@ jobs:
         curl -fsSL https://railway.app/install.sh | sh
         echo "$HOME/.railway/bin" >> $GITHUB_PATH
 
-    - name: �� List backend contents
+    - name: 📁 List backend contents
       run: |
         echo "Backend directory contents:"
         ls -la
@@ -150,21 +150,22 @@ jobs:
           python tests/smoke_tests.py
         else
           echo "No smoke tests found, running basic health check"
-          python -c "
-import requests
-import sys
-try:
-    response = requests.get('https://warehouse-management-staging.railway.app/health', timeout=30)
-    if response.status_code == 200:
-        print('✅ Health check passed')
-        sys.exit(0)
-    else:
-        print(f'❌ Health check failed: {response.status_code}')
-        sys.exit(1)
-except Exception as e:
-    print(f'❌ Health check error: {e}')
-    sys.exit(1)
-          "
+          cat > health_check.py << 'EOF'
+        import requests
+        import sys
+        try:
+            response = requests.get('https://warehouse-management-staging.railway.app/health', timeout=30)
+            if response.status_code == 200:
+                print('✅ Health check passed')
+                sys.exit(0)
+            else:
+                print(f'❌ Health check failed: {response.status_code}')
+                sys.exit(1)
+        except Exception as e:
+            print(f'❌ Health check error: {e}')
+            sys.exit(1)
+        EOF
+          python health_check.py
         fi
       env:
         STAGING_URL: https://warehouse-management-staging.railway.app
@@ -174,7 +175,7 @@ except Exception as e:
       run: |
         if [ -n "${{ secrets.SLACK_WEBHOOK }}" ]; then
           curl -X POST -H 'Content-type: application/json' \
-            --data '{"text":"🚀 Staging deployment successful!\n📱 URL: https://warehouse-management-staging.railway.app\n📊 Commit: ${{ github.sha }}\n�� Author: ${{ github.actor }}"}' \
+            --data '{"text":"🚀 Staging deployment successful!\n📱 URL: https://warehouse-management-staging.railway.app\n📊 Commit: ${{ github.sha }}\n👤 Author: ${{ github.actor }}"}' \
             ${{ secrets.SLACK_WEBHOOK }}
         else
           echo "✅ Deployment completed successfully!"
