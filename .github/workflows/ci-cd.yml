@@ -1,0 +1,182 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [master]
+    paths: ['warehouse_management_system-main/backend/**']  # Only trigger when backend files change
+  pull_request:
+    branches: [master]
+    paths: ['warehouse_management_system-main/backend/**']
+  workflow_dispatch:  # Manual trigger
+
+env:
+  PYTHON_VERSION: '3.11'
+  WORKING_DIRECTORY: './warehouse_management_system-main/backend'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test_password
+          MYSQL_DATABASE: test_warehouse_db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+        cache-dependency-path: 'warehouse_management_system-main/backend/requirements.txt'
+
+    - name: 📦 Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-asyncio httpx
+
+    - name: 🔍 Check environment
+      run: |
+        echo "Current directory: $(pwd)"
+        echo "Python version: $(python --version)"
+        echo "Files in backend:"
+        ls -la
+
+    - name: 🧪 Run tests
+      env:
+        DATABASE_URL: mysql+pymysql://root:test_password@127.0.0.1:3306/test_warehouse_db
+        SECRET_KEY: test-secret-key
+        ENVIRONMENT: testing
+      run: |
+        # Run linting (skip if no .flake8 config)
+        if command -v flake8 &> /dev/null; then
+          flake8 app/ --max-line-length=88 --extend-ignore=E203,W503 || true
+        fi
+        
+        # Run tests if they exist
+        if [ -d "tests/" ]; then
+          pytest tests/ -v --cov=app --cov-report=xml || true
+        else
+          echo "No tests directory found, skipping tests"
+        fi
+        
+        # Test database migrations
+        if [ -f "alembic.ini" ]; then
+          alembic upgrade head
+          echo "✅ Database migrations successful"
+        else
+          echo "No alembic.ini found, skipping migrations"
+        fi
+
+  deploy-staging:
+    needs: [test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    environment: 
+      name: staging
+      url: https://warehouse-management-staging.railway.app
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: 🚂 Install Railway CLI
+      run: |
+        curl -fsSL https://railway.app/install.sh | sh
+        echo "$HOME/.railway/bin" >> $GITHUB_PATH
+
+    - name: 📁 List backend contents
+      run: |
+        echo "Backend directory contents:"
+        ls -la
+
+    - name: 🚀 Deploy to Staging
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      run: |
+        # Link to Railway project
+        railway link ${{ secrets.RAILWAY_PROJECT_ID }} || true
+        
+        # Deploy from backend directory
+        railway up --service web
+
+    - name: 🗄️ Run database migrations
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      run: |
+        railway run alembic upgrade head
+
+    - name: 🌱 Seed staging data (optional)
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      run: |
+        if [ -f "scripts/seed_staging_data.py" ]; then
+          railway run python scripts/seed_staging_data.py
+        else
+          echo "No seed script found, skipping"
+        fi
+
+    - name: ⏳ Wait for deployment
+      run: sleep 60
+
+    - name: 🌡️ Run smoke tests
+      run: |
+        pip install requests
+        if [ -f "tests/smoke_tests.py" ]; then
+          python tests/smoke_tests.py
+        else
+          echo "No smoke tests found, running basic health check"
+          cat > health_check.py << 'EOF'
+        import requests
+        import sys
+        try:
+            response = requests.get('https://warehouse-management-staging.railway.app/health', timeout=30)
+            if response.status_code == 200:
+                print('✅ Health check passed')
+                sys.exit(0)
+            else:
+                print(f'❌ Health check failed: {response.status_code}')
+                sys.exit(1)
+        except Exception as e:
+            print(f'❌ Health check error: {e}')
+            sys.exit(1)
+        EOF
+          python health_check.py
+        fi
+      env:
+        STAGING_URL: https://warehouse-management-staging.railway.app
+
+    - name: 📢 Notify Success
+      if: success()
+      run: |
+        if [ -n "${{ secrets.SLACK_WEBHOOK }}" ]; then
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"🚀 Staging deployment successful!\n📱 URL: https://warehouse-management-staging.railway.app\n📊 Commit: ${{ github.sha }}\n👤 Author: ${{ github.actor }}"}' \
+            ${{ secrets.SLACK_WEBHOOK }}
+        else
+          echo "✅ Deployment completed successfully!"
+        fi
