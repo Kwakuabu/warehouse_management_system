@@ -8,7 +8,11 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h2 mb-1">Dashboard</h1>
+            {% if user_role in ['admin', 'manager'] %}
             <p class="text-muted">Real-time overview of your warehouse operations</p>
+            {% else %}
+            <p class="text-muted">Welcome to your medical supplies ordering portal</p>
+            {% endif %}
         </div>
         <div class="d-flex gap-2">
             <button class="btn btn-outline-primary" onclick="location.reload()">
@@ -17,7 +21,8 @@
         </div>
     </div>
 
-    <!-- KPI Cards -->
+    {% if user_role in ['admin', 'manager'] %}
+    <!-- Warehouse Management KPI Cards for Admin/Manager -->
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-3">
             <div class="kpi-card">
@@ -60,7 +65,7 @@
         </div>
     </div>
 
-    <!-- Second Row KPI Cards -->
+    <!-- Second Row KPI Cards for Admin/Manager -->
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-3">
             <div class="kpi-card">
@@ -103,12 +108,12 @@
         </div>
     </div>
 
-    <!-- Quick Actions -->
+    <!-- Warehouse Management Quick Actions for Admin/Manager -->
     <div class="card">
         <div class="card-header bg-transparent border-0">
             <h5 class="mb-0">
                 <i class="fas fa-bolt text-warning me-2"></i>
-                Quick Actions
+                Warehouse Management Actions
             </h5>
         </div>
         <div class="card-body">
@@ -152,6 +157,124 @@
             </div>
         </div>
     </div>
+
+    {% else %}
+    <!-- Customer-Facing KPI Cards for Staff (Hospital Buyers) -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="kpi-card">
+                <div class="icon text-primary">
+                    <i class="fas fa-pills"></i>
+                </div>
+                <div class="value text-primary">{{ stats.products_with_stock }}</div>
+                <div class="label">Available Products</div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="kpi-card">
+                <div class="icon text-success">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="value text-success">{{ stats.total_sales_orders }}</div>
+                <div class="label">My Orders</div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="kpi-card">
+                <div class="icon text-warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="value text-warning">{{ stats.pending_sales_orders }}</div>
+                <div class="label">Pending Orders</div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="kpi-card">
+                <div class="icon text-info">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <div class="value text-info">{{ stats.total_inventory_items }}</div>
+                <div class="label">Stock Items</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer-Facing Quick Actions for Staff -->
+    <div class="card">
+        <div class="card-header bg-transparent border-0">
+            <h5 class="mb-0">
+                <i class="fas fa-shopping-cart text-primary me-2"></i>
+                Order Management
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a href="/sales-orders/create" class="btn btn-primary w-100">
+                        <i class="fas fa-plus me-2"></i>
+                        New Order
+                    </a>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a href="/sales-orders/" class="btn btn-info w-100">
+                        <i class="fas fa-list me-2"></i>
+                        View Orders
+                    </a>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a href="/inventory/" class="btn btn-success w-100">
+                        <i class="fas fa-search me-2"></i>
+                        Browse Products
+                    </a>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a href="/products/" class="btn btn-warning w-100">
+                        <i class="fas fa-pills me-2"></i>
+                        Product Catalog
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Products for Staff -->
+    {% if available_products %}
+    <div class="card mt-4">
+        <div class="card-header bg-transparent border-0">
+            <h5 class="mb-0">
+                <i class="fas fa-star text-warning me-2"></i>
+                Featured Products
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for product in available_products %}
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-pills fa-2x text-primary mb-2"></i>
+                            <h6 class="card-title">{{ product.name }}</h6>
+                            <p class="card-text small text-muted">{{ product.description[:50] }}{% if product.description|length > 50 %}...{% endif %}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-success">In Stock</span>
+                                <small class="text-muted">{{ product.unit_of_measure }}</small>
+                            </div>
+                            <a href="/products/{{ product.id }}" class="btn btn-outline-primary btn-sm mt-2 w-100">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% endif %}
 
     <!-- Recent Activities -->
     {% if recent_activities %}

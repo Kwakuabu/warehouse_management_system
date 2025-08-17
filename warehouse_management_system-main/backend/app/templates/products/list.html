@@ -11,9 +11,11 @@
                     <h2 class="mb-0">
                         <i class="fas fa-boxes me-2"></i>Products
                     </h2>
+                    {% if current_user.role in ['admin', 'manager'] %}
                     <a href="/products/add" class="btn btn-primary">
                         <i class="fas fa-plus me-2"></i>Add Product
                     </a>
+                    {% endif %}
                 </div>
 
                 <!-- Search and Filter Section -->

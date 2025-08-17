@@ -22,7 +22,7 @@ async def dashboard(
     current_user: User = Depends(get_current_active_user_from_cookie),
     db: Session = Depends(get_db)
 ):
-    """Main dashboard with real-time statistics - All authenticated users"""
+    """Main dashboard with role-based data - All authenticated users"""
     
     # Get current date for calculations
     now = datetime.utcnow()
@@ -30,25 +30,35 @@ async def dashboard(
     
     # Calculate real-time statistics based on user role
     if current_user.role in ["admin", "manager"]:
-        # Full statistics for admin and manager
+        # Full warehouse statistics for admin and manager
         stats = calculate_dashboard_stats(db, now, thirty_days_ago)
         recent_activities = get_recent_activities(db)
         alerts = get_active_alerts(db)
+        template_data = {
+            "request": request,
+            "stats": stats,
+            "recent_activities": recent_activities,
+            "alerts": alerts,
+            "now": now,
+            "current_user": current_user,
+            "user_role": current_user.role
+        }
     else:
-        # Limited statistics for staff
-        stats = calculate_staff_dashboard_stats(db, now, thirty_days_ago)
-        recent_activities = get_staff_recent_activities(db)
-        alerts = []  # Staff don't see alerts
+        # Customer-facing dashboard for staff (hospital buyers)
+        stats = calculate_staff_dashboard_stats(db, now, thirty_days_ago, current_user)
+        recent_activities = get_staff_recent_activities(db, current_user)
+        available_products = get_available_products_for_staff(db)
+        template_data = {
+            "request": request,
+            "stats": stats,
+            "recent_activities": recent_activities,
+            "available_products": available_products,
+            "now": now,
+            "current_user": current_user,
+            "user_role": current_user.role
+        }
     
-    return templates.TemplateResponse("dashboard.html", {
-        "request": request,
-        "stats": stats,
-        "recent_activities": recent_activities,
-        "alerts": alerts,
-        "now": now,
-        "current_user": current_user,
-        "user_role": current_user.role
-    })
+    return templates.TemplateResponse("dashboard.html", template_data)
 
 @router.get("/api/stats")
 async def get_dashboard_stats(db: Session = Depends(get_db)):
@@ -210,71 +220,70 @@ def get_active_alerts(db: Session, limit: int = 5):
     
     return alerts
 
-def calculate_staff_dashboard_stats(db: Session, now: datetime, thirty_days_ago: datetime) -> Dict[str, Any]:
-    """Calculate limited dashboard statistics for staff users"""
+def calculate_staff_dashboard_stats(db: Session, now: datetime, thirty_days_ago: datetime, current_user: User) -> Dict[str, Any]:
+    """Calculate customer-facing dashboard statistics for staff users (hospital buyers)"""
     
-    # Limited product statistics
+    # Get available products (what they can order)
     total_products = db.query(Product).filter(Product.is_active == True).count()
-    active_products = db.query(Product).filter(
+    available_products = db.query(Product).filter(
         Product.is_active == True,
         Product.id.in_(
             db.query(InventoryItem.product_id).filter(InventoryItem.quantity_available > 0)
         )
     ).count()
     
-    # Basic inventory statistics
-    inventory_items = db.query(InventoryItem).filter(InventoryItem.quantity_available > 0).all()
-    total_inventory_value = sum([item.quantity_available * item.cost_price for item in inventory_items])
+    # Get products with stock (what they can actually order)
+    products_with_stock = db.query(Product).join(InventoryItem).filter(
+        Product.is_active == True,
+        InventoryItem.quantity_available > 0,
+        InventoryItem.status == "available"
+    ).distinct().count()
     
-    # Basic order statistics (staff can see counts but not sensitive financial data)
-    total_purchase_orders = db.query(PurchaseOrder).count()
-    pending_purchase_orders = db.query(PurchaseOrder).filter(
-        PurchaseOrder.status.in_(["pending", "confirmed", "shipped"])
-    ).count()
-    
+    # Get their own sales orders (as customer)
+    # Note: In a real B2B system, staff users would be linked to specific customers
+    # For now, we'll show all sales orders they can view
     total_sales_orders = db.query(SalesOrder).count()
     pending_sales_orders = db.query(SalesOrder).filter(
         SalesOrder.status.in_(["pending", "confirmed", "shipped"])
     ).count()
     
-    # Basic customer statistics
-    total_customers = db.query(Customer).filter(Customer.is_active == True).count()
+    # Get their own inventory (what they've purchased)
+    # This would typically be linked to their customer account
+    total_inventory_items = db.query(InventoryItem).filter(InventoryItem.quantity_available > 0).count()
     
-    # Basic vendor statistics
-    total_vendors = db.query(Vendor).filter(Vendor.is_active == True).count()
+    # Calculate total value of available inventory (what they can order)
+    inventory_items = db.query(InventoryItem).filter(
+        InventoryItem.quantity_available > 0,
+        InventoryItem.status == "available"
+    ).all()
+    total_inventory_value = sum([item.quantity_available * float(item.cost_price) for item in inventory_items if item.cost_price])
     
-    # Limited stock movements
+    # Get recent stock movements (what's been received/available)
     recent_movements = db.query(StockMovement).filter(
-        StockMovement.created_at >= thirty_days_ago
+        StockMovement.created_at >= thirty_days_ago,
+        StockMovement.movement_type.in_(["received", "available"])
     ).count()
     
     return {
         "total_products": total_products,
-        "active_products": active_products,
+        "available_products": available_products,
+        "products_with_stock": products_with_stock,
         "total_inventory_value": float(total_inventory_value),
-        "low_stock_alerts": 0,  # Staff don't see alerts
-        "expiring_soon": 0,  # Staff don't see alerts
-        "total_purchase_orders": total_purchase_orders,
-        "pending_purchase_orders": pending_purchase_orders,
         "total_sales_orders": total_sales_orders,
         "pending_sales_orders": pending_sales_orders,
-        "total_customers": total_customers,
-        "active_customers": 0,  # Staff don't see customer activity
-        "total_vendors": total_vendors,
-        "monthly_purchase_value": 0.0,  # Staff don't see financial data
-        "monthly_sales_value": 0.0,  # Staff don't see financial data
+        "total_inventory_items": total_inventory_items,
         "recent_movements": recent_movements,
         "last_updated": now.isoformat()
     }
 
-def get_staff_recent_activities(db: Session, limit: int = 10):
-    """Get limited recent activities for staff users"""
+def get_staff_recent_activities(db: Session, current_user: User, limit: int = 10):
+    """Get customer-facing recent activities for staff users (hospital buyers)"""
     activities = []
     
-    # Recent stock movements (staff can see these)
-    movements = db.query(StockMovement).order_by(
-        desc(StockMovement.created_at)
-    ).limit(limit).all()
+    # Recent stock movements (what's been received/available for ordering)
+    movements = db.query(StockMovement).filter(
+        StockMovement.movement_type.in_(["received", "available"])
+    ).order_by(desc(StockMovement.created_at)).limit(limit//2).all()
     
     for movement in movements:
         product = db.query(Product).filter(Product.id == movement.product_id).first()
@@ -286,21 +295,32 @@ def get_staff_recent_activities(db: Session, limit: int = 10):
                 "icon": "fas fa-boxes"
             })
     
-    # Recent sales orders (staff can see these)
+    # Recent sales orders (their orders)
     recent_sales_orders = db.query(SalesOrder).order_by(
         desc(SalesOrder.order_date)
-    ).limit(5).all()
+    ).limit(limit//2).all()
     
     for order in recent_sales_orders:
         customer = db.query(Customer).filter(Customer.id == order.customer_id).first()
         if customer:
             activities.append({
                 "type": "sales_order",
-                "message": f"Sales order {order.order_number} created for {customer.name}",
+                "message": f"Order {order.order_number} - {order.status.title()}",
                 "timestamp": order.order_date,
-                "icon": "fas fa-truck"
+                "icon": "fas fa-shopping-cart"
             })
     
     # Sort by timestamp and return top activities
     activities.sort(key=lambda x: x["timestamp"], reverse=True)
-    return activities[:limit] 
+    return activities[:limit]
+
+def get_available_products_for_staff(db: Session, limit: int = 8):
+    """Get products available for ordering by staff users"""
+    # Get products with available stock
+    available_products = db.query(Product).join(InventoryItem).filter(
+        Product.is_active == True,
+        InventoryItem.quantity_available > 0,
+        InventoryItem.status == "available"
+    ).distinct().limit(limit).all()
+    
+    return available_products 

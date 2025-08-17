@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from app.database import get_db
 from app.models.models import InventoryItem, Product, StockMovement, User, Category
-from app.utils.auth import get_current_active_user_from_cookie, check_user_role_from_cookie
+from app.utils.auth import get_current_active_user_from_cookie, check_user_role_from_cookie, check_user_roles_from_cookie
 from datetime import datetime
 from typing import Optional
 
@@ -20,7 +20,17 @@ async def inventory_overview(
     current_user: User = Depends(get_current_active_user_from_cookie),
     db: Session = Depends(get_db)
 ):
-    """Display inventory overview"""
+    """Display inventory overview - Role-based view"""
+    
+    if current_user.role in ["admin", "manager"]:
+        # Warehouse management view for admin/manager
+        return await warehouse_inventory_view(request, current_user, db)
+    else:
+        # Customer-facing view for staff (hospital buyers)
+        return await customer_inventory_view(request, current_user, db)
+
+async def warehouse_inventory_view(request: Request, current_user: User, db: Session):
+    """Warehouse management inventory view for admin/manager users"""
     # Get all inventory items
     all_inventory_items = db.query(InventoryItem).all()
     
@@ -58,6 +68,7 @@ async def inventory_overview(
         "categories": categories,
         "current_user": current_user,
         "user_role": current_user.role,
+        "view_type": "warehouse",
         "pagination": {
             "pages": 1, 
             "page": 1, 
@@ -69,6 +80,55 @@ async def inventory_overview(
         }  # Simple pagination placeholder
     })
 
+async def customer_inventory_view(request: Request, current_user: User, db: Session):
+    """Customer-facing inventory view for staff users (hospital buyers)"""
+    # Get products with available stock (what they can order)
+    available_products = db.query(Product).join(InventoryItem).filter(
+        Product.is_active == True,
+        InventoryItem.quantity_available > 0,
+        InventoryItem.status == "available"
+    ).distinct().order_by(Product.name).all()
+    
+    # Calculate statistics for customer view
+    total_products = len(available_products)
+    in_stock_products = total_products
+    
+    # Calculate total value of available inventory (what they can order)
+    total_value = 0
+    for product in available_products:
+        # Get total available stock for this product
+        total_stock = sum(item.quantity_available for item in product.inventory_items if item.status == "available")
+        if product.unit_price:
+            total_value += total_stock * float(product.unit_price)
+    
+    # Get categories for filter dropdown
+    categories = db.query(Category).filter(
+        Category.id.in_([p.category_id for p in available_products if p.category_id])
+    ).all()
+    
+    return templates.TemplateResponse("inventory/overview.html", {
+        "request": request,
+        "available_products": available_products,  # Different data structure for customer view
+        "total_value": total_value,
+        "total_items": total_products,
+        "in_stock_items": in_stock_products,
+        "low_stock_items": 0,  # Not relevant for customers
+        "out_of_stock_items": 0,  # Not relevant for customers
+        "categories": categories,
+        "current_user": current_user,
+        "user_role": current_user.role,
+        "view_type": "customer",
+        "pagination": {
+            "pages": 1, 
+            "page": 1, 
+            "has_prev": False, 
+            "has_next": False,
+            "prev_num": None,
+            "next_num": None,
+            "iter_pages": lambda: [1]
+        }
+    })
+
 # Receive inventory page - Admin and Manager only
 @router.get("/receive", response_class=HTMLResponse)
 async def receive_inventory_page(
@@ -76,7 +136,7 @@ async def receive_inventory_page(
     current_user: User = Depends(check_user_role_from_cookie("manager")),
     db: Session = Depends(get_db)
 ):
-    """Display receive inventory form"""
+    """Display receive inventory form - Admin and Manager only"""
     products = db.query(Product).filter(Product.is_active == True).all()
     return templates.TemplateResponse("inventory/receive.html", {
         "request": request,

@@ -11,9 +11,11 @@
                     <h2 class="mb-0">
                         <i class="fas fa-tags me-2"></i>Categories
                     </h2>
+                    {% if current_user.role in ['admin', 'manager'] %}
                     <a href="/categories/add" class="btn btn-primary">
                         <i class="fas fa-plus me-2"></i>Add Category
                     </a>
+                    {% endif %}
                 </div>
 
                 <!-- Search and Filter Section -->

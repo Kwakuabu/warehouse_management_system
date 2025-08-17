@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.models import SalesOrder, SalesOrderItem, Product, Customer, InventoryItem, StockMovement, User
-from app.utils.auth import check_user_role_from_cookie, get_current_active_user_from_cookie
+from app.utils.auth import check_user_role_from_cookie, get_current_active_user_from_cookie, check_user_roles_from_cookie
 from datetime import datetime, timedelta
 from typing import Optional, List
 
@@ -30,14 +30,14 @@ async def sales_orders_list(
         "pagination": {"pages": 1, "page": 1, "has_prev": False, "has_next": False}  # Simple pagination placeholder
     })
 
-# Create sales order page - Manager and Admin only
+# Create sales order page - Staff, Manager and Admin can create orders
 @router.get("/create", response_class=HTMLResponse)
 async def create_sales_order_page(
     request: Request, 
-    current_user: User = Depends(check_user_role_from_cookie("manager")),
+    current_user: User = Depends(check_user_roles_from_cookie(["staff", "manager"])),
     db: Session = Depends(get_db)
 ):
-    """Display create sales order page"""
+    """Display create sales order page - Staff (hospital buyers) and Manager/Admin can create orders"""
     customers = db.query(Customer).filter(Customer.is_active == True).all()
     
     # Get all active products (not just those with inventory)
@@ -52,7 +52,7 @@ async def create_sales_order_page(
         "user_role": current_user.role
     })
 
-# Process sales order creation - Manager and Admin only
+# Process sales order creation - Staff, Manager and Admin can create orders
 @router.post("/create")
 async def create_sales_order(
     request: Request,
@@ -63,10 +63,10 @@ async def create_sales_order(
     product_ids: List[int] = Form(...),
     quantities: List[int] = Form(...),
     unit_prices: List[float] = Form(...),
-    current_user: User = Depends(check_user_role_from_cookie("manager")),
+    current_user: User = Depends(check_user_roles_from_cookie(["staff", "manager"])),
     db: Session = Depends(get_db)
 ):
-    """Create a new sales order"""
+    """Create a new sales order - Staff (hospital buyers) and Manager/Admin can create orders"""
     try:
         # Generate SO number
         latest_so = db.query(SalesOrder).order_by(SalesOrder.id.desc()).first()
@@ -175,15 +175,15 @@ async def sales_order_detail(
         "user_role": current_user.role
     })
 
-# Edit sales order page - Manager and Admin only
+# Edit sales order page - Staff, Manager and Admin can edit their orders
 @router.get("/{so_id}/edit", response_class=HTMLResponse)
 async def edit_sales_order_page(
     request: Request,
     so_id: int,
-    current_user: User = Depends(check_user_role_from_cookie("manager")),
+    current_user: User = Depends(check_user_roles_from_cookie(["staff", "manager"])),
     db: Session = Depends(get_db)
 ):
-    """Display edit sales order page"""
+    """Display edit sales order page - Staff (hospital buyers) and Manager/Admin can edit orders"""
     sales_order = db.query(SalesOrder).filter(SalesOrder.id == so_id).first()
     if not sales_order:
         raise HTTPException(status_code=404, detail="Sales order not found")
@@ -204,9 +204,9 @@ async def edit_sales_order_page(
         "user_role": current_user.role
     })
 
-# Update sales order - Manager and Admin only
+# Process sales order edit - Staff, Manager and Admin can edit their orders
 @router.post("/{so_id}/edit")
-async def update_sales_order(
+async def edit_sales_order(
     request: Request,
     so_id: int,
     customer_id: int = Form(...),
@@ -216,56 +216,38 @@ async def update_sales_order(
     product_ids: List[int] = Form(...),
     quantities: List[int] = Form(...),
     unit_prices: List[float] = Form(...),
-    current_user: User = Depends(check_user_role_from_cookie("manager")),
+    current_user: User = Depends(check_user_roles_from_cookie(["staff", "manager"])),
     db: Session = Depends(get_db)
 ):
-    """Update an existing sales order"""
-    sales_order = db.query(SalesOrder).filter(SalesOrder.id == so_id).first()
-    if not sales_order:
-        raise HTTPException(status_code=404, detail="Sales order not found")
-    
-    # Only allow editing pending orders
-    if sales_order.status not in ["pending", "confirmed"]:
-        raise HTTPException(status_code=400, detail="Cannot edit orders that are already shipped or delivered")
-    
+    """Edit an existing sales order - Staff (hospital buyers) and Manager/Admin can edit orders"""
     try:
-        # Parse delivery date
-        delivery_dt = None
-        if delivery_date:
-            try:
-                delivery_dt = datetime.strptime(delivery_date, "%Y-%m-%d")
-            except ValueError:
-                pass
+        sales_order = db.query(SalesOrder).filter(SalesOrder.id == so_id).first()
+        if not sales_order:
+            raise HTTPException(status_code=404, detail="Sales order not found")
         
-        # Update sales order basic info
+        # Only allow editing pending orders
+        if sales_order.status not in ["pending", "confirmed"]:
+            raise HTTPException(status_code=400, detail="Cannot edit orders that are already shipped or delivered")
+        
+        # Update sales order details
         sales_order.customer_id = customer_id
-        sales_order.delivery_date = delivery_dt
+        sales_order.delivery_date = datetime.strptime(delivery_date, "%Y-%m-%d") if delivery_date else None
         sales_order.discount_percentage = discount_percentage
         sales_order.notes = notes
         
         # Remove existing items
         db.query(SalesOrderItem).filter(SalesOrderItem.sales_order_id == so_id).delete()
         
-        # Add updated items
+        # Add new items
         total_amount = 0
         for i in range(len(product_ids)):
             if product_ids[i] and quantities[i] and unit_prices[i]:
-                # Check inventory availability
-                available_inventory = db.query(InventoryItem).filter(
-                    InventoryItem.product_id == product_ids[i],
-                    InventoryItem.quantity_available >= quantities[i],
-                    InventoryItem.status == "available"
-                ).order_by(InventoryItem.received_date.asc()).first()
-                
-                inventory_item_id = available_inventory.id if available_inventory else None
-                
                 total_price = quantities[i] * unit_prices[i]
                 total_amount += total_price
                 
                 so_item = SalesOrderItem(
                     sales_order_id=sales_order.id,
                     product_id=product_ids[i],
-                    inventory_item_id=inventory_item_id,
                     quantity_ordered=quantities[i],
                     unit_price=unit_prices[i],
                     total_price=total_price
@@ -282,7 +264,7 @@ async def update_sales_order(
         return RedirectResponse(url=f"/sales-orders/{so_id}", status_code=302)
         
     except Exception as e:
-        print(f"Error updating sales order: {e}")
+        print(f"Error editing sales order: {e}")
         customers = db.query(Customer).filter(Customer.is_active == True).all()
         available_products = db.query(Product).filter(Product.is_active == True).all()
         
@@ -293,7 +275,7 @@ async def update_sales_order(
             "products": available_products,
             "current_user": current_user,
             "user_role": current_user.role,
-            "error": f"Error updating sales order: {str(e)}"
+            "error": f"Error editing sales order: {str(e)}"
         })
 
 # Update sales order status

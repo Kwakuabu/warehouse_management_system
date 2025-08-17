@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}Inventory Overview - Warehouse Management System{% endblock %}
+{% block title %}
+{% if view_type == 'customer' %}Available Products - Medical Supplies Portal{% else %}Inventory Overview - Warehouse Management System{% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -9,15 +11,29 @@
             <div class="glass-card">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="mb-0">
-                        <i class="fas fa-boxes me-2"></i>Inventory Overview
+                        <i class="fas fa-boxes me-2"></i>
+                        {% if view_type == 'customer' %}
+                        Available Products
+                        {% else %}
+                        Inventory Overview
+                        {% endif %}
                     </h2>
                     <div>
+                        {% if view_type == 'customer' %}
+                        <a href="/sales-orders/create" class="btn btn-primary me-2">
+                            <i class="fas fa-shopping-cart me-2"></i>Place Order
+                        </a>
+                        <a href="/products/" class="btn btn-info">
+                            <i class="fas fa-pills me-2"></i>Product Catalog
+                        </a>
+                        {% else %}
                         <a href="/inventory/receive" class="btn btn-success me-2">
                             <i class="fas fa-plus me-2"></i>Receive Stock
                         </a>
                         <a href="/inventory/issue" class="btn btn-warning">
                             <i class="fas fa-edit me-2"></i>Adjust Stock
                         </a>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -30,7 +46,13 @@
                             </div>
                             <div class="stat-content">
                                 <h3>{{ total_items }}</h3>
-                                <p>Total Items</p>
+                                <p>
+                                    {% if view_type == 'customer' %}
+                                    Available Products
+                                    {% else %}
+                                    Total Items
+                                    {% endif %}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -41,7 +63,13 @@
                             </div>
                             <div class="stat-content">
                                 <h3>{{ in_stock_items }}</h3>
-                                <p>In Stock</p>
+                                <p>
+                                    {% if view_type == 'customer' %}
+                                    In Stock
+                                    {% else %}
+                                    In Stock
+                                    {% endif %}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -52,7 +80,13 @@
                             </div>
                             <div class="stat-content">
                                 <h3>{{ low_stock_items }}</h3>
-                                <p>Low Stock</p>
+                                <p>
+                                    {% if view_type == 'customer' %}
+                                    Limited Stock
+                                    {% else %}
+                                    Low Stock
+                                    {% endif %}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -63,7 +97,13 @@
                             </div>
                             <div class="stat-content">
                                 <h3>{{ out_of_stock_items }}</h3>
-                                <p>Out of Stock</p>
+                                <p>
+                                    {% if view_type == 'customer' %}
+                                    Out of Stock
+                                    {% else %}
+                                    Out of Stock
+                                    {% endif %}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -76,7 +116,7 @@
                             <span class="input-group-text">
                                 <i class="fas fa-search"></i>
                             </span>
-                            <input type="text" id="searchInput" class="form-control" placeholder="Search inventory...">
+                            <input type="text" id="searchInput" class="form-control" placeholder="{% if view_type == 'customer' %}Search products...{% else %}Search inventory...{% endif %}">
                             <button id="clearSearchBtn" class="btn btn-outline-secondary" type="button" style="display:none;"><i class="fas fa-times"></i></button>
                         </div>
                     </div>
@@ -112,78 +152,138 @@
                                 <th>Category</th>
                                 <th>SKU</th>
                                 <th>Current Stock</th>
+                                {% if view_type != 'customer' %}
                                 <th>Reorder Point</th>
+                                {% endif %}
                                 <th>Last Updated</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="inventoryTableBody">
-                            {% for item in inventory_items %}
-                                                            <tr data-category="{{ item.product.category.name }}" data-stock="{{ item.quantity_available }}">
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        {% if item.product.image_url %}
-                                        <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="product-thumb me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
-                                        {% else %}
-                                        <div class="product-placeholder me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #f8f9fa; border-radius: 4px;">
-                                            <i class="fas fa-box text-muted"></i>
+                            {% if view_type == 'customer' %}
+                                {% for product in available_products %}
+                                <tr data-category="{{ product.category.name if product.category else 'Uncategorized' }}" data-stock="in_stock">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if product.image_url %}
+                                            <img src="{{ product.image_url }}" alt="{{ product.name }}" class="product-thumb me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                            {% else %}
+                                            <div class="product-placeholder me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #f8f9fa; border-radius: 4px;">
+                                                <i class="fas fa-pills text-muted"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ product.name }}</strong>
+                                                {% if product.description %}
+                                                <br><small class="text-muted">{{ product.description[:50] }}{% if product.description|length > 50 %}...{% endif %}</small>
+                                                {% endif %}
+                                            </div>
                                         </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ product.category.name if product.category else 'Uncategorized' }}</span>
+                                    </td>
+                                    <td><code>{{ product.sku }}</code></td>
+                                    <td>
+                                        <span class="fw-bold">{{ product.stock_quantity if product.stock_quantity else 0 }}</span>
+                                        <small class="text-muted">{{ product.unit_of_measure }}</small>
+                                    </td>
+                                    <td>
+                                        {% if product.updated_at %}
+                                        {{ product.updated_at.strftime('%Y-%m-%d %H:%M') }}
+                                        {% else %}
+                                        <span class="text-muted">Never</span>
                                         {% endif %}
-                                        <div>
-                                            <strong>{{ item.product.name }}</strong>
-                                            {% if item.product.description %}
-                                            <br><small class="text-muted">{{ item.product.description[:50] }}{% if item.product.description|length > 50 %}...{% endif %}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">In Stock</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="/products/{{ product.id }}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="/sales-orders/create" class="btn btn-sm btn-outline-success" title="Order Now">
+                                                <i class="fas fa-shopping-cart"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                {% for item in inventory_items %}
+                                <tr data-category="{{ item.product.category.name }}" data-stock="{{ item.quantity_available }}">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if item.product.image_url %}
+                                            <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="product-thumb me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                            {% else %}
+                                            <div class="product-placeholder me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #f8f9fa; border-radius: 4px;">
+                                                <i class="fas fa-box text-muted"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ item.product.name }}</strong>
+                                                {% if item.product.description %}
+                                                <br><small class="text-muted">{{ item.product.description[:50] }}{% if item.product.description|length > 50 %}...{% endif %}</small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ item.product.category.name }}</span>
+                                    </td>
+                                    <td><code>{{ item.product.sku }}</code></td>
+                                    <td>
+                                        <span class="fw-bold">{{ item.quantity_available }}</span>
+                                        <small class="text-muted">units</small>
+                                    </td>
+                                    <td>{{ item.product.reorder_point }}</td>
+                                    <td>
+                                        {% if item.updated_at %}
+                                        {{ item.updated_at.strftime('%Y-%m-%d %H:%M') }}
+                                        {% else %}
+                                        <span class="text-muted">Never</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.quantity_available == 0 %}
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                        {% elif item.quantity_available <= item.product.reorder_point %}
+                                        <span class="badge bg-warning">Low Stock</span>
+                                        {% else %}
+                                        <span class="badge bg-success">In Stock</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="/inventory/{{ item.id }}" class="btn btn-sm btn-outline-primary" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if current_user.role in ['admin', 'manager'] %}
+                                            <a href="/inventory/issue" class="btn btn-sm btn-outline-warning" title="Adjust">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-success" onclick="receiveStock({{ item.id }})" title="Receive">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
                                             {% endif %}
                                         </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-info">{{ item.product.category.name }}</span>
-                                </td>
-                                <td><code>{{ item.product.sku }}</code></td>
-                                <td>
-                                    <span class="fw-bold">{{ item.quantity_available }}</span>
-                                    <small class="text-muted">units</small>
-                                </td>
-                                <td>{{ item.product.reorder_point }}</td>
-                                <td>
-                                    {% if item.updated_at %}
-                                    {{ item.updated_at.strftime('%Y-%m-%d %H:%M') }}
-                                    {% else %}
-                                    <span class="text-muted">Never</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if item.quantity_available == 0 %}
-                                    <span class="badge bg-danger">Out of Stock</span>
-                                    {% elif item.quantity_available <= item.product.reorder_point %}
-                                    <span class="badge bg-warning">Low Stock</span>
-                                    {% else %}
-                                    <span class="badge bg-success">In Stock</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="/inventory/{{ item.id }}" class="btn btn-sm btn-outline-primary" title="View">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        {% if current_user.role in ['admin', 'manager'] %}
-                                        <a href="/inventory/issue" class="btn btn-sm btn-outline-warning" title="Adjust">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-success" onclick="receiveStock({{ item.id }})" title="Receive">
-                                            <i class="fas fa-plus"></i>
-                                        </button>
-                                        {% endif %}
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% endif %}
                         </tbody>
                         <tbody id="noResultsRow" style="display:none;">
                             <tr>
-                                <td colspan="8" class="text-center text-muted">No inventory items found.</td>
+                                <td colspan="{% if view_type == 'customer' %}7{% else %}8{% endif %}" class="text-center text-muted">
+                                    {% if view_type == 'customer' %}
+                                    No products found.
+                                    {% else %}
+                                    No inventory items found.
+                                    {% endif %}
+                                </td>
                             </tr>
                         </tbody>
                     </table>

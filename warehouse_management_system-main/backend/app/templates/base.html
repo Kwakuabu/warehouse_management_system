@@ -71,24 +71,35 @@
                         <li class="nav-item">
                             <a class="nav-link text-white {% if request.url.path.startswith('/inventory') %}active{% endif %}" href="/inventory/">
                                 <i class="fas fa-boxes me-2"></i>
+                                {% if current_user.role == 'staff' %}
+                                Available Products
+                                {% else %}
                                 Inventory
+                                {% endif %}
                             </a>
                         </li>
                         
+                        {% if current_user.role in ['admin', 'manager'] %}
                         <li class="nav-item">
                             <a class="nav-link text-white {% if request.url.path.startswith('/purchase-orders') %}active{% endif %}" href="/purchase-orders/">
                                 <i class="fas fa-shopping-cart me-2"></i>
                                 Purchase Orders
                             </a>
                         </li>
+                        {% endif %}
                         
                         <li class="nav-item">
                             <a class="nav-link text-white {% if request.url.path.startswith('/sales-orders') %}active{% endif %}" href="/sales-orders/">
                                 <i class="fas fa-truck me-2"></i>
+                                {% if current_user.role == 'staff' %}
+                                My Orders
+                                {% else %}
                                 Sales Orders
+                                {% endif %}
                             </a>
                         </li>
                         
+                        {% if current_user.role in ['admin', 'manager'] %}
                         <li class="nav-item">
                             <a class="nav-link text-white {% if request.url.path.startswith('/customers') %}active{% endif %}" href="/customers/">
                                 <i class="fas fa-hospital me-2"></i>
@@ -102,12 +113,13 @@
                                 Vendors
                             </a>
                         </li>
+                        {% endif %}
                         
                         <!-- Separator -->
                         <hr class="text-muted my-3">
                         
                         <!-- Admin/Manager/Staff Items -->
-                        {% if current_user.role in ['admin', 'manager', 'staff'] %}
+                        {% if current_user.role in ['admin', 'manager'] %}
                         <li class="nav-item">
                             <a class="nav-link text-white {% if request.url.path.startswith('/alerts') %}active{% endif %}" href="/alerts/">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
@@ -122,6 +134,24 @@
                             </a>
                         </li>
                         {% endif %}
+                        
+                        <!-- Staff-specific items (hospital buyers) -->
+                        {% if current_user.role == 'staff' %}
+                        <li class="nav-item">
+                            <a class="nav-link text-white {% if request.url.path.startswith('/my-orders') %}active{% endif %}" href="/sales-orders/">
+                                <i class="fas fa-shopping-cart me-2"></i>
+                                My Orders
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link text-white {% if request.url.path.startswith('/product-catalog') %}active{% endif %}" href="/products/">
+                                <i class="fas fa-pills me-2"></i>
+                                Product Catalog
+                            </a>
+                        </li>
+                        {% endif %}
+                        
                         <!-- Settings still admin/manager only -->
                         {% if current_user.role in ['admin', 'manager'] %}
                         <li class="nav-item">
