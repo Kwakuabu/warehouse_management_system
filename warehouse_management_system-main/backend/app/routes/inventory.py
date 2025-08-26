@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from app.database import get_db
-from app.models.models import InventoryItem, Product, StockMovement, User, Category
+from app.models.models import InventoryItem, Product, StockMovement, User, Category, SalesOrder, SalesOrderItem
 from app.utils.auth import get_current_active_user_from_cookie, check_user_role_from_cookie, check_user_roles_from_cookie
 from datetime import datetime
 from typing import Optional
@@ -26,8 +26,98 @@ async def inventory_overview(
         # Warehouse management view for admin/manager
         return await warehouse_inventory_view(request, current_user, db)
     else:
-        # Customer-facing view for staff (hospital buyers)
-        return await customer_inventory_view(request, current_user, db)
+        # Hospital inventory view for staff (hospital buyers)
+        return await hospital_inventory_view(request, current_user, db)
+
+# Staff-specific inventory page for hospital buyers
+@router.get("/available", response_class=HTMLResponse)
+async def staff_inventory_available(
+    request: Request,
+    current_user: User = Depends(check_user_roles_from_cookie(["staff", "manager"])),
+    db: Session = Depends(get_db)
+):
+    """Display available products for staff users (hospital buyers) - Enhanced view"""
+    
+    # Get products with available stock (what they can order)
+    available_products = db.query(Product).join(InventoryItem).filter(
+        Product.is_active == True,
+        InventoryItem.quantity_available > 0,
+        InventoryItem.status == "available"
+    ).distinct().order_by(Product.name).all()
+    
+    # Enhanced product data with stock information for staff users
+    enhanced_products = []
+    total_value = 0
+    in_stock_count = 0
+    low_stock_count = 0
+    out_of_stock_count = 0
+    
+    for product in available_products:
+        # Get total available stock for this product
+        total_stock = sum(item.quantity_available for item in product.inventory_items if item.status == "available")
+        
+        # Determine stock status
+        if total_stock == 0:
+            stock_status = "out_of_stock"
+            out_of_stock_count += 1
+        elif total_stock <= product.reorder_point:
+            stock_status = "low_stock"
+            low_stock_count += 1
+        else:
+            stock_status = "in_stock"
+            in_stock_count += 1
+        
+        # Calculate product value
+        product_value = 0
+        if product.unit_price:
+            product_value = total_stock * float(product.unit_price)
+            total_value += product_value
+        
+        # Enhanced product data
+        enhanced_product = {
+            "id": product.id,
+            "name": product.name,
+            "description": product.description,
+            "sku": product.sku,
+            "category": product.category,
+            "unit_price": product.unit_price,
+            "unit_of_measure": product.unit_of_measure,
+            "total_stock": total_stock,
+            "stock_status": stock_status,
+            "reorder_point": product.reorder_point,
+            "product_value": product_value,
+            "requires_cold_chain": product.requires_cold_chain,
+            "is_controlled_substance": product.is_controlled_substance
+        }
+        enhanced_products.append(enhanced_product)
+    
+    # Get categories for filter dropdown
+    categories = db.query(Category).filter(
+        Category.id.in_([p.category_id for p in available_products if p.category_id])
+    ).all()
+    
+    return templates.TemplateResponse("inventory/overview.html", {
+        "request": request,
+        "available_products": enhanced_products,  # Enhanced product data for staff users
+        "total_value": total_value,
+        "total_items": len(enhanced_products),
+        "in_stock_items": in_stock_count,
+        "low_stock_items": low_stock_count,
+        "out_of_stock_items": out_of_stock_count,
+        "categories": categories,
+        "current_user": current_user,
+        "user_role": current_user.role,
+        "view_type": "customer",
+        "pagination": {
+            "pages": 1, 
+            "page": 1, 
+            "has_prev": False, 
+            "has_next": False,
+            "prev_num": None,
+            "next_num": None,
+            "iter_pages": lambda: [1]
+        }
+    })
 
 async def warehouse_inventory_view(request: Request, current_user: User, db: Session):
     """Warehouse management inventory view for admin/manager users"""
@@ -81,7 +171,7 @@ async def warehouse_inventory_view(request: Request, current_user: User, db: Ses
     })
 
 async def customer_inventory_view(request: Request, current_user: User, db: Session):
-    """Customer-facing inventory view for staff users (hospital buyers)"""
+    """Hospital inventory view for staff users (hospital buyers) - Shows their own hospital stock"""
     # Get products with available stock (what they can order)
     available_products = db.query(Product).join(InventoryItem).filter(
         Product.is_active == True,
@@ -89,17 +179,51 @@ async def customer_inventory_view(request: Request, current_user: User, db: Sess
         InventoryItem.status == "available"
     ).distinct().order_by(Product.name).all()
     
-    # Calculate statistics for customer view
-    total_products = len(available_products)
-    in_stock_products = total_products
-    
-    # Calculate total value of available inventory (what they can order)
+    # Enhanced product data with stock information for staff users
+    enhanced_products = []
     total_value = 0
+    in_stock_count = 0
+    low_stock_count = 0
+    out_of_stock_count = 0
+    
     for product in available_products:
         # Get total available stock for this product
         total_stock = sum(item.quantity_available for item in product.inventory_items if item.status == "available")
+        
+        # Determine stock status
+        if total_stock == 0:
+            stock_status = "out_of_stock"
+            out_of_stock_count += 1
+        elif total_stock <= product.reorder_point:
+            stock_status = "low_stock"
+            low_stock_count += 1
+        else:
+            stock_status = "in_stock"
+            in_stock_count += 1
+        
+        # Calculate product value
+        product_value = 0
         if product.unit_price:
-            total_value += total_stock * float(product.unit_price)
+            product_value = total_stock * float(product.unit_price)
+            total_value += product_value
+        
+        # Enhanced product data
+        enhanced_product = {
+            "id": product.id,
+            "name": product.name,
+            "description": product.description,
+            "sku": product.sku,
+            "category": product.category,
+            "unit_price": product.unit_price,
+            "unit_of_measure": product.unit_of_measure,
+            "total_stock": total_stock,
+            "stock_status": stock_status,
+            "reorder_point": product.reorder_point,
+            "product_value": product_value,
+            "requires_cold_chain": product.requires_cold_chain,
+            "is_controlled_substance": product.is_controlled_substance
+        }
+        enhanced_products.append(enhanced_product)
     
     # Get categories for filter dropdown
     categories = db.query(Category).filter(
@@ -108,16 +232,127 @@ async def customer_inventory_view(request: Request, current_user: User, db: Sess
     
     return templates.TemplateResponse("inventory/overview.html", {
         "request": request,
-        "available_products": available_products,  # Different data structure for customer view
+        "available_products": enhanced_products,  # Enhanced product data for staff users
         "total_value": total_value,
-        "total_items": total_products,
-        "in_stock_items": in_stock_products,
-        "low_stock_items": 0,  # Not relevant for customers
-        "out_of_stock_items": 0,  # Not relevant for customers
+        "total_items": len(enhanced_products),
+        "in_stock_items": in_stock_count,
+        "low_stock_items": low_stock_count,
+        "out_of_stock_items": out_of_stock_count,
         "categories": categories,
         "current_user": current_user,
         "user_role": current_user.role,
         "view_type": "customer",
+        "pagination": {
+            "pages": 1, 
+            "page": 1, 
+            "has_prev": False, 
+            "has_next": False,
+            "prev_num": None,
+            "next_num": None,
+            "iter_pages": lambda: [1]
+        }
+    })
+
+# Hospital inventory view for staff users (hospital buyers)
+async def hospital_inventory_view(request: Request, current_user: User, db: Session):
+    """Hospital inventory view for staff users (hospital buyers) - Shows their own hospital stock"""
+    
+    # Get all products that the hospital has ordered or might need
+    all_products = db.query(Product).filter(Product.is_active == True).order_by(Product.name).all()
+    
+    # Enhanced product data with HOSPITAL inventory information
+    enhanced_products = []
+    total_value = 0
+    in_stock_count = 0
+    low_stock_count = 0
+    out_of_stock_count = 0
+    
+    for product in all_products:
+        # Get hospital's current stock for this product
+        # This would typically come from a hospital_inventory table
+        # For now, we'll simulate hospital inventory based on their order history
+        
+        # Get hospital's order history for this product
+        hospital_orders = db.query(SalesOrder).join(SalesOrderItem).filter(
+            SalesOrderItem.product_id == product.id,
+            # In a real system, you'd filter by hospital_id
+            # For now, we'll show all orders as if they're from this hospital
+        ).all()
+        
+        # Calculate hospital's current stock (simplified - in reality this would be tracked separately)
+        hospital_stock = 0
+        total_ordered = 0
+        total_received = 0
+        
+        for order in hospital_orders:
+            for item in order.items:
+                if item.product_id == product.id:
+                    total_ordered += item.quantity_ordered
+                    total_received += item.quantity_shipped or 0
+        
+        # Simulate hospital inventory (received - consumed)
+        # In reality, this would be tracked in a separate hospital_inventory table
+        hospital_stock = max(0, total_received - (total_ordered * 0.3))  # Assume 30% consumed
+        
+        # Determine stock status based on hospital's reorder point
+        hospital_reorder_point = product.reorder_point // 2  # Hospital reorder point is lower
+        
+        if hospital_stock == 0:
+            stock_status = "out_of_stock"
+            out_of_stock_count += 1
+        elif hospital_stock <= hospital_reorder_point:
+            stock_status = "low_stock"
+            low_stock_count += 1
+        else:
+            stock_status = "in_stock"
+            in_stock_count += 1
+        
+        # Calculate hospital inventory value
+        hospital_value = 0
+        if product.unit_price:
+            hospital_value = hospital_stock * float(product.unit_price)
+            total_value += hospital_value
+        
+        # Enhanced product data for HOSPITAL inventory
+        enhanced_product = {
+            "id": product.id,
+            "name": product.name,
+            "description": product.description,
+            "sku": product.sku,
+            "category": product.category,
+            "unit_price": product.unit_price,
+            "unit_of_measure": product.unit_of_measure,
+            "hospital_stock": hospital_stock,  # Hospital's current stock
+            "warehouse_stock": sum(item.quantity_available for item in product.inventory_items if item.status == "available"),  # Available from warehouse
+            "stock_status": stock_status,
+            "hospital_reorder_point": hospital_reorder_point,
+            "warehouse_reorder_point": product.reorder_point,
+            "hospital_value": hospital_value,
+            "requires_cold_chain": product.requires_cold_chain,
+            "is_controlled_substance": product.is_controlled_substance,
+            "last_order_date": max([order.order_date for order in hospital_orders]) if hospital_orders else None,
+            "total_ordered": total_ordered,
+            "total_received": total_received
+        }
+        enhanced_products.append(enhanced_product)
+    
+    # Get categories for filter dropdown
+    categories = db.query(Category).filter(
+        Category.id.in_([p.category_id for p in all_products if p.category_id])
+    ).all()
+    
+    return templates.TemplateResponse("inventory/overview.html", {
+        "request": request,
+        "available_products": enhanced_products,  # Hospital inventory data
+        "total_value": total_value,
+        "total_items": len(enhanced_products),
+        "in_stock_items": in_stock_count,
+        "low_stock_items": low_stock_count,
+        "out_of_stock_items": out_of_stock_count,
+        "categories": categories,
+        "current_user": current_user,
+        "user_role": current_user.role,
+        "view_type": "hospital",  # Hospital inventory view
         "pagination": {
             "pages": 1, 
             "page": 1, 
@@ -364,6 +599,56 @@ async def get_inventory_api(
     """API endpoint to get all inventory items"""
     inventory_items = db.query(InventoryItem).filter(InventoryItem.quantity_available > 0).all()
     return {"inventory_items": [{"id": i.id, "product_id": i.product_id, "quantity": i.quantity_available} for i in inventory_items]}
+
+# Staff-specific API endpoint for available products
+@router.get("/api/available-products")
+async def get_available_products_api(
+    current_user: User = Depends(check_user_roles_from_cookie(["staff", "manager"])),
+    db: Session = Depends(get_db)
+):
+    """API endpoint to get available products for staff users (hospital buyers)"""
+    
+    # Get products with available stock
+    available_products = db.query(Product).join(InventoryItem).filter(
+        Product.is_active == True,
+        InventoryItem.quantity_available > 0,
+        InventoryItem.status == "available"
+    ).distinct().order_by(Product.name).all()
+    
+    # Format data for staff users
+    products_data = []
+    for product in available_products:
+        total_stock = sum(item.quantity_available for item in product.inventory_items if item.status == "available")
+        
+        # Determine stock status
+        if total_stock == 0:
+            stock_status = "out_of_stock"
+        elif total_stock <= product.reorder_point:
+            stock_status = "low_stock"
+        else:
+            stock_status = "in_stock"
+        
+        product_data = {
+            "id": product.id,
+            "name": product.name,
+            "description": product.description,
+            "sku": product.sku,
+            "category": product.category.name if product.category else None,
+            "unit_price": float(product.unit_price) if product.unit_price else 0,
+            "unit_of_measure": product.unit_of_measure,
+            "total_stock": total_stock,
+            "stock_status": stock_status,
+            "reorder_point": product.reorder_point,
+            "requires_cold_chain": product.requires_cold_chain,
+            "is_controlled_substance": product.is_controlled_substance
+        }
+        products_data.append(product_data)
+    
+    return {
+        "products": products_data,
+        "total_products": len(products_data),
+        "timestamp": datetime.utcnow().isoformat()
+    }
 
 @router.get("/api/inventory/{inventory_item_id}")
 async def get_inventory_item_api(

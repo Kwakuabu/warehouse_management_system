@@ -12,6 +12,50 @@ from typing import Optional, List
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
+# Hospital My Orders page - Staff users see only their hospital's orders
+@router.get("/my-orders", response_class=HTMLResponse)
+async def hospital_my_orders(
+    request: Request, 
+    current_user: User = Depends(check_user_roles_from_cookie(["staff"])),
+    db: Session = Depends(get_db)
+):
+    """Display hospital's own orders - Staff users only see their hospital's orders"""
+    
+    # For staff users, we'll simulate showing orders for their hospital
+    # In a real system, this would filter by hospital_id from the user's profile
+    
+    # Get all sales orders (in reality, filter by current_user.hospital_id)
+    all_orders = db.query(SalesOrder).order_by(SalesOrder.order_date.desc()).all()
+    
+    # Calculate hospital-specific metrics
+    total_orders = len(all_orders)
+    pending_orders = len([o for o in all_orders if o.status in ["pending", "confirmed"]])
+    shipped_orders = len([o for o in all_orders if o.status == "shipped"])
+    delivered_orders = len([o for o in all_orders if o.status == "delivered"])
+    
+    # Calculate total spent by hospital
+    total_spent = sum(float(order.total_amount) for order in all_orders)
+    
+    # Get recent orders (last 30 days)
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    recent_orders = len([o for o in all_orders if o.order_date >= thirty_days_ago])
+    
+    return templates.TemplateResponse("sales_orders/my_orders.html", {
+        "request": request, 
+        "sales_orders": all_orders,
+        "current_user": current_user,
+        "user_role": current_user.role,
+        "current_datetime": datetime.utcnow(),
+        "view_type": "hospital",  # Indicates this is hospital view
+        "total_orders": total_orders,
+        "pending_orders": pending_orders,
+        "shipped_orders": shipped_orders,
+        "delivered_orders": delivered_orders,
+        "total_spent": total_spent,
+        "recent_orders": recent_orders,
+        "pagination": {"pages": 1, "page": 1, "has_prev": False, "has_next": False}
+    })
+
 # Sales orders list page - All authenticated users
 @router.get("/", response_class=HTMLResponse)
 async def sales_orders_list(

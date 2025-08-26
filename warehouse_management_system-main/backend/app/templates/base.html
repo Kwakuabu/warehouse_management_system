@@ -72,7 +72,7 @@
                             <a class="nav-link text-white {% if request.url.path.startswith('/inventory') %}active{% endif %}" href="/inventory/">
                                 <i class="fas fa-boxes me-2"></i>
                                 {% if current_user.role == 'staff' %}
-                                Available Products
+                                Hospital Inventory
                                 {% else %}
                                 Inventory
                                 {% endif %}
@@ -89,7 +89,7 @@
                         {% endif %}
                         
                         <li class="nav-item">
-                            <a class="nav-link text-white {% if request.url.path.startswith('/sales-orders') %}active{% endif %}" href="/sales-orders/">
+                            <a class="nav-link text-white {% if current_user.role == 'staff' and request.url.path.startswith('/sales-orders/my-orders') or current_user.role != 'staff' and request.url.path.startswith('/sales-orders') %}active{% endif %}" href="{% if current_user.role == 'staff' %}/sales-orders/my-orders{% else %}/sales-orders/{% endif %}">
                                 <i class="fas fa-truck me-2"></i>
                                 {% if current_user.role == 'staff' %}
                                 My Orders
@@ -137,19 +137,9 @@
                         
                         <!-- Staff-specific items (hospital buyers) -->
                         {% if current_user.role == 'staff' %}
-                        <li class="nav-item">
-                            <a class="nav-link text-white {% if request.url.path.startswith('/my-orders') %}active{% endif %}" href="/sales-orders/">
-                                <i class="fas fa-shopping-cart me-2"></i>
-                                My Orders
-                            </a>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <a class="nav-link text-white {% if request.url.path.startswith('/product-catalog') %}active{% endif %}" href="/products/">
-                                <i class="fas fa-pills me-2"></i>
-                                Product Catalog
-                            </a>
-                        </li>
+                        <!-- Note: My Orders is already available in main navigation above -->
+                        <!-- Note: Product Catalog removed as it duplicates Products -->
+                        <!-- Staff users can access: /inventory/ for available products -->
                         {% endif %}
                         
                         <!-- Settings still admin/manager only -->
