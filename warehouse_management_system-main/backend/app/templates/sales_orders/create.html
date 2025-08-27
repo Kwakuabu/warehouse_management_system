@@ -27,12 +27,23 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label for="customer_id">Customer *</label>
-                    <select id="customer_id" name="customer_id" class="form-control" required>
+                    <select id="customer_id" name="customer_id" class="form-control" required 
+                            {% if auto_customer_id %}disabled{% endif %}>
                         <option value="">Select a customer</option>
                         {% for customer in customers %}
-                        <option value="{{ customer.id }}">{{ customer.name }}</option>
+                        <option value="{{ customer.id }}" 
+                                {% if auto_customer_id and auto_customer_id == customer.id %}selected{% endif %}>
+                            {{ customer.name }}
+                        </option>
                         {% endfor %}
                     </select>
+                    {% if auto_customer_id %}
+                    <input type="hidden" name="customer_id" value="{{ auto_customer_id }}">
+                    <small class="form-text text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        Hospital automatically selected for your account
+                    </small>
+                    {% endif %}
                 </div>
 
                 <div class="form-group">

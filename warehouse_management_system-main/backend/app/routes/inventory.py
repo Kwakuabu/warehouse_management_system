@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from app.database import get_db
-from app.models.models import InventoryItem, Product, StockMovement, User, Category, SalesOrder, SalesOrderItem
+from app.models.models import InventoryItem, Product, StockMovement, User, Category, SalesOrder, SalesOrderItem, HospitalInventory
 from app.utils.auth import get_current_active_user_from_cookie, check_user_role_from_cookie, check_user_roles_from_cookie
 from datetime import datetime
 from typing import Optional
@@ -257,10 +257,44 @@ async def customer_inventory_view(request: Request, current_user: User, db: Sess
 async def hospital_inventory_view(request: Request, current_user: User, db: Session):
     """Hospital inventory view for staff users (hospital buyers) - Shows their own hospital stock"""
     
-    # Get all products that the hospital has ordered or might need
-    all_products = db.query(Product).filter(Product.is_active == True).order_by(Product.name).all()
+    if not current_user.hospital_id:
+        # If staff user has no hospital assigned, show empty inventory
+        return templates.TemplateResponse("inventory/overview.html", {
+            "request": request,
+            "available_products": [],
+            "total_value": 0,
+            "total_items": 0,
+            "in_stock_items": 0,
+            "low_stock_items": 0,
+            "out_of_stock_items": 0,
+            "categories": [],
+            "current_user": current_user,
+            "user_role": current_user.role,
+            "view_type": "hospital",
+            "pagination": {
+                "pages": 1, 
+                "page": 1, 
+                "has_prev": False, 
+                "has_next": False,
+                "prev_num": None,
+                "next_num": None,
+                "iter_pages": lambda: [1]
+            }
+        })
     
-    # Enhanced product data with HOSPITAL inventory information
+    # Get hospital's inventory from HospitalInventory table
+    hospital_inventory = db.query(HospitalInventory).filter(
+        HospitalInventory.hospital_id == current_user.hospital_id
+    ).all()
+    
+    # Get all products that the hospital has in inventory
+    product_ids = [item.product_id for item in hospital_inventory]
+    all_products = db.query(Product).filter(
+        Product.id.in_(product_ids),
+        Product.is_active == True
+    ).order_by(Product.name).all()
+    
+    # Enhanced product data with REAL hospital inventory information
     enhanced_products = []
     total_value = 0
     in_stock_count = 0
@@ -269,34 +303,20 @@ async def hospital_inventory_view(request: Request, current_user: User, db: Sess
     
     for product in all_products:
         # Get hospital's current stock for this product
-        # This would typically come from a hospital_inventory table
-        # For now, we'll simulate hospital inventory based on their order history
+        hospital_item = next((item for item in hospital_inventory if item.product_id == product.id), None)
         
-        # Get hospital's order history for this product
-        hospital_orders = db.query(SalesOrder).join(SalesOrderItem).filter(
-            SalesOrderItem.product_id == product.id,
-            # In a real system, you'd filter by hospital_id
-            # For now, we'll show all orders as if they're from this hospital
-        ).all()
-        
-        # Calculate hospital's current stock (simplified - in reality this would be tracked separately)
-        hospital_stock = 0
-        total_ordered = 0
-        total_received = 0
-        
-        for order in hospital_orders:
-            for item in order.items:
-                if item.product_id == product.id:
-                    total_ordered += item.quantity_ordered
-                    total_received += item.quantity_shipped or 0
-        
-        # Simulate hospital inventory (received - consumed)
-        # In reality, this would be tracked in a separate hospital_inventory table
-        hospital_stock = max(0, total_received - (total_ordered * 0.3))  # Assume 30% consumed
+        if hospital_item:
+            hospital_stock = hospital_item.current_stock
+            hospital_reorder_point = hospital_item.reorder_point
+            hospital_max_stock = hospital_item.max_stock
+            last_restocked = hospital_item.last_restocked
+        else:
+            hospital_stock = 0
+            hospital_reorder_point = product.reorder_point // 2  # Default hospital reorder point
+            hospital_max_stock = product.max_stock_level // 4  # Default hospital max stock
+            last_restocked = None
         
         # Determine stock status based on hospital's reorder point
-        hospital_reorder_point = product.reorder_point // 2  # Hospital reorder point is lower
-        
         if hospital_stock == 0:
             stock_status = "out_of_stock"
             out_of_stock_count += 1
@@ -313,6 +333,9 @@ async def hospital_inventory_view(request: Request, current_user: User, db: Sess
             hospital_value = hospital_stock * float(product.unit_price)
             total_value += hospital_value
         
+        # Get warehouse stock for reference
+        warehouse_stock = sum(item.quantity_available for item in product.inventory_items if item.status == "available")
+        
         # Enhanced product data for HOSPITAL inventory
         enhanced_product = {
             "id": product.id,
@@ -322,17 +345,16 @@ async def hospital_inventory_view(request: Request, current_user: User, db: Sess
             "category": product.category,
             "unit_price": product.unit_price,
             "unit_of_measure": product.unit_of_measure,
-            "hospital_stock": hospital_stock,  # Hospital's current stock
-            "warehouse_stock": sum(item.quantity_available for item in product.inventory_items if item.status == "available"),  # Available from warehouse
+            "hospital_stock": hospital_stock,  # Real hospital stock
+            "warehouse_stock": warehouse_stock,  # Available from warehouse
             "stock_status": stock_status,
             "hospital_reorder_point": hospital_reorder_point,
             "warehouse_reorder_point": product.reorder_point,
             "hospital_value": hospital_value,
             "requires_cold_chain": product.requires_cold_chain,
             "is_controlled_substance": product.is_controlled_substance,
-            "last_order_date": max([order.order_date for order in hospital_orders]) if hospital_orders else None,
-            "total_ordered": total_ordered,
-            "total_received": total_received
+            "last_restocked": last_restocked,
+            "hospital_max_stock": hospital_max_stock
         }
         enhanced_products.append(enhanced_product)
     
@@ -343,7 +365,7 @@ async def hospital_inventory_view(request: Request, current_user: User, db: Sess
     
     return templates.TemplateResponse("inventory/overview.html", {
         "request": request,
-        "available_products": enhanced_products,  # Hospital inventory data
+        "available_products": enhanced_products,  # Real hospital inventory data
         "total_value": total_value,
         "total_items": len(enhanced_products),
         "in_stock_items": in_stock_count,

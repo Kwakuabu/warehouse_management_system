@@ -15,9 +15,13 @@ class User(Base):
     full_name = Column(String(100), nullable=False)
     hashed_password = Column(String(255), nullable=False)
     role = Column(String(20), nullable=False, default="staff")  # admin, manager, staff
+    hospital_id = Column(Integer, ForeignKey("customers.id"), nullable=True)  # Link staff to hospital
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    hospital = relationship("Customer", foreign_keys=[hospital_id])
 
 class Vendor(Base):
     __tablename__ = "vendors"
@@ -55,6 +59,8 @@ class Customer(Base):
     
     # Relationships
     sales_orders = relationship("SalesOrder", back_populates="customer")
+    hospital_inventory = relationship("HospitalInventory", back_populates="hospital")
+    staff_users = relationship("User", foreign_keys="User.hospital_id", back_populates="hospital")
 
 class Category(Base):
     __tablename__ = "categories"
@@ -219,3 +225,21 @@ class Alert(Base):
     acknowledged_by = Column(Integer, ForeignKey("users.id"))
     acknowledged_at = Column(DateTime)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class HospitalInventory(Base):
+    __tablename__ = "hospital_inventory"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    hospital_id = Column(Integer, ForeignKey("customers.id"), nullable=False)  # Hospital customer
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)  # Product
+    current_stock = Column(Integer, default=0)  # Current hospital stock
+    reorder_point = Column(Integer, default=5)  # Hospital-specific reorder point
+    max_stock = Column(Integer, default=100)  # Hospital-specific max stock
+    last_restocked = Column(DateTime)  # Last time hospital received stock
+    notes = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    hospital = relationship("Customer", foreign_keys=[hospital_id])
+    product = relationship("Product")

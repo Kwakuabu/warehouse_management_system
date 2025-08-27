@@ -10,6 +10,7 @@ from app.database import get_db
 from app.models.models import User
 import os
 from dotenv import load_dotenv
+from sqlalchemy.orm import joinedload
 
 load_dotenv()
 
@@ -33,8 +34,8 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 def get_user_by_username(db: Session, username: str):
-    """Get user by username"""
-    return db.query(User).filter(User.username == username).first()
+    """Get user by username with hospital relationship loaded"""
+    return db.query(User).options(joinedload(User.hospital)).filter(User.username == username).first()
 
 def get_user_by_email(db: Session, email: str):
     """Get user by email"""

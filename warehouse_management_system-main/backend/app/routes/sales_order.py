@@ -21,28 +21,45 @@ async def hospital_my_orders(
 ):
     """Display hospital's own orders - Staff users only see their hospital's orders"""
     
-    # For staff users, we'll simulate showing orders for their hospital
-    # In a real system, this would filter by hospital_id from the user's profile
+    if not current_user.hospital_id:
+        # If staff user has no hospital assigned, show empty orders
+        return templates.TemplateResponse("sales_orders/my_orders.html", {
+            "request": request, 
+            "sales_orders": [],
+            "current_user": current_user,
+            "user_role": current_user.role,
+            "current_datetime": datetime.utcnow(),
+            "view_type": "hospital",
+            "total_orders": 0,
+            "pending_orders": 0,
+            "shipped_orders": 0,
+            "delivered_orders": 0,
+            "total_spent": 0,
+            "recent_orders": 0,
+            "pagination": {"pages": 1, "page": 1, "has_prev": False, "has_next": False}
+        })
     
-    # Get all sales orders (in reality, filter by current_user.hospital_id)
-    all_orders = db.query(SalesOrder).order_by(SalesOrder.order_date.desc()).all()
+    # Get orders for the staff user's specific hospital
+    hospital_orders = db.query(SalesOrder).filter(
+        SalesOrder.customer_id == current_user.hospital_id
+    ).order_by(SalesOrder.order_date.desc()).all()
     
     # Calculate hospital-specific metrics
-    total_orders = len(all_orders)
-    pending_orders = len([o for o in all_orders if o.status in ["pending", "confirmed"]])
-    shipped_orders = len([o for o in all_orders if o.status == "shipped"])
-    delivered_orders = len([o for o in all_orders if o.status == "delivered"])
+    total_orders = len(hospital_orders)
+    pending_orders = len([o for o in hospital_orders if o.status in ["pending", "confirmed"]])
+    shipped_orders = len([o for o in hospital_orders if o.status == "shipped"])
+    delivered_orders = len([o for o in hospital_orders if o.status == "delivered"])
     
     # Calculate total spent by hospital
-    total_spent = sum(float(order.total_amount) for order in all_orders)
+    total_spent = sum(float(order.total_amount) for order in hospital_orders)
     
     # Get recent orders (last 30 days)
     thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-    recent_orders = len([o for o in all_orders if o.order_date >= thirty_days_ago])
+    recent_orders = len([o for o in hospital_orders if o.order_date >= thirty_days_ago])
     
     return templates.TemplateResponse("sales_orders/my_orders.html", {
         "request": request, 
-        "sales_orders": all_orders,
+        "sales_orders": hospital_orders,
         "current_user": current_user,
         "user_role": current_user.role,
         "current_datetime": datetime.utcnow(),
@@ -82,7 +99,15 @@ async def create_sales_order_page(
     db: Session = Depends(get_db)
 ):
     """Display create sales order page - Staff (hospital buyers) and Manager/Admin can create orders"""
-    customers = db.query(Customer).filter(Customer.is_active == True).all()
+    
+    # For staff users, only show their hospital; for managers, show all customers
+    if current_user.role == "staff" and current_user.hospital_id:
+        customers = db.query(Customer).filter(
+            Customer.id == current_user.hospital_id,
+            Customer.is_active == True
+        ).all()
+    else:
+        customers = db.query(Customer).filter(Customer.is_active == True).all()
     
     # Get all active products (not just those with inventory)
     # This allows creating orders even for products that might be backordered
@@ -93,7 +118,8 @@ async def create_sales_order_page(
         "customers": customers,
         "products": available_products,
         "current_user": current_user,
-        "user_role": current_user.role
+        "user_role": current_user.role,
+        "auto_customer_id": current_user.hospital_id if current_user.role == "staff" else None
     })
 
 # Process sales order creation - Staff, Manager and Admin can create orders
@@ -112,6 +138,13 @@ async def create_sales_order(
 ):
     """Create a new sales order - Staff (hospital buyers) and Manager/Admin can create orders"""
     try:
+        # For staff users, ensure they can only create orders for their hospital
+        if current_user.role == "staff" and current_user.hospital_id:
+            if customer_id != current_user.hospital_id:
+                raise HTTPException(status_code=403, detail="Staff users can only create orders for their assigned hospital")
+        elif current_user.role == "staff" and not current_user.hospital_id:
+            raise HTTPException(status_code=403, detail="Staff user must be assigned to a hospital to create orders")
+        
         # Generate SO number
         latest_so = db.query(SalesOrder).order_by(SalesOrder.id.desc()).first()
         order_number = f"SO-{datetime.now().year}-{(latest_so.id + 1) if latest_so else 1:04d}"
@@ -131,7 +164,8 @@ async def create_sales_order(
             delivery_date=delivery_dt,
             status="pending",
             discount_percentage=discount_percentage,
-            notes=notes
+            notes=notes,
+            created_by=current_user.id
         )
         
         db.add(sales_order)
@@ -193,7 +227,7 @@ async def create_sales_order(
 async def sales_order_detail(
     request: Request, 
     so_id: int, 
-    current_user: User = Depends(get_current_active_user_from_cookie),
+    current_user: User = Depends(check_user_roles_from_cookie(["staff", "manager", "admin"])),
     db: Session = Depends(get_db)
 ):
     """Display sales order details"""
