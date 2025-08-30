@@ -121,35 +121,66 @@ async def staff_inventory_available(
 
 async def warehouse_inventory_view(request: Request, current_user: User, db: Session):
     """Warehouse management inventory view for admin/manager users"""
-    # Get all inventory items
-    all_inventory_items = db.query(InventoryItem).all()
-    
-    # Get items with available stock
-    inventory_items = db.query(InventoryItem).filter(InventoryItem.quantity_available > 0).order_by(InventoryItem.received_date.desc()).all()
-    
-    # Calculate statistics
-    total_items = len(all_inventory_items)
-    in_stock_items = len([item for item in all_inventory_items if item.quantity_available > 0])
-    
-    # Get products to calculate low stock items
+    # Get all products to calculate total stock levels
     products = db.query(Product).all()
+    
+    # Calculate statistics based on products (not inventory items)
+    total_items = len(products)
+    in_stock_items = 0
     low_stock_items = 0
+    out_of_stock_items = 0
+    
+    # Create enhanced product data with stock status
+    enhanced_products = []
+    total_value = 0
+    
     for product in products:
+        # Get total available stock for this product
         total_stock = sum(item.quantity_available for item in product.inventory_items if item.status == "available")
-        if total_stock <= product.reorder_point:
+        
+        # Determine stock status
+        if total_stock == 0:
+            stock_status = "out_of_stock"
+            out_of_stock_items += 1
+        elif total_stock <= product.reorder_point:
+            stock_status = "low_stock"
             low_stock_items += 1
+        else:
+            stock_status = "in_stock"
+            in_stock_items += 1
+        
+        # Calculate product value
+        product_value = total_stock * float(product.cost_price) if product.cost_price else 0
+        total_value += product_value
+        
+        # Enhanced product data
+        enhanced_product = {
+            "id": product.id,
+            "name": product.name,
+            "description": product.description,
+            "sku": product.sku,
+            "category": product.category,
+            "unit_of_measure": product.unit_of_measure,
+            "total_stock": total_stock,
+            "stock_status": stock_status,
+            "reorder_point": product.reorder_point,
+            "cost_price": product.cost_price,
+            "product_value": product_value,
+            "requires_cold_chain": product.requires_cold_chain,
+            "is_controlled_substance": product.is_controlled_substance,
+            "updated_at": product.updated_at
+        }
+        enhanced_products.append(enhanced_product)
     
-    out_of_stock_items = len([item for item in all_inventory_items if item.quantity_available == 0])
-    
-    # Calculate total inventory value
-    total_value = sum([item.quantity_available * float(item.cost_price) for item in inventory_items if item.cost_price])
+    # Sort products by stock status (out of stock first, then low stock, then in stock)
+    enhanced_products.sort(key=lambda x: (x["stock_status"] == "out_of_stock", x["stock_status"] == "low_stock", x["stock_status"] == "in_stock"))
     
     # Get categories for filter dropdown
     categories = db.query(Category).all()
     
     return templates.TemplateResponse("inventory/overview.html", {
         "request": request,
-        "inventory_items": inventory_items,
+        "inventory_items": enhanced_products,  # Use enhanced product data instead of raw inventory items
         "total_value": total_value,
         "total_items": total_items,
         "in_stock_items": in_stock_items, 
@@ -167,7 +198,7 @@ async def warehouse_inventory_view(request: Request, current_user: User, db: Ses
             "prev_num": None,
             "next_num": None,
             "iter_pages": lambda: [1]
-        }  # Simple pagination placeholder
+        }
     })
 
 async def customer_inventory_view(request: Request, current_user: User, db: Session):

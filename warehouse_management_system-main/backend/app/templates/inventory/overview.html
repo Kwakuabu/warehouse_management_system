@@ -172,16 +172,9 @@
                                 <th>Product</th>
                                 <th>Category</th>
                                 <th>SKU</th>
-                                <th>Hospital Stock</th>
-                                {% if view_type == 'hospital' %}
-                                <th>Hospital Reorder Point</th>
-                                <th>Last Order Date</th>
-                                {% elif view_type != 'customer' %}
+                                <th>Stock Level</th>
                                 <th>Reorder Point</th>
                                 <th>Last Updated</th>
-                                {% else %}
-                                <th>Last Updated</th>
-                                {% endif %}
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -299,33 +292,38 @@
                                 {% endfor %}
                             {% else %}
                                 {% for item in inventory_items %}
-                                <tr data-category="{{ item.product.category.name }}" data-stock="{{ item.quantity_available }}">
+                                <tr data-category="{{ item.category.name if item.category else 'Uncategorized' }}" data-stock="{{ item.stock_status }}">
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            {% if item.product.image_url %}
-                                            <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="product-thumb me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                            {% if item.image_url %}
+                                            <img src="{{ item.image_url }}" alt="{{ item.name }}" class="product-thumb me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
                                             {% else %}
                                             <div class="product-placeholder me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #f8f9fa; border-radius: 4px;">
                                                 <i class="fas fa-box text-muted"></i>
                                             </div>
                                             {% endif %}
                                             <div>
-                                                <strong>{{ item.product.name }}</strong>
-                                                {% if item.product.description %}
-                                                <br><small class="text-muted">{{ item.product.description[:50] }}{% if item.product.description|length > 50 %}...{% endif %}</small>
+                                                <strong>{{ item.name }}</strong>
+                                                {% if item.description %}
+                                                <br><small class="text-muted">{{ item.description[:50] }}{% if item.description|length > 50 %}...{% endif %}</small>
                                                 {% endif %}
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge bg-info">{{ item.product.category.name }}</span>
+                                        <span class="badge bg-info">{{ item.category.name if item.category else 'Uncategorized' }}</span>
                                     </td>
-                                    <td><code>{{ item.product.sku }}</code></td>
+                                    <td><code>{{ item.sku }}</code></td>
                                     <td>
-                                        <span class="fw-bold">{{ item.quantity_available }}</span>
-                                        <small class="text-muted">units</small>
+                                        <span class="stock-level-indicator">
+                                            {{ item.total_stock }} {{ item.unit_of_measure }}
+                                        </span>
                                     </td>
-                                    <td>{{ item.product.reorder_point }}</td>
+                                    <td>
+                                        <span class="reorder-point-badge">
+                                            {{ item.reorder_point }}
+                                        </span>
+                                    </td>
                                     <td>
                                         {% if item.updated_at %}
                                         {{ item.updated_at.strftime('%Y-%m-%d %H:%M') }}
@@ -334,17 +332,19 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if item.quantity_available == 0 %}
-                                        <span class="badge bg-danger">Out of Stock</span>
-                                        {% elif item.quantity_available <= item.product.reorder_point %}
-                                        <span class="badge bg-warning">Low Stock</span>
-                                        {% else %}
-                                        <span class="badge bg-success">In Stock</span>
-                                        {% endif %}
+                                        <span class="status-badge {% if item.total_stock == 0 %}status-out{% elif item.total_stock <= item.reorder_point %}status-low{% else %}status-in{% endif %}">
+                                            {% if item.total_stock == 0 %}
+                                                Out of Stock
+                                            {% elif item.total_stock <= item.reorder_point %}
+                                                Low Stock
+                                            {% else %}
+                                                In Stock
+                                            {% endif %}
+                                        </span>
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <a href="/inventory/{{ item.id }}" class="btn btn-sm btn-outline-primary" title="View">
+                                            <a href="/products/{{ item.id }}" class="btn btn-sm btn-outline-primary" title="View">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             {% if current_user.role in ['admin', 'manager'] %}
@@ -538,17 +538,12 @@ document.addEventListener('DOMContentLoaded', function() {
         rows.forEach(row => {
             const name = row.cells[0].textContent.toLowerCase();
             const category = row.getAttribute('data-category');
-            const stock = parseInt(row.getAttribute('data-stock'));
-            const reorderPoint = parseInt(row.cells[4].textContent);
-            let stockLevel = 'in_stock';
-            if (stock === 0) {
-                stockLevel = 'out_of_stock';
-            } else if (stock <= reorderPoint) {
-                stockLevel = 'low_stock';
-            }
+            const stockStatus = row.getAttribute('data-stock'); // This now contains 'out_of_stock', 'low_stock', or 'in_stock'
+            
             const matchesSearch = name.includes(searchTerm);
             const matchesCategory = !categoryVal || category === categoryVal;
-            const matchesStock = !stockVal || stockLevel === stockVal;
+            const matchesStock = !stockVal || stockStatus === stockVal;
+            
             if (matchesSearch && matchesCategory && matchesStock) {
                 row.style.display = '';
                 visibleCount++;
@@ -638,5 +633,78 @@ statCards.forEach((card, index) => {
     background: rgba(255,255,255,0.1);
     border-radius: 50%;
 }
+</style>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stock-level-indicator {
+        font-size: 1rem;
+        font-weight: 600;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        display: inline-block;
+        background-color: #f8f9fa;
+        color: #495057;
+        border: 1px solid #dee2e6;
+    }
+    
+    .reorder-point-badge {
+        font-size: 0.875rem;
+        font-weight: 600;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        display: inline-block;
+        background-color: #6c757d;
+        color: white;
+        min-width: 40px;
+        text-align: center;
+    }
+    
+    .status-badge {
+        font-size: 0.875rem;
+        font-weight: 600;
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        display: inline-block;
+        min-width: 100px;
+        text-align: center;
+        border: none;
+        color: white;
+    }
+    
+    .status-out {
+        background-color: #dc3545;
+    }
+    
+    .status-low {
+        background-color: #fd7e14;
+    }
+    
+    .status-in {
+        background-color: #198754;
+    }
+    
+    .table tbody tr:hover {
+        background-color: rgba(102, 126, 234, 0.05);
+        transform: translateY(-1px);
+        transition: all 0.2s ease;
+    }
+    
+    .product-placeholder {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 1px solid #dee2e6;
+    }
+    
+    .stat-card-enhanced {
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card-enhanced:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
 </style>
 {% endblock %}

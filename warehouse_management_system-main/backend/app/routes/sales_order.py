@@ -356,15 +356,15 @@ async def edit_sales_order(
             "error": f"Error editing sales order: {str(e)}"
         })
 
-# Update sales order status
+# Update sales order status - Only Admin and Manager can update status
 @router.post("/{so_id}/update-status")
 async def update_sales_order_status(
     so_id: int,
     status: str = Form(...),
-    current_user: User = Depends(get_current_active_user_from_cookie),
+    current_user: User = Depends(check_user_roles_from_cookie(["admin", "manager"])),  # Only admin/manager can update status
     db: Session = Depends(get_db)
 ):
-    """Update sales order status and process inventory"""
+    """Update sales order status and process inventory - Only Admin and Manager can process orders"""
     sales_order = db.query(SalesOrder).filter(SalesOrder.id == so_id).first()
     if not sales_order:
         raise HTTPException(status_code=404, detail="Sales order not found")
@@ -457,16 +457,16 @@ async def get_sales_order_summary(db: Session = Depends(get_db)):
             "error": str(e)
         }
 
-# Partial shipment route
+# Partial shipment route - Only Admin and Manager can handle partial shipments
 @router.post("/{so_id}/partial-shipment")
 async def partial_shipment(
     so_id: int,
     item_id: int = Form(...),
     quantity_shipped: int = Form(...),
-    current_user: User = Depends(check_user_role_from_cookie("manager")),
+    current_user: User = Depends(check_user_roles_from_cookie(["admin", "manager"])),  # Admin and Manager only
     db: Session = Depends(get_db)
 ):
-    """Handle partial shipment of a specific item"""
+    """Handle partial shipment of a specific item - Only Admin and Manager can process shipments"""
     sales_order = db.query(SalesOrder).filter(SalesOrder.id == so_id).first()
     if not sales_order:
         raise HTTPException(status_code=404, detail="Sales order not found")

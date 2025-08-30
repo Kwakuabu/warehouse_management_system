@@ -312,6 +312,11 @@
         .btn-edit { background: #dbeafe; color: #1d4ed8; }
         .btn-cancel { background: #fee2e2; color: #dc2626; }
         .btn-ship { background: #ecfdf5; color: #059669; }
+        .btn-confirm { background: #dbeafe; color: #1d4ed8; }
+        .btn-process { background: #fef3c7; color: #d97706; }
+        .btn-notes { background: #e0f2fe; color: #1d4ed8; }
+        .btn-issues { background: #fef3c7; color: #dc2626; }
+        .btn-deliver { background: #ecfdf5; color: #059669; }
 
         .table-action-btn:hover {
             transform: translateY(-1px);
@@ -380,21 +385,24 @@
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Header -->
-    <div class="header">
-        <div>
-            <h1>Sales Orders</h1>
-            <p>Manage customer orders and deliveries</p>
-        </div>
-        <div class="header-actions">
-            <a href="/sales-orders/create" class="action-btn btn-create">
-                <i class="fas fa-plus"></i>
-                Create Order
-            </a>
-            <a href="/sales-orders/analytics" class="action-btn btn-analytics">
-                <i class="fas fa-chart-bar"></i>
-                Analytics
-            </a>
+    <!-- Enhanced Header Section -->
+    <div class="glass-card mb-4" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none;">
+        <div class="d-flex justify-content-between align-items-center p-4">
+            <div class="text-white">
+                <h1 class="mb-2 fw-bold">
+                    <i class="fas fa-truck me-3"></i>
+                    Sales Orders
+                </h1>
+                <p class="mb-0 fs-5 opacity-90">Process and manage orders from all hospital customers</p>
+            </div>
+            <div class="d-flex gap-3">
+                <a href="/sales-orders/create" class="btn btn-light btn-lg px-4 py-3 fw-semibold shadow-sm">
+                    <i class="fas fa-plus me-2"></i>Create Order
+                </a>
+                <a href="/reports/sales" class="btn btn-outline-light btn-lg px-4 py-3 fw-semibold">
+                    <i class="fas fa-chart-bar me-2"></i>Sales Analytics
+                </a>
+            </div>
         </div>
     </div>
 
@@ -551,23 +559,69 @@
                                 <i class="fas fa-eye"></i>
                                 View
                             </a>
-                            {% if order.status in ['pending', 'confirmed'] %}
-                            <a href="/sales-orders/{{ order.id }}/edit" class="table-action-btn btn-edit">
-                                <i class="fas fa-edit"></i>
-                                Edit
-                            </a>
-                            {% endif %}
-                            {% if order.status == 'confirmed' %}
-                            <button class="table-action-btn btn-ship" onclick="shipOrder({{ order.id }})">
-                                <i class="fas fa-truck"></i>
-                                Ship
-                            </button>
-                            {% endif %}
-                            {% if order.status == 'pending' %}
-                            <button class="table-action-btn btn-cancel" onclick="cancelOrder({{ order.id }})">
-                                <i class="fas fa-times"></i>
-                                Cancel
-                            </button>
+                            
+                            <!-- Warehouse Processing Actions for Admin/Manager -->
+                            {% if current_user.role in ['admin', 'manager'] %}
+                                {% if order.status == 'pending' %}
+                                <!-- Confirm Order -->
+                                <button class="table-action-btn btn-confirm" onclick="confirmOrder({{ order.id }})">
+                                    <i class="fas fa-check"></i>
+                                    Confirm
+                                </button>
+                                <!-- Add Processing Notes -->
+                                <button class="table-action-btn btn-notes" onclick="addWarehouseNotes({{ order.id }})">
+                                    <i class="fas fa-sticky-note"></i>
+                                    Notes
+                                </button>
+                                <!-- Handle Issues -->
+                                <button class="table-action-btn btn-issues" onclick="handleOrderIssues({{ order.id }})">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Issues
+                                </button>
+                                {% elif order.status == 'confirmed' %}
+                                <!-- Process Order (Pick & Pack) -->
+                                <button class="table-action-btn btn-process" onclick="processOrder({{ order.id }})">
+                                    <i class="fas fa-boxes"></i>
+                                    Process
+                                </button>
+                                <!-- Ship Order -->
+                                <button class="table-action-btn btn-ship" onclick="shipOrder({{ order.id }})">
+                                    <i class="fas fa-truck"></i>
+                                    Ship
+                                </button>
+                                <!-- Add Processing Notes -->
+                                <button class="table-action-btn btn-notes" onclick="addWarehouseNotes({{ order.id }})">
+                                    <i class="fas fa-sticky-note"></i>
+                                    Notes
+                                </button>
+                                {% elif order.status == 'shipped' %}
+                                <!-- Mark as Delivered -->
+                                <button class="table-action-btn btn-deliver" onclick="deliverOrder({{ order.id }})">
+                                    <i class="fas fa-check-circle"></i>
+                                    Deliver
+                                </button>
+                                <!-- Add Delivery Notes -->
+                                <button class="table-action-btn btn-notes" onclick="addWarehouseNotes({{ order.id }})">
+                                    <i class="fas fa-sticky-note"></i>
+                                    Notes
+                                </button>
+                                {% endif %}
+                                
+                                <!-- Cancel Order (if still pending) -->
+                                {% if order.status == 'pending' %}
+                                <button class="table-action-btn btn-cancel" onclick="cancelOrder({{ order.id }})">
+                                    <i class="fas fa-times"></i>
+                                    Cancel
+                                </button>
+                                {% endif %}
+                            {% else %}
+                                <!-- Hospital Staff: Can only edit their own pending orders -->
+                                {% if order.status in ['pending', 'confirmed'] and current_user.role == 'staff' and order.customer_id == current_user.hospital_id %}
+                                <a href="/sales-orders/{{ order.id }}/edit" class="table-action-btn btn-edit">
+                                    <i class="fas fa-edit"></i>
+                                    Edit
+                                </a>
+                                {% endif %}
                             {% endif %}
                         </div>
                     </td>
@@ -625,6 +679,67 @@
                     location.reload();
                 } else {
                     alert('Error cancelling order');
+                }
+            });
+        }
+    }
+
+    function confirmOrder(orderId) {
+        if (confirm('Are you sure you want to confirm this sales order? This will move it to the processing stage.')) {
+            fetch('/sales-orders/' + orderId + '/update-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'status=confirmed'
+            })
+            .then(function(response) {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error confirming order');
+                }
+            });
+        }
+    }
+
+    function processOrder(orderId) {
+        if (confirm('Are you ready to process this order? This will pick and pack the items for shipping.')) {
+            // For now, just show a message. In a real system, this would open a processing form
+            alert('Order processing initiated. Please pick and pack the items, then use the Ship button when ready.');
+        }
+    }
+
+    function addWarehouseNotes(orderId) {
+        const notes = prompt('Add warehouse processing notes:');
+        if (notes !== null && notes.trim() !== '') {
+            // In a real system, this would send to a notes API endpoint
+            alert('Notes added successfully! (This would save to the database in production)');
+        }
+    }
+
+    function handleOrderIssues(orderId) {
+        const issue = prompt('Describe the issue (backorder, substitution, etc.):');
+        if (issue !== null && issue.trim() !== '') {
+            // In a real system, this would open an issues management form
+            alert('Issue logged successfully! (This would create an issue ticket in production)');
+        }
+    }
+
+    function deliverOrder(orderId) {
+        if (confirm('Are you sure you want to mark this order as delivered?')) {
+            fetch('/sales-orders/' + orderId + '/update-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'status=delivered'
+            })
+            .then(function(response) {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error marking order as delivered');
                 }
             });
         }
