@@ -22,6 +22,43 @@ async def lifespan(app: FastAPI):
     # Startup
     create_tables()
     print("Database tables created successfully!")
+    
+    # Run database migration for user approval system
+    try:
+        db = next(get_db())
+        from sqlalchemy import text
+        
+        # Check if approval columns exist
+        result = db.execute(text("SHOW COLUMNS FROM users LIKE 'requires_approval'"))
+        if not result.fetchone():
+            print("Adding user approval columns to database...")
+            
+            # Add new columns
+            db.execute(text("ALTER TABLE users ADD COLUMN requires_approval BOOLEAN DEFAULT 1"))
+            db.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT 0"))
+            db.execute(text("ALTER TABLE users ADD COLUMN approved_by INT"))
+            db.execute(text("ALTER TABLE users ADD COLUMN approved_at DATETIME"))
+            
+            # Update existing users to be approved
+            db.execute(text("""
+                UPDATE users 
+                SET requires_approval = 0, 
+                    is_approved = 1, 
+                    approved_at = NOW() 
+                WHERE requires_approval = 1 OR is_approved = 0
+            """))
+            
+            db.commit()
+            print("User approval system migration completed successfully!")
+        else:
+            print("User approval columns already exist.")
+            
+    except Exception as e:
+        print(f"Migration error: {e}")
+    finally:
+        if 'db' in locals():
+            db.close()
+    
     # Seed initial data
     db = next(get_db())
     seed_all_data(db)
@@ -56,6 +93,30 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Templates
 templates = Jinja2Templates(directory="app/templates")
+
+# Middleware to inject pending users count
+@app.middleware("http")
+async def add_pending_users_count(request: Request, call_next):
+    """Add pending users count to request state for templates"""
+    response = await call_next(request)
+    
+    # Only add to HTML responses
+    if isinstance(response, HTMLResponse):
+        try:
+            # Get database session
+            db = next(get_db())
+            from app.models.models import User
+            pending_count = db.query(User).filter(
+                User.requires_approval == True,
+                User.is_approved == False
+            ).count()
+            
+            # Add to request state
+            request.state.pending_users_count = pending_count
+        except:
+            request.state.pending_users_count = 0
+    
+    return response
 
 # Root endpoint - Dashboard (Protected)
 @app.get("/", response_class=HTMLResponse)

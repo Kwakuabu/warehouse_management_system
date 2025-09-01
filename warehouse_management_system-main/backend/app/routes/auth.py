@@ -1,5 +1,5 @@
 # app/routes/auth.py
-from datetime import timedelta
+from datetime import timedelta, datetime
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Form
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -70,14 +70,37 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
             detail="Email already registered"
         )
     
-    # Create new user
+    # Validate hospital assignment for staff users
+    if user.role == "staff":
+        if not user.hospital_id:
+            raise HTTPException(status_code=400, detail="Staff users must be assigned to a hospital")
+        
+        # Verify the hospital exists and is a valid hospital
+        from app.models.models import Customer
+        hospital = db.query(Customer).filter(
+            Customer.id == user.hospital_id,
+            Customer.is_active == True
+        ).first()
+        
+        if not hospital:
+            raise HTTPException(status_code=400, detail="Selected hospital not found")
+        
+        # Check if it's a valid hospital (not "Nathaniel Amponsah" which is ID 1)
+        if user.hospital_id == 1:  # Nathaniel Amponsah is not a hospital
+            raise HTTPException(status_code=400, detail="Please select a valid hospital")
+    
+    # Create new user (pending approval)
     hashed_password = get_password_hash(user.password)
     db_user = User(
         username=user.username,
         email=user.email,
         full_name=user.full_name,
         hashed_password=hashed_password,
-        role=user.role
+        role=user.role,
+        hospital_id=user.hospital_id if user.role == "staff" else None,  # Assign hospital for staff users
+        requires_approval=True,
+        is_approved=False,
+        is_active=False  # Inactive until approved
     )
     db.add(db_user)
     db.commit()
@@ -121,6 +144,7 @@ async def register_form(
     password: str = Form(...),
     confirm_password: str = Form(...),
     role: str = Form("staff"),
+    hospital_id: int = Form(None),
     db: Session = Depends(get_db)
 ):
     """Handle form-based registration"""
@@ -145,26 +169,129 @@ async def register_form(
             {"request": request, "error": "Email already registered"}
         )
     
-    # Create user
+    # Validate hospital assignment for staff users
+    if role == "staff":
+        if not hospital_id:
+            return templates.TemplateResponse(
+                "register.html", 
+                {"request": request, "error": "Staff users must be assigned to a hospital"}
+            )
+        
+        # Verify the hospital exists and is a valid hospital (not a regular customer)
+        from app.models.models import Customer
+        hospital = db.query(Customer).filter(
+            Customer.id == hospital_id,
+            Customer.is_active == True
+        ).first()
+        
+        if not hospital:
+            return templates.TemplateResponse(
+                "register.html", 
+                {"request": request, "error": "Selected hospital not found"}
+            )
+        
+        # Check if it's a valid hospital (not "Nathaniel Amponsah" which is ID 1)
+        if hospital_id == 1:  # Nathaniel Amponsah is not a hospital
+            return templates.TemplateResponse(
+                "register.html", 
+                {"request": request, "error": "Please select a valid hospital"}
+            )
+    
+    # Create user (pending approval)
     hashed_password = get_password_hash(password)
     db_user = User(
         username=username,
         email=email,
         full_name=full_name,
         hashed_password=hashed_password,
-        role=role
+        role=role,
+        hospital_id=hospital_id if role == "staff" else None,  # Assign hospital for staff users
+        requires_approval=True,
+        is_approved=False,
+        is_active=False  # Inactive until approved
     )
     db.add(db_user)
     db.commit()
     
-    # Redirect to login page with success message
-    return RedirectResponse(url="/login?message=Registration successful, please login", status_code=302)
+    # Redirect to login page with pending approval message
+    return RedirectResponse(url="/login?message=Registration submitted successfully. Your account is pending admin approval.", status_code=302)
 
 # Get current user info
 @router.get("/me", response_model=UserSchema)
 async def read_users_me(current_user: User = Depends(get_current_active_user_from_cookie)):
     """Get current user information"""
     return current_user
+
+# Admin approval routes
+@router.get("/pending-users", response_class=HTMLResponse)
+async def pending_users_page(
+    request: Request,
+    current_user: User = Depends(get_current_active_user_from_cookie),
+    db: Session = Depends(get_db)
+):
+    """Display pending users for admin approval"""
+    if current_user.role not in ['admin', 'manager']:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    pending_users = db.query(User).filter(
+        User.requires_approval == True,
+        User.is_approved == False
+    ).all()
+    
+    return templates.TemplateResponse(
+        "auth/pending_users.html", 
+        {"request": request, "pending_users": pending_users, "current_user": current_user}
+    )
+
+@router.post("/approve-user/{user_id}")
+async def approve_user(
+    user_id: int,
+    current_user: User = Depends(get_current_active_user_from_cookie),
+    db: Session = Depends(get_db)
+):
+    """Approve a pending user"""
+    if current_user.role not in ['admin', 'manager']:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if not user.requires_approval or user.is_approved:
+        raise HTTPException(status_code=400, detail="User does not require approval")
+    
+    # Approve the user
+    user.is_approved = True
+    user.is_active = True
+    user.approved_by = current_user.id
+    user.approved_at = datetime.utcnow()
+    
+    db.commit()
+    
+    return {"message": f"User {user.username} has been approved successfully"}
+
+@router.post("/reject-user/{user_id}")
+async def reject_user(
+    user_id: int,
+    current_user: User = Depends(get_current_active_user_from_cookie),
+    db: Session = Depends(get_db)
+):
+    """Reject a pending user"""
+    if current_user.role not in ['admin', 'manager']:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if not user.requires_approval or user.is_approved:
+        raise HTTPException(status_code=400, detail="User does not require approval")
+    
+    # Delete the rejected user
+    db.delete(user)
+    db.commit()
+    
+    return {"message": f"User {user.username} has been rejected and removed"}
 
 # Logout
 @router.post("/logout")

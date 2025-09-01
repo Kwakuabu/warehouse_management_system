@@ -17,11 +17,16 @@ class User(Base):
     role = Column(String(20), nullable=False, default="staff")  # admin, manager, staff
     hospital_id = Column(Integer, ForeignKey("customers.id"), nullable=True)  # Link staff to hospital
     is_active = Column(Boolean, default=True)
+    requires_approval = Column(Boolean, default=True)  # New users require admin approval
+    is_approved = Column(Boolean, default=False)  # Admin approval status
+    approved_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # Who approved the user
+    approved_at = Column(DateTime, nullable=True)  # When the user was approved
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     hospital = relationship("Customer", foreign_keys=[hospital_id])
+    approver = relationship("User", foreign_keys=[approved_by], remote_side=[id])
 
 class Vendor(Base):
     __tablename__ = "vendors"

@@ -197,16 +197,12 @@
 
 {% block extra_js %}
 <script>
-// Test if JavaScript is loading
-console.log('Vendor list JavaScript loaded');
-alert('JavaScript loaded successfully');
-
+// Vendor list JavaScript
 let deleteVendorId = null;
 let deleteVendorName = null;
 
 function deleteVendor(vendorId) {
     console.log('Delete vendor called with ID:', vendorId);
-    alert('Delete function called for vendor ID: ' + vendorId); // Simple test
     
     deleteVendorId = vendorId;
     // Get vendor name from the button's data attribute
@@ -229,7 +225,7 @@ function deleteVendor(vendorId) {
         console.log('Modal should be showing now');
     } catch (error) {
         console.error('Error showing modal:', error);
-        alert('Error showing modal: ' + error.message);
+        showNotification('error', 'Error showing delete confirmation modal');
     }
 }
 

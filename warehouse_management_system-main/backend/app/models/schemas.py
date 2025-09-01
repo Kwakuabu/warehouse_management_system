@@ -12,6 +12,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    hospital_id: Optional[int] = None
 
 class UserUpdate(BaseModel):
     username: Optional[str] = None

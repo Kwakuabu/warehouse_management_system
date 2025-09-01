@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+
+{% block title %}Pending User Approvals - Warehouse Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">
+                        <i class="fas fa-user-clock me-2"></i>Pending User Approvals
+                    </h2>
+                    <div class="header-actions">
+                        <a href="/dashboard/" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="summary-card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-user-clock fa-2x mb-2"></i>
+                                <h4 class="mb-1">{{ pending_users|length }}</h4>
+                                <p class="mb-0">Pending Approvals</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="summary-card bg-info text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-users fa-2x mb-2"></i>
+                                <h4 class="mb-1">{{ pending_users|selectattr('role', 'equalto', 'staff')|list|length }}</h4>
+                                <p class="mb-0">Staff Users</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="summary-card bg-success text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-user-tie fa-2x mb-2"></i>
+                                <h4 class="mb-1">{{ pending_users|selectattr('role', 'equalto', 'manager')|list|length }}</h4>
+                                <p class="mb-0">Manager Users</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="summary-card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-calendar-alt fa-2x mb-2"></i>
+                                <h4 class="mb-1">{{ pending_users|selectattr('created_at', 'ne', None)|list|length }}</h4>
+                                <p class="mb-0">New Today</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if pending_users %}
+                <!-- Pending Users Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>User Info</th>
+                                <th>Role</th>
+                                <th>Contact</th>
+                                <th>Registration Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in pending_users %}
+                            <tr data-user-id="{{ user.id }}">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="user-avatar me-3 d-flex align-items-center justify-content-center" 
+                                             style="width: 50px; height: 50px; background: #e3f2fd; border-radius: 50%;">
+                                            <i class="fas fa-user text-primary fa-lg"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">{{ user.full_name }}</h6>
+                                            <small class="text-muted">@{{ user.username }}</small>
+                                            {% if user.hospital %}
+                                            <br><small class="text-info">{{ user.hospital.name }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if user.role == 'manager' else 'info' if user.role == 'staff' else 'warning' }}">
+                                        {{ user.role|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div>
+                                        <div><i class="fas fa-envelope me-2 text-muted"></i>{{ user.email }}</div>
+                                        {% if user.hospital %}
+                                        <div><i class="fas fa-hospital me-2 text-muted"></i>{{ user.hospital.name }}</div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-muted">
+                                        <i class="fas fa-calendar me-2"></i>
+                                        {{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else 'N/A' }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-success" 
+                                                onclick="approveUser({{ user.id }}, '{{ user.username }}')">
+                                            <i class="fas fa-check me-1"></i>Approve
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger" 
+                                                onclick="rejectUser({{ user.id }}, '{{ user.username }}')">
+                                            <i class="fas fa-times me-1"></i>Reject
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <!-- No Pending Users -->
+                <div class="text-center py-5">
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h4>No Pending Approvals</h4>
+                        <p class="text-muted">All user registrations have been processed.</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Approval Confirmation Modal -->
+<div class="modal fade" id="approvalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="approvalModalTitle">Confirm Action</h5>
+                <button type="button" class="btn-close" data-bbs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="approvalModalBody">
+                <!-- Content will be dynamically updated -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmAction">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.summary-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+}
+
+.user-avatar {
+    border: 2px solid #e3f2fd;
+}
+
+.empty-state {
+    color: #6c757d;
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-group .btn {
+    margin-right: 0.25rem;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentAction = null;
+let currentUserId = null;
+let currentUsername = null;
+
+function approveUser(userId, username) {
+    currentAction = 'approve';
+    currentUserId = userId;
+    currentUsername = username;
+    
+    const modal = document.getElementById('approvalModal');
+    const modalTitle = document.getElementById('approvalModalTitle');
+    const modalBody = document.getElementById('approvalModalBody');
+    const confirmBtn = document.getElementById('confirmAction');
+    
+    modalTitle.textContent = 'Approve User';
+    modalBody.innerHTML = `
+        <div class="text-center">
+            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+            <h5>Approve User Account</h5>
+            <p>Are you sure you want to approve <strong>${username}</strong>?</p>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                This will activate the user account and allow them to log in.
+            </div>
+        </div>
+    `;
+    confirmBtn.className = 'btn btn-success';
+    confirmBtn.innerHTML = '<i class="fas fa-check me-2"></i>Approve User';
+    
+    const bootstrapModal = new bootstrap.Modal(modal);
+    bootstrapModal.show();
+}
+
+function rejectUser(userId, username) {
+    currentAction = 'reject';
+    currentUserId = userId;
+    currentUsername = username;
+    
+    const modal = document.getElementById('approvalModal');
+    const modalTitle = document.getElementById('approvalModalTitle');
+    const modalBody = document.getElementById('approvalModalBody');
+    const confirmBtn = document.getElementById('confirmAction');
+    
+    modalTitle.textContent = 'Reject User';
+    modalBody.innerHTML = `
+        <div class="text-center">
+            <i class="fas fa-times-circle fa-3x text-danger mb-3"></i>
+            <h5>Reject User Account</h5>
+            <p>Are you sure you want to reject <strong>${username}</strong>?</p>
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Warning:</strong> This action cannot be undone. The user account will be permanently deleted.
+            </div>
+        </div>
+    `;
+    confirmBtn.className = 'btn btn-danger';
+    confirmBtn.innerHTML = '<i class="fas fa-times me-2"></i>Reject User';
+    
+    const bootstrapModal = new bootstrap.Modal(modal);
+    bootstrapModal.show();
+}
+
+// Handle confirmation button click
+document.getElementById('confirmAction').addEventListener('click', async function() {
+    if (!currentAction || !currentUserId) return;
+    
+    const confirmBtn = this;
+    const originalText = confirmBtn.innerHTML;
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    
+    try {
+        let url, method;
+        if (currentAction === 'approve') {
+            url = `/auth/approve-user/${currentUserId}`;
+            method = 'POST';
+        } else {
+            url = `/auth/reject-user/${currentUserId}`;
+            method = 'POST';
+        }
+        
+        const response = await fetch(url, { method });
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Show success message
+            showNotification('success', data.message);
+            
+            // Remove the row from the table
+            const row = document.querySelector(`tr[data-user-id="${currentUserId}"]`);
+            if (row) {
+                row.remove();
+                
+                // Update summary counts
+                updateSummaryCounts();
+                
+                // Check if no more pending users
+                const tbody = document.querySelector('tbody');
+                if (tbody.children.length === 0) {
+                    location.reload(); // Reload to show empty state
+                }
+            }
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('approvalModal'));
+            modal.hide();
+        } else {
+            throw new Error(data.detail || 'Operation failed');
+        }
+    } catch (error) {
+        showNotification('error', `Failed to ${currentAction} user: ${error.message}`);
+    } finally {
+        // Reset button state
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = originalText;
+    }
+});
+
+function updateSummaryCounts() {
+    const pendingCount = document.querySelectorAll('tbody tr').length;
+    const summaryCards = document.querySelectorAll('.summary-card h4');
+    if (summaryCards[0]) {
+        summaryCards[0].textContent = pendingCount;
+    }
+}
+
+function showNotification(type, message) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

@@ -48,6 +48,9 @@ def authenticate_user(db: Session, username: str, password: str):
         return False
     if not verify_password(password, user.hashed_password):
         return False
+    # Check if user requires approval and is not approved
+    if user.requires_approval and not user.is_approved:
+        return False
     return user
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -150,3 +153,10 @@ def check_user_roles_from_cookie(allowed_roles: list):
             )
         return current_user
     return role_checker
+
+async def get_pending_users_count(db: Session = Depends(get_db)):
+    """Get count of pending user approvals"""
+    return db.query(User).filter(
+        User.requires_approval == True,
+        User.is_approved == False
+    ).count()

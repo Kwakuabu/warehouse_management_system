@@ -79,17 +79,31 @@ async def financial_reports(
     else:
         end_date = datetime.utcnow()
     
-    # Generate financial data based on report type
-    if report_type == "summary":
-        financial_data = generate_financial_summary(db, start_date, end_date)
-    elif report_type == "revenue":
-        financial_data = generate_revenue_report(db, start_date, end_date)
-    elif report_type == "expenses":
-        financial_data = generate_expense_report(db, start_date, end_date)
-    elif report_type == "profit":
-        financial_data = generate_profit_report(db, start_date, end_date)
+    # For staff users, filter by their hospital
+    if current_user.role == "staff" and current_user.hospital_id:
+        # Generate hospital-specific financial data
+        if report_type == "summary":
+            financial_data = generate_hospital_financial_summary(db, start_date, end_date, current_user.hospital_id)
+        elif report_type == "revenue":
+            financial_data = generate_hospital_revenue_report(db, start_date, end_date, current_user.hospital_id)
+        elif report_type == "expenses":
+            financial_data = generate_hospital_expense_report(db, start_date, end_date, current_user.hospital_id)
+        elif report_type == "profit":
+            financial_data = generate_hospital_profit_report(db, start_date, end_date, current_user.hospital_id)
+        else:
+            financial_data = generate_hospital_financial_summary(db, start_date, end_date, current_user.hospital_id)
     else:
-        financial_data = generate_financial_summary(db, start_date, end_date)
+        # Generate full financial data for admin/manager
+        if report_type == "summary":
+            financial_data = generate_financial_summary(db, start_date, end_date)
+        elif report_type == "revenue":
+            financial_data = generate_revenue_report(db, start_date, end_date)
+        elif report_type == "expenses":
+            financial_data = generate_expense_report(db, start_date, end_date)
+        elif report_type == "profit":
+            financial_data = generate_profit_report(db, start_date, end_date)
+        else:
+            financial_data = generate_financial_summary(db, start_date, end_date)
     
     return templates.TemplateResponse("reports/financial.html", {
         "request": request,
@@ -111,18 +125,35 @@ async def inventory_reports(
 ):
     """Display inventory reports"""
     
-    if report_type == "overview":
-        inventory_data = generate_inventory_overview(db)
-    elif report_type == "low_stock":
-        inventory_data = generate_low_stock_report(db)
-    elif report_type == "expiry":
-        inventory_data = generate_expiry_report(db)
-    elif report_type == "movements":
-        inventory_data = generate_movement_report(db)
-    elif report_type == "value":
-        inventory_data = generate_inventory_value_report(db)
+    # For staff users, filter by their hospital
+    if current_user.role == "staff" and current_user.hospital_id:
+        # Generate hospital-specific inventory data
+        if report_type == "overview":
+            inventory_data = generate_hospital_inventory_overview(db, current_user.hospital_id)
+        elif report_type == "low_stock":
+            inventory_data = generate_hospital_low_stock_report(db, current_user.hospital_id)
+        elif report_type == "expiry":
+            inventory_data = generate_hospital_expiry_report(db, current_user.hospital_id)
+        elif report_type == "movements":
+            inventory_data = generate_hospital_movement_report(db, current_user.hospital_id)
+        elif report_type == "value":
+            inventory_data = generate_hospital_inventory_value_report(db, current_user.hospital_id)
+        else:
+            inventory_data = generate_hospital_inventory_overview(db, current_user.hospital_id)
     else:
-        inventory_data = generate_inventory_overview(db)
+        # Generate full inventory data for admin/manager
+        if report_type == "overview":
+            inventory_data = generate_inventory_overview(db)
+        elif report_type == "low_stock":
+            inventory_data = generate_low_stock_report(db)
+        elif report_type == "expiry":
+            inventory_data = generate_expiry_report(db)
+        elif report_type == "movements":
+            inventory_data = generate_movement_report(db)
+        elif report_type == "value":
+            inventory_data = generate_inventory_value_report(db)
+        else:
+            inventory_data = generate_inventory_overview(db)
     
     # Get categories for filter
     categories = db.query(Category).all()
@@ -158,7 +189,11 @@ async def customer_analytics(
     else:
         end_date = datetime.utcnow()
     
-    customer_data = generate_customer_analytics(db, start_date, end_date)
+    # For staff users, show only their hospital's data
+    if current_user.role == "staff" and current_user.hospital_id:
+        customer_data = generate_hospital_customer_analytics(db, start_date, end_date, current_user.hospital_id)
+    else:
+        customer_data = generate_customer_analytics(db, start_date, end_date)
     
     return templates.TemplateResponse("reports/customers.html", {
         "request": request,
@@ -190,7 +225,11 @@ async def vendor_analytics(
     else:
         end_date = datetime.utcnow()
     
-    vendor_data = generate_vendor_analytics(db, start_date, end_date)
+    # For staff users, show only vendors related to their hospital's orders
+    if current_user.role == "staff" and current_user.hospital_id:
+        vendor_data = generate_hospital_vendor_analytics(db, start_date, end_date, current_user.hospital_id)
+    else:
+        vendor_data = generate_vendor_analytics(db, start_date, end_date)
     
     return templates.TemplateResponse("reports/vendors.html", {
         "request": request,
@@ -220,17 +259,33 @@ async def sales_report(
     else:
         end_date_dt = datetime.utcnow()
 
-    # Total sales and revenue in period
-    total_sales_orders = db.query(SalesOrder).filter(
-        SalesOrder.order_date.between(start_date_dt, end_date_dt)
-    ).count()
-    total_revenue = db.query(func.sum(SalesOrder.total_amount)).filter(
-        SalesOrder.order_date.between(start_date_dt, end_date_dt),
-        SalesOrder.status.in_(["delivered", "shipped"])
-    ).scalar() or 0
+    # For staff users, show only their hospital's sales data
+    if current_user.role == "staff" and current_user.hospital_id:
+        # Total sales and revenue in period for hospital only
+        total_sales_orders = db.query(SalesOrder).filter(
+            SalesOrder.customer_id == current_user.hospital_id,
+            SalesOrder.order_date.between(start_date_dt, end_date_dt)
+        ).count()
+        total_revenue = db.query(func.sum(SalesOrder.total_amount)).filter(
+            SalesOrder.customer_id == current_user.hospital_id,
+            SalesOrder.order_date.between(start_date_dt, end_date_dt),
+            SalesOrder.status.in_(["delivered", "shipped"])
+        ).scalar() or 0
 
-    # Recent sales orders
-    recent_sales = get_recent_sales(db, limit=10)
+        # Recent sales orders for hospital only
+        recent_sales = get_hospital_recent_sales(db, current_user.hospital_id, limit=10)
+    else:
+        # Total sales and revenue in period for all
+        total_sales_orders = db.query(SalesOrder).filter(
+            SalesOrder.order_date.between(start_date_dt, end_date_dt)
+        ).count()
+        total_revenue = db.query(func.sum(SalesOrder.total_amount)).filter(
+            SalesOrder.order_date.between(start_date_dt, end_date_dt),
+            SalesOrder.status.in_(["delivered", "shipped"])
+        ).scalar() or 0
+
+        # Recent sales orders for all
+        recent_sales = get_recent_sales(db, limit=10)
 
     return templates.TemplateResponse("reports/sales.html", {
         "request": request,
@@ -821,6 +876,38 @@ def generate_customer_analytics(db: Session, start_date: datetime, end_date: dat
         "avg_revenue_per_customer": round(avg_revenue_per_customer, 2)
     }
 
+# Additional hospital-specific functions
+
+def generate_hospital_vendor_analytics(db: Session, start_date: datetime, end_date: datetime, hospital_id: int) -> Dict[str, Any]:
+    """Generate hospital-specific vendor analytics"""
+    # For hospital users, show vendors related to their orders
+    # This would need to be implemented based on your business logic
+    # For now, return empty data
+    return {
+        "vendors": [],
+        "total_vendors": 0,
+        "total_spent": 0,
+        "avg_spent_per_vendor": 0
+    }
+
+def get_hospital_recent_sales(db: Session, hospital_id: int, limit: int = 10) -> List[Dict]:
+    """Get recent sales orders for a specific hospital"""
+    sales = db.query(SalesOrder).filter(
+        SalesOrder.customer_id == hospital_id
+    ).order_by(SalesOrder.order_date.desc()).limit(limit).all()
+    
+    return [
+        {
+            "id": sale.id,
+            "order_number": sale.order_number,
+            "customer_name": sale.customer.name if sale.customer else "Unknown",
+            "total_amount": float(sale.total_amount),
+            "status": sale.status,
+            "order_date": sale.order_date
+        }
+        for sale in sales
+    ]
+
 def generate_vendor_analytics(db: Session, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
     """Generate vendor analytics"""
     # Get vendors with their purchase data
@@ -854,4 +941,222 @@ def generate_vendor_analytics(db: Session, start_date: datetime, end_date: datet
         "total_vendors": total_vendors,
         "total_spent": total_spent,
         "avg_spent_per_vendor": round(avg_spent_per_vendor, 2)
+    }
+
+# Hospital-specific report functions for staff users
+
+def generate_hospital_financial_summary(db: Session, start_date: datetime, end_date: datetime, hospital_id: int) -> Dict[str, Any]:
+    """Generate hospital-specific financial summary"""
+    # Get hospital's sales orders
+    hospital_orders = db.query(SalesOrder).filter(
+        SalesOrder.customer_id == hospital_id,
+        SalesOrder.order_date.between(start_date, end_date)
+    ).all()
+    
+    total_revenue = sum(float(order.total_amount) for order in hospital_orders)
+    total_orders = len(hospital_orders)
+    avg_order_value = total_revenue / total_orders if total_orders > 0 else 0
+    
+    return {
+        "total_revenue": total_revenue,
+        "total_orders": total_orders,
+        "avg_order_value": round(avg_order_value, 2),
+        "period": f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}"
+    }
+
+def generate_hospital_revenue_report(db: Session, start_date: datetime, end_date: datetime, hospital_id: int) -> Dict[str, Any]:
+    """Generate hospital-specific revenue report"""
+    # Get hospital's sales orders by month
+    monthly_revenue = db.query(
+        func.date_format(SalesOrder.order_date, '%Y-%m').label('month'),
+        func.sum(SalesOrder.total_amount).label('revenue')
+    ).filter(
+        SalesOrder.customer_id == hospital_id,
+        SalesOrder.order_date.between(start_date, end_date)
+    ).group_by(func.date_format(SalesOrder.order_date, '%Y-%m')).all()
+    
+    return {
+        "monthly_revenue": [
+            {"month": month, "revenue": float(revenue)} 
+            for month, revenue in monthly_revenue
+        ]
+    }
+
+def generate_hospital_expense_report(db: Session, start_date: datetime, end_date: datetime, hospital_id: int) -> Dict[str, Any]:
+    """Generate hospital-specific expense report"""
+    # For hospital users, expenses are their purchase orders
+    hospital_orders = db.query(SalesOrder).filter(
+        SalesOrder.customer_id == hospital_id,
+        SalesOrder.order_date.between(start_date, end_date)
+    ).all()
+    
+    total_expenses = sum(float(order.total_amount) for order in hospital_orders)
+    
+    return {
+        "total_expenses": total_expenses,
+        "period": f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}"
+    }
+
+def generate_hospital_profit_report(db: Session, start_date: datetime, end_date: datetime, hospital_id: int) -> Dict[str, Any]:
+    """Generate hospital-specific profit report"""
+    # For hospital users, profit is revenue minus expenses (their orders)
+    hospital_orders = db.query(SalesOrder).filter(
+        SalesOrder.customer_id == hospital_id,
+        SalesOrder.order_date.between(start_date, end_date)
+    ).all()
+    
+    total_revenue = sum(float(order.total_amount) for order in hospital_orders)
+    # For simplicity, assume 20% profit margin
+    total_profit = total_revenue * 0.2
+    
+    return {
+        "total_revenue": total_revenue,
+        "total_profit": total_profit,
+        "profit_margin": 20.0,
+        "period": f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}"
+    }
+
+def generate_hospital_inventory_overview(db: Session, hospital_id: int) -> Dict[str, Any]:
+    """Generate hospital-specific inventory overview"""
+    from app.models.models import HospitalInventory
+    
+    # Get hospital's inventory
+    hospital_inventory = db.query(HospitalInventory).filter(
+        HospitalInventory.hospital_id == hospital_id
+    ).all()
+    
+    total_items = len(hospital_inventory)
+    in_stock_items = sum(1 for item in hospital_inventory if item.current_stock > 0)
+    low_stock_items = sum(1 for item in hospital_inventory if item.current_stock <= item.reorder_point and item.current_stock > 0)
+    out_of_stock_items = sum(1 for item in hospital_inventory if item.current_stock == 0)
+    
+    # Calculate total value
+    total_value = 0
+    for item in hospital_inventory:
+        product = db.query(Product).filter(Product.id == item.product_id).first()
+        if product and product.unit_price:
+            total_value += item.current_stock * float(product.unit_price)
+    
+    return {
+        "total_items": total_items,
+        "in_stock_items": in_stock_items,
+        "low_stock_items": low_stock_items,
+        "out_of_stock_items": out_of_stock_items,
+        "total_value": float(total_value)
+    }
+
+def generate_hospital_low_stock_report(db: Session, hospital_id: int) -> Dict[str, Any]:
+    """Generate hospital-specific low stock report"""
+    from app.models.models import HospitalInventory
+    
+    # Get hospital's low stock items
+    low_stock_items = db.query(HospitalInventory).filter(
+        HospitalInventory.hospital_id == hospital_id,
+        HospitalInventory.current_stock <= HospitalInventory.reorder_point,
+        HospitalInventory.current_stock > 0
+    ).all()
+    
+    items_data = []
+    for item in low_stock_items:
+        product = db.query(Product).filter(Product.id == item.product_id).first()
+        if product:
+            items_data.append({
+                "product_name": product.name,
+                "current_stock": item.current_stock,
+                "reorder_point": item.reorder_point,
+                "max_stock": item.max_stock,
+                "last_restocked": item.last_restocked
+            })
+    
+    return {
+        "low_stock_items": items_data,
+        "total_low_stock_items": len(items_data)
+    }
+
+def generate_hospital_expiry_report(db: Session, hospital_id: int) -> Dict[str, Any]:
+    """Generate hospital-specific expiry report"""
+    # For hospital inventory, we don't track expiry dates in HospitalInventory
+    # This would need to be implemented if hospitals track expiry dates
+    return {
+        "expiring_items": [],
+        "total_expiring_items": 0,
+        "note": "Expiry tracking not implemented for hospital inventory"
+    }
+
+def generate_hospital_movement_report(db: Session, hospital_id: int) -> Dict[str, Any]:
+    """Generate hospital-specific movement report"""
+    # For hospital inventory, movements are when they receive stock
+    # This would need to be implemented if hospitals track stock movements
+    return {
+        "movements": [],
+        "total_movements": 0,
+        "note": "Movement tracking not implemented for hospital inventory"
+    }
+
+def generate_hospital_inventory_value_report(db: Session, hospital_id: int) -> Dict[str, Any]:
+    """Generate hospital-specific inventory value report"""
+    from app.models.models import HospitalInventory
+    
+    # Get hospital's inventory
+    hospital_inventory = db.query(HospitalInventory).filter(
+        HospitalInventory.hospital_id == hospital_id
+    ).all()
+    
+    total_value = 0
+    category_values = {}
+    
+    for item in hospital_inventory:
+        product = db.query(Product).filter(Product.id == item.product_id).first()
+        if product and product.unit_price:
+            item_value = item.current_stock * float(product.unit_price)
+            total_value += item_value
+            
+            # Group by category
+            if product.category:
+                category_name = product.category.name
+                if category_name not in category_values:
+                    category_values[category_name] = 0
+                category_values[category_name] += item_value
+    
+    return {
+        "total_value": float(total_value),
+        "category_values": [
+            {"category": cat, "value": float(val)} 
+            for cat, val in category_values.items()
+        ]
+    }
+
+def generate_hospital_customer_analytics(db: Session, start_date: datetime, end_date: datetime, hospital_id: int) -> Dict[str, Any]:
+    """Generate hospital-specific customer analytics"""
+    # For hospital users, they are the customer, so show their own data
+    hospital = db.query(Customer).filter(Customer.id == hospital_id).first()
+    
+    if not hospital:
+        return {
+            "customers": [],
+            "total_customers": 0,
+            "total_revenue": 0,
+            "avg_revenue_per_customer": 0
+        }
+    
+    # Get hospital's order data
+    hospital_orders = db.query(SalesOrder).filter(
+        SalesOrder.customer_id == hospital_id,
+        SalesOrder.order_date.between(start_date, end_date)
+    ).all()
+    
+    total_revenue = sum(float(order.total_amount) for order in hospital_orders)
+    total_orders = len(hospital_orders)
+    avg_revenue_per_customer = total_revenue if total_orders > 0 else 0
+    
+    return {
+        "customers": [{
+            "id": hospital.id,
+            "name": hospital.name,
+            "total_orders": total_orders,
+            "total_revenue": total_revenue
+        }],
+        "total_customers": 1,
+        "total_revenue": total_revenue,
+        "avg_revenue_per_customer": round(avg_revenue_per_customer, 2)
     } 

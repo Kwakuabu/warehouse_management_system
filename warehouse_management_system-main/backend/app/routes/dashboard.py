@@ -99,6 +99,12 @@ def calculate_dashboard_stats(db: Session, now: datetime, thirty_days_ago: datet
         InventoryItem.quantity_available > 0
     ).count()
     
+    # Pending user approvals (admin/manager only)
+    pending_users = db.query(User).filter(
+        User.requires_approval == True,
+        User.is_approved == False
+    ).count()
+    
     # Order statistics
     total_purchase_orders = db.query(PurchaseOrder).count()
     pending_purchase_orders = db.query(PurchaseOrder).filter(
@@ -156,6 +162,7 @@ def calculate_dashboard_stats(db: Session, now: datetime, thirty_days_ago: datet
         "monthly_purchase_value": float(monthly_purchase_value),
         "monthly_sales_value": float(monthly_sales_value),
         "recent_movements": recent_movements,
+        "pending_users": pending_users,
         "last_updated": now.isoformat()
     }
 
@@ -223,7 +230,21 @@ def get_active_alerts(db: Session, limit: int = 5):
 def calculate_staff_dashboard_stats(db: Session, now: datetime, thirty_days_ago: datetime, current_user: User) -> Dict[str, Any]:
     """Calculate customer-facing dashboard statistics for staff users (hospital buyers)"""
     
-    # Get available products (what they can order)
+    # Check if staff user has hospital assigned
+    if not current_user.hospital_id:
+        return {
+            "total_products": 0,
+            "available_products": 0,
+            "products_with_stock": 0,
+            "total_inventory_value": 0.0,
+            "total_sales_orders": 0,
+            "pending_sales_orders": 0,
+            "total_inventory_items": 0,
+            "recent_movements": 0,
+            "last_updated": now.isoformat()
+        }
+    
+    # Get available products (what they can order from warehouse)
     total_products = db.query(Product).filter(Product.is_active == True).count()
     available_products = db.query(Product).filter(
         Product.is_active == True,
@@ -239,30 +260,37 @@ def calculate_staff_dashboard_stats(db: Session, now: datetime, thirty_days_ago:
         InventoryItem.status == "available"
     ).distinct().count()
     
-    # Get their own sales orders (as customer)
-    # Note: In a real B2B system, staff users would be linked to specific customers
-    # For now, we'll show all sales orders they can view
-    total_sales_orders = db.query(SalesOrder).count()
+    # Get their hospital's sales orders only
+    total_sales_orders = db.query(SalesOrder).filter(
+        SalesOrder.customer_id == current_user.hospital_id
+    ).count()
     pending_sales_orders = db.query(SalesOrder).filter(
+        SalesOrder.customer_id == current_user.hospital_id,
         SalesOrder.status.in_(["pending", "confirmed", "shipped"])
     ).count()
     
-    # Get their own inventory (what they've purchased)
-    # This would typically be linked to their customer account
-    total_inventory_items = db.query(InventoryItem).filter(InventoryItem.quantity_available > 0).count()
+    # Get their hospital's inventory (from HospitalInventory table)
+    from app.models.models import HospitalInventory
+    total_inventory_items = db.query(HospitalInventory).filter(
+        HospitalInventory.hospital_id == current_user.hospital_id
+    ).count()
     
-    # Calculate total value of available inventory (what they can order)
-    inventory_items = db.query(InventoryItem).filter(
-        InventoryItem.quantity_available > 0,
-        InventoryItem.status == "available"
+    # Calculate total value of their hospital's inventory
+    hospital_inventory = db.query(HospitalInventory).filter(
+        HospitalInventory.hospital_id == current_user.hospital_id
     ).all()
-    total_inventory_value = sum([item.quantity_available * float(item.cost_price) for item in inventory_items if item.cost_price])
     
-    # Get recent stock movements (what's been received/available)
+    total_inventory_value = 0
+    for item in hospital_inventory:
+        product = db.query(Product).filter(Product.id == item.product_id).first()
+        if product and product.unit_price:
+            total_inventory_value += item.current_stock * float(product.unit_price)
+    
+    # Get recent stock movements for their hospital only
     recent_movements = db.query(StockMovement).filter(
         StockMovement.created_at >= thirty_days_ago,
         StockMovement.movement_type.in_(["received", "available"])
-    ).count()
+    ).count()  # Note: StockMovement doesn't have hospital_id, so this is warehouse-wide
     
     return {
         "total_products": total_products,
@@ -280,7 +308,12 @@ def get_staff_recent_activities(db: Session, current_user: User, limit: int = 10
     """Get customer-facing recent activities for staff users (hospital buyers)"""
     activities = []
     
+    # Check if staff user has hospital assigned
+    if not current_user.hospital_id:
+        return activities
+    
     # Recent stock movements (what's been received/available for ordering)
+    # Note: StockMovement doesn't have hospital_id, so this shows warehouse-wide movements
     movements = db.query(StockMovement).filter(
         StockMovement.movement_type.in_(["received", "available"])
     ).order_by(desc(StockMovement.created_at)).limit(limit//2).all()
@@ -295,10 +328,10 @@ def get_staff_recent_activities(db: Session, current_user: User, limit: int = 10
                 "icon": "fas fa-boxes"
             })
     
-    # Recent sales orders (their orders)
-    recent_sales_orders = db.query(SalesOrder).order_by(
-        desc(SalesOrder.order_date)
-    ).limit(limit//2).all()
+    # Recent sales orders (their hospital's orders only)
+    recent_sales_orders = db.query(SalesOrder).filter(
+        SalesOrder.customer_id == current_user.hospital_id
+    ).order_by(desc(SalesOrder.order_date)).limit(limit//2).all()
     
     for order in recent_sales_orders:
         customer = db.query(Customer).filter(Customer.id == order.customer_id).first()
@@ -316,7 +349,8 @@ def get_staff_recent_activities(db: Session, current_user: User, limit: int = 10
 
 def get_available_products_for_staff(db: Session, limit: int = 8):
     """Get products available for ordering by staff users"""
-    # Get products with available stock
+    # Get products with available stock from warehouse
+    # Staff users can see all available products in warehouse, but their orders are restricted to their hospital
     available_products = db.query(Product).join(InventoryItem).filter(
         Product.is_active == True,
         InventoryItem.quantity_available > 0,

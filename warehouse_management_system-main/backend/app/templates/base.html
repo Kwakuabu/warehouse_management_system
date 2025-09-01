@@ -162,6 +162,17 @@
                                 Settings
                             </a>
                         </li>
+                        
+                        <!-- User Approvals -->
+                        <li class="nav-item">
+                            <a class="nav-link text-white {% if request.url.path.startswith('/auth/pending-users') %}active{% endif %}" href="/auth/pending-users">
+                                <i class="fas fa-user-clock me-2"></i>
+                                User Approvals
+                                {% if current_user.role in ['admin', 'manager'] and request.state.pending_users_count and request.state.pending_users_count > 0 %}
+                                <span class="badge bg-warning text-dark ms-2">{{ request.state.pending_users_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
                         {% endif %}
                     </ul>
                     

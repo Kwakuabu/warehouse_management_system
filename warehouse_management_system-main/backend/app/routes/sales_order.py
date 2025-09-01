@@ -235,6 +235,11 @@ async def sales_order_detail(
     if not sales_order:
         raise HTTPException(status_code=404, detail="Sales order not found")
     
+    # For staff users, ensure they can only see orders for their hospital
+    if current_user.role == "staff" and current_user.hospital_id:
+        if sales_order.customer_id != current_user.hospital_id:
+            raise HTTPException(status_code=403, detail="Access denied - You can only view orders for your hospital")
+    
     # Pre-load inventory items for each order item to avoid N+1 queries
     for item in sales_order.items:
         if item.inventory_item_id:
@@ -266,11 +271,24 @@ async def edit_sales_order_page(
     if not sales_order:
         raise HTTPException(status_code=404, detail="Sales order not found")
     
+    # For staff users, ensure they can only edit orders for their hospital
+    if current_user.role == "staff" and current_user.hospital_id:
+        if sales_order.customer_id != current_user.hospital_id:
+            raise HTTPException(status_code=403, detail="Access denied - You can only edit orders for your hospital")
+    
     # Only allow editing pending orders
     if sales_order.status not in ["pending", "confirmed"]:
         raise HTTPException(status_code=400, detail="Cannot edit orders that are already shipped or delivered")
     
-    customers = db.query(Customer).filter(Customer.is_active == True).all()
+    # For staff users, only show their hospital; for managers, show all customers
+    if current_user.role == "staff" and current_user.hospital_id:
+        customers = db.query(Customer).filter(
+            Customer.id == current_user.hospital_id,
+            Customer.is_active == True
+        ).all()
+    else:
+        customers = db.query(Customer).filter(Customer.is_active == True).all()
+    
     available_products = db.query(Product).filter(Product.is_active == True).all()
     
     return templates.TemplateResponse("sales_orders/edit.html", {
@@ -302,6 +320,13 @@ async def edit_sales_order(
         sales_order = db.query(SalesOrder).filter(SalesOrder.id == so_id).first()
         if not sales_order:
             raise HTTPException(status_code=404, detail="Sales order not found")
+        
+        # For staff users, ensure they can only edit orders for their hospital
+        if current_user.role == "staff" and current_user.hospital_id:
+            if sales_order.customer_id != current_user.hospital_id:
+                raise HTTPException(status_code=403, detail="Access denied - You can only edit orders for your hospital")
+            if customer_id != current_user.hospital_id:
+                raise HTTPException(status_code=403, detail="Staff users can only edit orders for their assigned hospital")
         
         # Only allow editing pending orders
         if sales_order.status not in ["pending", "confirmed"]:

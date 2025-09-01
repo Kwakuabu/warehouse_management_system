@@ -38,12 +38,27 @@ async def staff_inventory_available(
 ):
     """Display available products for staff users (hospital buyers) - Enhanced view"""
     
-    # Get products with available stock (what they can order)
-    available_products = db.query(Product).join(InventoryItem).filter(
-        Product.is_active == True,
-        InventoryItem.quantity_available > 0,
-        InventoryItem.status == "available"
-    ).distinct().order_by(Product.name).all()
+    # For staff users, show only their hospital's inventory
+    if current_user.role == "staff" and current_user.hospital_id:
+        # Get hospital's inventory from HospitalInventory table
+        from app.models.models import HospitalInventory
+        hospital_inventory = db.query(HospitalInventory).filter(
+            HospitalInventory.hospital_id == current_user.hospital_id
+        ).all()
+        
+        # Get products that the hospital has in inventory
+        product_ids = [item.product_id for item in hospital_inventory]
+        available_products = db.query(Product).filter(
+            Product.id.in_(product_ids),
+            Product.is_active == True
+        ).order_by(Product.name).all()
+    else:
+        # For managers, show all available products
+        available_products = db.query(Product).join(InventoryItem).filter(
+            Product.is_active == True,
+            InventoryItem.quantity_available > 0,
+            InventoryItem.status == "available"
+        ).distinct().order_by(Product.name).all()
     
     # Enhanced product data with stock information for staff users
     enhanced_products = []
@@ -661,12 +676,27 @@ async def get_available_products_api(
 ):
     """API endpoint to get available products for staff users (hospital buyers)"""
     
-    # Get products with available stock
-    available_products = db.query(Product).join(InventoryItem).filter(
-        Product.is_active == True,
-        InventoryItem.quantity_available > 0,
-        InventoryItem.status == "available"
-    ).distinct().order_by(Product.name).all()
+    # For staff users, show only their hospital's inventory
+    if current_user.role == "staff" and current_user.hospital_id:
+        # Get hospital's inventory from HospitalInventory table
+        from app.models.models import HospitalInventory
+        hospital_inventory = db.query(HospitalInventory).filter(
+            HospitalInventory.hospital_id == current_user.hospital_id
+        ).all()
+        
+        # Get products that the hospital has in inventory
+        product_ids = [item.product_id for item in hospital_inventory]
+        available_products = db.query(Product).filter(
+            Product.id.in_(product_ids),
+            Product.is_active == True
+        ).order_by(Product.name).all()
+    else:
+        # For managers, show all available products
+        available_products = db.query(Product).join(InventoryItem).filter(
+            Product.is_active == True,
+            InventoryItem.quantity_available > 0,
+            InventoryItem.status == "available"
+        ).distinct().order_by(Product.name).all()
     
     # Format data for staff users
     products_data = []
@@ -725,8 +755,23 @@ async def export_inventory(
     import io
     import csv
     
-    # Get all inventory items
-    inventory_items = db.query(InventoryItem).all()
+    # For staff users, export only their hospital's inventory
+    if current_user.role == "staff" and current_user.hospital_id:
+        from app.models.models import HospitalInventory
+        
+        # Get hospital's inventory from HospitalInventory table
+        hospital_inventory = db.query(HospitalInventory).filter(
+            HospitalInventory.hospital_id == current_user.hospital_id
+        ).all()
+        
+        # Get inventory items for the hospital's products
+        product_ids = [item.product_id for item in hospital_inventory]
+        inventory_items = db.query(InventoryItem).filter(
+            InventoryItem.product_id.in_(product_ids)
+        ).all()
+    else:
+        # For admin/manager, export all inventory items
+        inventory_items = db.query(InventoryItem).all()
     
     # Create CSV data
     output = io.StringIO()

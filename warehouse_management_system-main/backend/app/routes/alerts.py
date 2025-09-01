@@ -25,8 +25,28 @@ async def alerts_list(
 ):
     """Display alerts list page with filters - Manager and Admin only"""
     
-    # Build query with filters
-    query = db.query(Alert)
+    # For staff users, show only alerts related to their hospital
+    if current_user.role == "staff" and current_user.hospital_id:
+        # Get alerts related to the hospital's inventory
+        from app.models.models import HospitalInventory, InventoryItem
+        
+        # Get hospital's product IDs
+        hospital_products = db.query(HospitalInventory.product_id).filter(
+            HospitalInventory.hospital_id == current_user.hospital_id
+        ).all()
+        hospital_product_ids = [p[0] for p in hospital_products]
+        
+        # Filter alerts by hospital's products
+        query = db.query(Alert).filter(
+            Alert.inventory_item_id.in_(
+                db.query(InventoryItem.id).filter(
+                    InventoryItem.product_id.in_(hospital_product_ids)
+                )
+            )
+        )
+    else:
+        # For managers, show all alerts
+        query = db.query(Alert)
     
     if severity:
         query = query.filter(Alert.severity == severity)
@@ -41,23 +61,35 @@ async def alerts_list(
     
     alerts = query.order_by(Alert.created_at.desc()).all()
     
-    # Get alert statistics
-    total_alerts = db.query(Alert).count()
-    unacknowledged_alerts = db.query(Alert).filter(Alert.is_acknowledged == False).count()
-    critical_alerts = db.query(Alert).filter(
-        Alert.severity == "critical",
-        Alert.is_acknowledged == False
-    ).count()
-    high_alerts = db.query(Alert).filter(
-        Alert.severity == "high",
-        Alert.is_acknowledged == False
-    ).count()
-    
-    # Calculate alert statistics by type for the template
-    error_count = db.query(Alert).filter(Alert.severity == "critical").count()
-    warning_count = db.query(Alert).filter(Alert.severity == "high").count()
-    info_count = db.query(Alert).filter(Alert.severity == "medium").count()
-    success_count = db.query(Alert).filter(Alert.severity == "low").count()
+    # Get alert statistics based on user role
+    if current_user.role == "staff" and current_user.hospital_id:
+        # Hospital-specific statistics
+        total_alerts = len(alerts)
+        unacknowledged_alerts = len([a for a in alerts if not a.is_acknowledged])
+        critical_alerts = len([a for a in alerts if a.severity == "critical" and not a.is_acknowledged])
+        high_alerts = len([a for a in alerts if a.severity == "high" and not a.is_acknowledged])
+        
+        error_count = len([a for a in alerts if a.severity == "critical"])
+        warning_count = len([a for a in alerts if a.severity == "high"])
+        info_count = len([a for a in alerts if a.severity == "medium"])
+        success_count = len([a for a in alerts if a.severity == "low"])
+    else:
+        # Full system statistics for managers
+        total_alerts = db.query(Alert).count()
+        unacknowledged_alerts = db.query(Alert).filter(Alert.is_acknowledged == False).count()
+        critical_alerts = db.query(Alert).filter(
+            Alert.severity == "critical",
+            Alert.is_acknowledged == False
+        ).count()
+        high_alerts = db.query(Alert).filter(
+            Alert.severity == "high",
+            Alert.is_acknowledged == False
+        ).count()
+        
+        error_count = db.query(Alert).filter(Alert.severity == "critical").count()
+        warning_count = db.query(Alert).filter(Alert.severity == "high").count()
+        info_count = db.query(Alert).filter(Alert.severity == "medium").count()
+        success_count = db.query(Alert).filter(Alert.severity == "low").count()
     
     return templates.TemplateResponse("alerts/list.html", {
         "request": request,
@@ -87,11 +119,33 @@ async def alerts_list(
 
 # Alert detail page
 @router.get("/detail/{alert_id}", response_class=HTMLResponse)
-async def alert_detail(request: Request, alert_id: int, db: Session = Depends(get_db)):
+async def alert_detail(
+    request: Request, 
+    alert_id: int, 
+    current_user: User = Depends(get_current_active_user_from_cookie),
+    db: Session = Depends(get_db)
+):
     """Display alert details"""
     alert = db.query(Alert).filter(Alert.id == alert_id).first()
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
+    
+    # For staff users, ensure they can only see alerts related to their hospital
+    if current_user.role == "staff" and current_user.hospital_id:
+        from app.models.models import HospitalInventory, InventoryItem
+        
+        # Check if the alert is related to the hospital's inventory
+        if alert.inventory_item_id:
+            inventory_item = db.query(InventoryItem).filter(InventoryItem.id == alert.inventory_item_id).first()
+            if inventory_item:
+                # Check if this product belongs to the hospital
+                hospital_product = db.query(HospitalInventory).filter(
+                    HospitalInventory.hospital_id == current_user.hospital_id,
+                    HospitalInventory.product_id == inventory_item.product_id
+                ).first()
+                
+                if not hospital_product:
+                    raise HTTPException(status_code=403, detail="Access denied - Alert not related to your hospital")
     
     # Get related inventory item if available
     inventory_item = None

@@ -238,6 +238,24 @@
                 </div>
             </div>
 
+            <!-- Hospital selection for staff users -->
+            <div class="form-group" id="hospitalSelection" style="display: none;">
+                <label for="hospital_id">Hospital Assignment *</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-hospital input-icon"></i>
+                    <select id="hospital_id" name="hospital_id" class="form-control role-select">
+                        <option value="">Select a hospital</option>
+                        <option value="2">City General Hospital</option>
+                        <option value="3">Regional Medical Center</option>
+                        <option value="4">Community Health Hospital</option>
+                    </select>
+                </div>
+                <small class="form-text text-muted">
+                    <i class="fas fa-info-circle"></i> 
+                    Staff users must be assigned to a hospital to access the system
+                </small>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label for="password">Password</label>
@@ -277,6 +295,9 @@
             const passwordStrength = document.getElementById('passwordStrength');
             const passwordMatch = document.getElementById('passwordMatch');
             const form = document.getElementById('registerForm');
+            const roleSelect = document.getElementById('role');
+            const hospitalSelection = document.getElementById('hospitalSelection');
+            const hospitalSelect = document.getElementById('hospital_id');
 
             // Password strength checker
             passwordField.addEventListener('input', function() {
@@ -322,10 +343,24 @@
                 }
             });
 
+            // Role change handler - show/hide hospital selection
+            roleSelect.addEventListener('change', function() {
+                if (this.value === 'staff') {
+                    hospitalSelection.style.display = 'block';
+                    hospitalSelect.required = true;
+                } else {
+                    hospitalSelection.style.display = 'none';
+                    hospitalSelect.required = false;
+                    hospitalSelect.value = '';
+                }
+            });
+
             // Form validation
             form.addEventListener('submit', function(e) {
                 const password = passwordField.value;
                 const confirmPassword = confirmPasswordField.value;
+                const role = roleSelect.value;
+                const hospitalId = hospitalSelect.value;
 
                 if (password !== confirmPassword) {
                     e.preventDefault();
@@ -336,6 +371,13 @@
                 if (password.length < 6) {
                     e.preventDefault();
                     alert('Password must be at least 6 characters long!');
+                    return false;
+                }
+
+                // Validate hospital selection for staff users
+                if (role === 'staff' && !hospitalId) {
+                    e.preventDefault();
+                    alert('Staff users must select a hospital!');
                     return false;
                 }
             });
