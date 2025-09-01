@@ -61,7 +61,7 @@
                         </thead>
                         <tbody id="vendorsTableBody">
                             {% for vendor in vendors %}
-                            <tr data-status="{{ vendor.is_active }}" data-type="{{ vendor.vendor_type }}">
+                            <tr data-status="{{ vendor.is_active }}" data-type="{{ vendor.vendor_type }}" data-vendor-id="{{ vendor.id }}">
                                 <td>{{ vendor.id }}</td>
                                 <td>
                                     <div class="d-flex align-items-center">
@@ -114,7 +114,7 @@
                                         <a href="/vendors/{{ vendor.id }}/edit" class="btn btn-sm btn-outline-warning" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteVendor({{ vendor.id }})" title="Delete">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteVendor({{ vendor.id }})" data-vendor-name="{{ vendor.name }}" title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                         {% endif %}
@@ -195,18 +195,62 @@
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_js %}
 <script>
+// Test if JavaScript is loading
+console.log('Vendor list JavaScript loaded');
+alert('JavaScript loaded successfully');
+
 let deleteVendorId = null;
+let deleteVendorName = null;
 
 function deleteVendor(vendorId) {
+    console.log('Delete vendor called with ID:', vendorId);
+    alert('Delete function called for vendor ID: ' + vendorId); // Simple test
+    
     deleteVendorId = vendorId;
-    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    modal.show();
+    // Get vendor name from the button's data attribute
+    const button = event.target.closest('button');
+    deleteVendorName = button.getAttribute('data-vendor-name');
+    console.log('Vendor name:', deleteVendorName);
+    
+    try {
+        // Update modal content with vendor name
+        const modalBody = document.getElementById('deleteModal').querySelector('.modal-body');
+        modalBody.innerHTML = 
+            `Are you sure you want to delete the vendor <strong>"${deleteVendorName}"</strong>? This action cannot be undone.
+            <div class="alert alert-warning mt-3">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Warning:</strong> If this vendor has associated products, they will need to be reassigned.
+            </div>`;
+        
+        const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        modal.show();
+        console.log('Modal should be showing now');
+    } catch (error) {
+        console.error('Error showing modal:', error);
+        alert('Error showing modal: ' + error.message);
+    }
 }
 
-document.getElementById('confirmDelete').addEventListener('click', function() {
+// Test if the confirm delete button exists
+const confirmDeleteBtn = document.getElementById('confirmDelete');
+if (confirmDeleteBtn) {
+    console.log('Confirm delete button found');
+} else {
+    console.error('Confirm delete button not found!');
+}
+
+confirmDeleteBtn.addEventListener('click', function() {
+    console.log('Confirm delete clicked for vendor ID:', deleteVendorId);
     if (deleteVendorId) {
+        // Show loading state
+        const confirmBtn = this;
+        const originalText = confirmBtn.innerHTML;
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
+        confirmBtn.disabled = true;
+        
+        console.log('Sending delete request to:', `/vendors/${deleteVendorId}/delete`);
         fetch(`/vendors/${deleteVendorId}/delete`, {
             method: 'POST',
             headers: {
@@ -214,15 +258,42 @@ document.getElementById('confirmDelete').addEventListener('click', function() {
             }
         })
         .then(response => {
+            console.log('Response status:', response.status);
             if (response.ok) {
-                location.reload();
+                return response.json();
             } else {
-                alert('Error deleting vendor');
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+        })
+        .then(data => {
+            console.log('Delete successful, response data:', data);
+            // Show success message
+            showNotification('success', `Vendor "${deleteVendorName}" has been deleted successfully.`);
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+            modal.hide();
+            
+            // Remove the row from the table
+            const row = document.querySelector(`tr[data-vendor-id="${deleteVendorId}"]`);
+            console.log('Found row to remove:', row);
+            if (row) {
+                row.remove();
+                console.log('Row removed successfully');
+            } else {
+                // If row not found, reload the page
+                console.log('Row not found, reloading page');
+                location.reload();
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error deleting vendor');
+            showNotification('error', `Failed to delete vendor: ${error.message}`);
+        })
+        .finally(() => {
+            // Reset button state
+            confirmBtn.innerHTML = originalText;
+            confirmBtn.disabled = false;
         });
     }
 });
@@ -253,6 +324,29 @@ function filterVendors() {
             row.style.display = 'none';
         }
     });
+}
+
+// Notification function for user feedback
+function showNotification(type, message) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
 }
 </script>
 {% endblock %} 

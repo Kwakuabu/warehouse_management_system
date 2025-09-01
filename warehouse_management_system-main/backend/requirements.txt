@@ -92,3 +92,4 @@ drf-spectacular==0.27.0
 # Additional Utilities
 sqlalchemy-utils==0.41.1
 tzdata==2025.2
+psutil==6.1.0

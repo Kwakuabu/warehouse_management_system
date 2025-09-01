@@ -53,6 +53,12 @@ async def alerts_list(
         Alert.is_acknowledged == False
     ).count()
     
+    # Calculate alert statistics by type for the template
+    error_count = db.query(Alert).filter(Alert.severity == "critical").count()
+    warning_count = db.query(Alert).filter(Alert.severity == "high").count()
+    info_count = db.query(Alert).filter(Alert.severity == "medium").count()
+    success_count = db.query(Alert).filter(Alert.severity == "low").count()
+    
     return templates.TemplateResponse("alerts/list.html", {
         "request": request,
         "alerts": alerts,
@@ -65,7 +71,10 @@ async def alerts_list(
             "unacknowledged_alerts": unacknowledged_alerts,
             "critical_alerts": critical_alerts,
             "high_alerts": high_alerts,
-            "error_count": 0
+            "error_count": error_count,
+            "warning_count": warning_count,
+            "info_count": info_count,
+            "success_count": success_count
         },
         "filters": {
             "severity": severity,
@@ -150,6 +159,64 @@ async def bulk_acknowledge_alerts(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Error bulk acknowledging alerts: {str(e)}")
+
+# Create sample alerts (for testing/demo purposes)
+@router.get("/create-sample")
+async def create_sample_alerts(
+    current_user: User = Depends(check_user_roles_from_cookie(["admin", "manager"])),
+    db: Session = Depends(get_db)
+):
+    """Create sample alerts for testing"""
+    try:
+        # Create sample alerts
+        sample_alerts = [
+            {
+                "alert_type": "low_stock",
+                "message": "Low stock alert: Paracetamol 500mg tablets - Available: 15 units",
+                "severity": "high",
+                "title": "Low Stock Alert"
+            },
+            {
+                "alert_type": "expiry_warning",
+                "message": "Expiry warning: Amoxicillin 250mg capsules (Batch: AMX001) expires in 5 days",
+                "severity": "critical",
+                "title": "Expiry Warning"
+            },
+            {
+                "alert_type": "system_alert",
+                "message": "System maintenance scheduled for tonight at 2:00 AM",
+                "severity": "medium",
+                "title": "System Maintenance"
+            },
+            {
+                "alert_type": "temperature_alert",
+                "message": "Temperature alert: Cold storage unit 3 is running at 8°C (above recommended 2-8°C)",
+                "severity": "critical",
+                "title": "Temperature Alert"
+            },
+            {
+                "alert_type": "inventory_alert",
+                "message": "Inventory count completed successfully for all categories",
+                "severity": "low",
+                "title": "Inventory Count Complete"
+            }
+        ]
+        
+        for alert_data in sample_alerts:
+            alert = Alert(
+                alert_type=alert_data["alert_type"],
+                message=alert_data["message"],
+                severity=alert_data["severity"],
+                is_acknowledged=False
+            )
+            db.add(alert)
+        
+        db.commit()
+        
+        return RedirectResponse(url="/alerts", status_code=302)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Error creating sample alerts: {str(e)}")
 
 # Create alert (for testing/demo purposes)
 @router.post("/create")
@@ -305,6 +372,45 @@ async def api_acknowledge_alert(alert_id: int, db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Error acknowledging alert: {str(e)}")
+
+# Clear all alerts - Admin and Manager only
+@router.get("/clear-all")
+async def clear_all_alerts(
+    current_user: User = Depends(check_user_roles_from_cookie(["admin", "manager"])),
+    db: Session = Depends(get_db)
+):
+    """Clear all alerts"""
+    try:
+        # Delete all alerts
+        db.query(Alert).delete()
+        db.commit()
+        
+        return RedirectResponse(url="/alerts", status_code=302)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Error clearing alerts: {str(e)}")
+
+# Dismiss alert
+@router.get("/{alert_id}/dismiss")
+async def dismiss_alert(
+    alert_id: int,
+    current_user: User = Depends(check_user_roles_from_cookie(["staff", "manager"])),
+    db: Session = Depends(get_db)
+):
+    """Dismiss an alert"""
+    alert = db.query(Alert).filter(Alert.id == alert_id).first()
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    
+    try:
+        # Delete the alert (dismiss = delete for alerts)
+        db.delete(alert)
+        db.commit()
+        
+        return RedirectResponse(url="/alerts", status_code=302)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Error dismissing alert: {str(e)}")
 
 # Delete alert - Admin and Manager only
 @router.post("/{alert_id}/delete")

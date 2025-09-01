@@ -2,12 +2,355 @@
 
 {% block title %}Edit Vendor - Alive Pharmaceuticals{% endblock %}
 
+{% block extra_css %}
+<style>
+    .vendor-edit-dashboard {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .dashboard-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .dashboard-header h1 {
+        color: #333;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .dashboard-header p {
+        color: #666;
+        font-size: 1.1rem;
+        margin: 0.5rem 0 0 0;
+    }
+
+    .back-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .back-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .edit-vendor-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .card-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+    }
+
+    .card-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1.5rem;
+    }
+
+    .card-icon i {
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .card-title {
+        color: #333;
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .card-subtitle {
+        color: #666;
+        font-size: 1rem;
+        margin: 0.25rem 0 0 0;
+    }
+
+    .error-message {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #dc2626;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .required-field {
+        color: #dc2626;
+        margin-left: 0.25rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid rgba(102, 126, 234, 0.2);
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        background: white;
+    }
+
+    .form-control.error {
+        border-color: #dc2626;
+        background: rgba(239, 68, 68, 0.05);
+    }
+
+    .form-control.success {
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid rgba(102, 126, 234, 0.2);
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        background: white;
+    }
+
+    .form-checkbox {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 10px;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .form-checkbox:hover {
+        background: rgba(255, 255, 255, 0.8);
+        border-color: rgba(102, 126, 234, 0.3);
+    }
+
+    .form-checkbox input[type="checkbox"] {
+        margin-right: 0.75rem;
+        width: 20px;
+        height: 20px;
+        accent-color: #667eea;
+    }
+
+    .form-checkbox label {
+        font-weight: 500;
+        color: #333;
+        cursor: pointer;
+        flex: 1;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        padding-top: 2rem;
+        border-top: 2px solid rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-secondary {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border: 2px solid #667eea;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(102, 126, 234, 0.2);
+        transform: translateY(-2px);
+        color: #667eea;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    }
+
+    .info-text {
+        color: #666;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        font-style: italic;
+    }
+
+    .vendor-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .status-active {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-inactive {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .form-section {
+        background: rgba(255, 255, 255, 0.7);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+    }
+
+    .section-title i {
+        margin-right: 0.75rem;
+        color: #667eea;
+        font-size: 1.1rem;
+    }
+
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .dashboard-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
+<div class="vendor-edit-dashboard">
     <!-- Header -->
-    <div class="header">
+    <div class="dashboard-header">
         <div>
             <h1>Edit Vendor</h1>
-            <p>Update vendor information</p>
+            <p>Update vendor information and settings</p>
         </div>
         <a href="/vendors" class="back-btn">
             <i class="fas fa-arrow-left"></i>
@@ -15,44 +358,136 @@
         </a>
     </div>
 
-    <!-- Form -->
-    <div class="form-container">
+    <!-- Edit Vendor Form -->
+    <div class="edit-vendor-card">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-edit"></i>
+            </div>
+            <div>
+                <h2 class="card-title">Vendor Information</h2>
+                <p class="card-subtitle">Update vendor details, contact information, and business settings</p>
+            </div>
+        </div>
+
         {% if error %}
         <div class="error-message">
             <i class="fas fa-exclamation-circle"></i> {{ error }}
         </div>
         {% endif %}
 
+        <!-- Vendor Status -->
+        <div class="vendor-status {% if vendor.is_active %}status-active{% else %}status-inactive{% endif %}">
+            <i class="fas {% if vendor.is_active %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+            Vendor Status: {% if vendor.is_active %}Active{% else %}Inactive{% endif %}
+        </div>
+
         <form method="POST" action="/vendors/{{ vendor.id }}/edit" id="vendorForm">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="name">Vendor Name *</label>
-                    <input type="text" id="name" name="name" class="form-control" 
-                           value="{{ vendor.name }}" required>
+            <!-- Basic Information Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    Basic Information
                 </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="name" class="form-label">
+                            Vendor Name
+                            <span class="required-field">*</span>
+                        </label>
+                        <input type="text" id="name" name="name" class="form-control" 
+                               value="{{ vendor.name }}" required placeholder="Enter vendor name">
+                        <div class="info-text">Official business name of the vendor</div>
+                    </div>
 
-                <div class="form-group">
-                    <label for="email">Email *</label>
-                    <input type="email" id="email" name="email" class="form-control" 
-                           value="{{ vendor.email }}" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="phone">Phone *</label>
-                    <input type="tel" id="phone" name="phone" class="form-control" 
-                           value="{{ vendor.phone }}" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="contact_person">Contact Person</label>
-                    <input type="text" id="contact_person" name="contact_person" class="form-control" 
-                           value="{{ vendor.contact_person }}">
+                    <div class="form-group">
+                        <label for="contact_person" class="form-label">Contact Person</label>
+                        <input type="text" id="contact_person" name="contact_person" class="form-control" 
+                               value="{{ vendor.contact_person }}" placeholder="Primary contact person">
+                        <div class="info-text">Name of the main contact person</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="address">Address</label>
-                <textarea id="address" name="address" class="form-control">{{ vendor.address }}</textarea>
+            <!-- Contact Information Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-address-book"></i>
+                    Contact Information
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="email" class="form-label">
+                            Email Address
+                            <span class="required-field">*</span>
+                        </label>
+                        <input type="email" id="email" name="email" class="form-control" 
+                               value="{{ vendor.email }}" required placeholder="vendor@example.com">
+                        <div class="info-text">Primary email address for communications</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone" class="form-label">
+                            Phone Number
+                            <span class="required-field">*</span>
+                        </label>
+                        <input type="tel" id="phone" name="phone" class="form-control" 
+                               value="{{ vendor.phone }}" required placeholder="+1 (555) 123-4567">
+                        <div class="info-text">Primary contact phone number</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="address" class="form-label">Address</label>
+                    <textarea id="address" name="address" class="form-control" rows="3" 
+                              placeholder="Enter complete address">{{ vendor.address }}</textarea>
+                    <div class="info-text">Full business address including street, city, state, and zip</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="country" class="form-label">Country</label>
+                    <input type="text" id="country" name="country" class="form-control" 
+                           value="{{ vendor.country }}" placeholder="Country">
+                    <div class="info-text">Country where the vendor is located</div>
+                </div>
+            </div>
+
+            <!-- Business Settings Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-cogs"></i>
+                    Business Settings
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="payment_terms" class="form-label">Payment Terms</label>
+                        <select id="payment_terms" name="payment_terms" class="form-select">
+                            <option value="Net 15" {% if vendor.payment_terms == 'Net 15' %}selected{% endif %}>Net 15</option>
+                            <option value="Net 30" {% if vendor.payment_terms == 'Net 30' %}selected{% endif %}>Net 30</option>
+                            <option value="Net 45" {% if vendor.payment_terms == 'Net 45' %}selected{% endif %}>Net 45</option>
+                            <option value="Net 60" {% if vendor.payment_terms == 'Net 60' %}selected{% endif %}>Net 60</option>
+                            <option value="Net 90" {% if vendor.payment_terms == 'Net 90' %}selected{% endif %}>Net 90</option>
+                        </select>
+                        <div class="info-text">Standard payment terms for this vendor</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lead_time_days" class="form-label">Lead Time (Days)</label>
+                        <input type="number" id="lead_time_days" name="lead_time_days" class="form-control" 
+                               value="{{ vendor.lead_time_days }}" min="1" max="365" placeholder="30">
+                        <div class="info-text">Typical lead time for order fulfillment in days</div>
+                    </div>
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" id="is_active" name="is_active" 
+                           {% if vendor.is_active %}checked{% endif %}>
+                    <label for="is_active">Vendor is Active</label>
+                    <div class="info-text">Uncheck to deactivate this vendor (soft delete)</div>
+                </div>
             </div>
 
             <div class="form-actions">
@@ -67,53 +502,106 @@
             </div>
         </form>
     </div>
+</div>
+{% endblock %}
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('vendorForm');
-            const nameInput = document.getElementById('name');
-            const emailInput = document.getElementById('email');
-            const phoneInput = document.getElementById('phone');
-            
-            // Form validation
-            form.addEventListener('submit', function(e) {
-                const name = nameInput.value.trim();
-                const email = emailInput.value.trim();
-                const phone = phoneInput.value.trim();
-                
-                if (!name) {
-                    e.preventDefault();
-                    alert('Please enter a vendor name');
-                    nameInput.focus();
-                    return false;
-                }
-                
-                if (!email) {
-                    e.preventDefault();
-                    alert('Please enter an email address');
-                    emailInput.focus();
-                    return false;
-                }
-                
-                if (!phone) {
-                    e.preventDefault();
-                    alert('Please enter a phone number');
-                    phoneInput.focus();
-                    return false;
-                }
-                
-                // Basic email validation
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(email)) {
-                    e.preventDefault();
-                    alert('Please enter a valid email address');
-                    emailInput.focus();
-                    return false;
-                }
-            });
-
-            // Auto-focus on name input
-            nameInput.focus();
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('vendorForm');
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const phoneInput = document.getElementById('phone');
+        
+        // Real-time validation feedback
+        function validateField(input, isValid) {
+            input.classList.remove('error', 'success');
+            if (isValid) {
+                input.classList.add('success');
+            } else {
+                input.classList.add('error');
+            }
+        }
+        
+        // Name validation
+        nameInput.addEventListener('input', function() {
+            const value = this.value.trim();
+            validateField(this, value.length >= 2);
         });
-    </script>
+        
+        // Email validation
+        emailInput.addEventListener('input', function() {
+            const value = this.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            validateField(this, emailRegex.test(value));
+        });
+        
+        // Phone validation
+        phoneInput.addEventListener('input', function() {
+            const value = this.value.trim();
+            const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+            validateField(this, phoneRegex.test(value.replace(/[\s\-\(\)]/g, '')));
+        });
+        
+        // Form validation
+        form.addEventListener('submit', function(e) {
+            const name = nameInput.value.trim();
+            const email = emailInput.value.trim();
+            const phone = phoneInput.value.trim();
+            
+            let hasErrors = false;
+            
+            if (!name || name.length < 2) {
+                e.preventDefault();
+                alert('Please enter a valid vendor name (at least 2 characters)');
+                nameInput.focus();
+                hasErrors = true;
+                return false;
+            }
+            
+            if (!email) {
+                e.preventDefault();
+                alert('Please enter an email address');
+                emailInput.focus();
+                hasErrors = true;
+                return false;
+            }
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                alert('Please enter a valid email address');
+                emailInput.focus();
+                hasErrors = true;
+                return false;
+            }
+            
+            if (!phone) {
+                e.preventDefault();
+                alert('Please enter a phone number');
+                phoneInput.focus();
+                hasErrors = true;
+                return false;
+            }
+            
+            if (hasErrors) {
+                return false;
+            }
+            
+            // Confirm before updating
+            if (!confirm('Are you sure you want to update this vendor?')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Auto-focus on name input
+        nameInput.focus();
+        
+        // Initialize validation state
+        nameInput.dispatchEvent(new Event('input'));
+        emailInput.dispatchEvent(new Event('input'));
+        phoneInput.dispatchEvent(new Event('input'));
+    });
+</script>
 {% endblock %} 

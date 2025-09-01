@@ -101,7 +101,7 @@ async def vendor_detail(
     })
 
 # Edit vendor page - Manager and Admin only
-@router.get("/edit/{vendor_id}", response_class=HTMLResponse)
+@router.get("/{vendor_id}/edit", response_class=HTMLResponse)
 async def edit_vendor_page(
     request: Request, 
     vendor_id: int, 
@@ -120,7 +120,7 @@ async def edit_vendor_page(
     })
 
 # Update vendor - Manager and Admin only
-@router.post("/edit/{vendor_id}")
+@router.post("/{vendor_id}/edit")
 async def update_vendor(
     request: Request,
     vendor_id: int,

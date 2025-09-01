@@ -21,7 +21,7 @@ templates = Jinja2Templates(directory="app/templates")
 @router.get("/", response_class=HTMLResponse)
 async def reports_dashboard(
     request: Request, 
-    current_user: User = Depends(check_user_roles_from_cookie(["staff", "manager"])),
+    current_user: User = Depends(check_user_roles_from_cookie(["admin", "manager"])),
     db: Session = Depends(get_db)
 ):
     """Display reports dashboard with overview and quick reports - Manager and Admin only"""
@@ -30,8 +30,11 @@ async def reports_dashboard(
     end_date = datetime.utcnow()
     start_date = end_date - timedelta(days=30)
     
-    # Calculate key metrics
-    metrics = calculate_key_metrics(db, start_date, end_date)
+    # Calculate comprehensive metrics for dashboard
+    metrics = calculate_comprehensive_metrics(db, start_date, end_date)
+    
+    # Get chart data
+    chart_data = get_chart_data(db, start_date, end_date)
     
     # Get recent activities for dashboard
     recent_sales = get_recent_sales(db, limit=5)
@@ -42,13 +45,15 @@ async def reports_dashboard(
     return templates.TemplateResponse("reports/dashboard.html", {
         "request": request,
         "metrics": metrics,
+        "chart_data": chart_data,
         "recent_sales": recent_sales,
         "recent_purchases": recent_purchases,
         "top_products": top_products,
         "top_customers": top_customers,
         "start_date": start_date,
         "end_date": end_date,
-        "current_user": current_user
+        "current_user": current_user,
+        "user_role": current_user.role
     })
 
 # Financial reports
@@ -264,6 +269,18 @@ async def api_inventory_summary(db: Session = Depends(get_db)):
     data = generate_inventory_overview(db)
     return JSONResponse(content=data)
 
+@router.get("/api/dashboard-data")
+async def api_dashboard_data(
+    days: int = Query(30, description="Number of days to look back"),
+    db: Session = Depends(get_db)
+):
+    """API endpoint for dashboard chart data"""
+    end_date = datetime.utcnow()
+    start_date = end_date - timedelta(days=days)
+    
+    chart_data = get_chart_data(db, start_date, end_date)
+    return JSONResponse(content=chart_data)
+
 @router.get("/api/customer-analytics")
 async def api_customer_analytics(
     start_date: str = Query(None),
@@ -285,40 +302,59 @@ async def api_customer_analytics(
     return JSONResponse(content=data)
 
 # Helper functions
-def calculate_key_metrics(db: Session, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
-    """Calculate key business metrics"""
+def calculate_comprehensive_metrics(db: Session, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+    """Calculate comprehensive business metrics for dashboard"""
     
-    # Revenue
-    total_revenue = db.query(func.sum(SalesOrder.total_amount)).filter(
+    # Revenue metrics
+    monthly_revenue = db.query(func.sum(SalesOrder.total_amount)).filter(
         SalesOrder.order_date.between(start_date, end_date),
         SalesOrder.status.in_(["delivered", "shipped"])
     ).scalar() or 0
     
-    # Expenses
+    # Previous period for comparison
+    period_days = (end_date - start_date).days
+    previous_start = start_date - timedelta(days=period_days)
+    previous_end = start_date
+    
+    previous_revenue = db.query(func.sum(SalesOrder.total_amount)).filter(
+        SalesOrder.order_date.between(previous_start, previous_end),
+        SalesOrder.status.in_(["delivered", "shipped"])
+    ).scalar() or 0
+    
+    # Calculate growth rate - ensure decimal values are converted to float
+    revenue_growth = 0
+    if previous_revenue > 0:
+        revenue_growth = float(((monthly_revenue - previous_revenue) / previous_revenue) * 100)
+    
+    # Orders metrics
+    total_orders = db.query(SalesOrder).filter(
+        SalesOrder.order_date.between(start_date, end_date)
+    ).count()
+    
+    previous_orders = db.query(SalesOrder).filter(
+        SalesOrder.order_date.between(previous_start, previous_end)
+    ).count()
+    
+    orders_growth = 0
+    if previous_orders > 0:
+        orders_growth = float(((total_orders - previous_orders) / previous_orders) * 100)
+    
+    # Inventory metrics
+    total_inventory_value = db.query(func.sum(
+        InventoryItem.quantity_available * InventoryItem.cost_price
+    )).scalar() or 0
+    
+    # Profit metrics
     total_expenses = db.query(func.sum(PurchaseOrder.total_amount)).filter(
         PurchaseOrder.order_date.between(start_date, end_date),
         PurchaseOrder.status.in_(["received", "shipped"])
     ).scalar() or 0
     
-    # Profit
-    gross_profit = float(total_revenue - total_expenses)
-    profit_margin = (gross_profit / float(total_revenue)) * 100 if total_revenue > 0 else 0
+    gross_profit = float(monthly_revenue - total_expenses)
+    profit_margin = float((gross_profit / float(monthly_revenue)) * 100) if monthly_revenue > 0 else 0
     
-    # Orders
-    total_sales_orders = db.query(SalesOrder).filter(
-        SalesOrder.order_date.between(start_date, end_date)
-    ).count()
-    
-    total_purchase_orders = db.query(PurchaseOrder).filter(
-        PurchaseOrder.order_date.between(start_date, end_date)
-    ).count()
-    
-    # Inventory
-    total_inventory_value = db.query(func.sum(
-        InventoryItem.quantity_available * InventoryItem.cost_price
-    )).scalar() or 0
-    
-    # Customers
+    # Customer metrics
+    total_customers = db.query(Customer).filter(Customer.is_active == True).count()
     active_customers = db.query(Customer).filter(
         Customer.id.in_(
             db.query(SalesOrder.customer_id).filter(
@@ -327,15 +363,92 @@ def calculate_key_metrics(db: Session, start_date: datetime, end_date: datetime)
         )
     ).count()
     
+    previous_customers = db.query(Customer).filter(
+        Customer.id.in_(
+            db.query(SalesOrder.customer_id).filter(
+                SalesOrder.order_date.between(previous_start, previous_end)
+            ).distinct()
+        )
+    ).count()
+    
+    customer_growth = 0
+    if previous_customers > 0:
+        customer_growth = float(((active_customers - previous_customers) / previous_customers) * 100)
+    
+    # Overall growth rate - ensure all values are float before calculation
+    overall_growth = (float(revenue_growth) + float(orders_growth) + float(customer_growth)) / 3
+    
     return {
-        "total_revenue": float(total_revenue),
-        "total_expenses": float(total_expenses),
-        "gross_profit": gross_profit,
+        "monthly_revenue": float(monthly_revenue),
+        "total_orders": total_orders,
+        "inventory_value": float(total_inventory_value),
         "profit_margin": round(profit_margin, 2),
-        "total_sales_orders": total_sales_orders,
-        "total_purchase_orders": total_purchase_orders,
-        "total_inventory_value": float(total_inventory_value),
-        "active_customers": active_customers
+        "total_customers": total_customers,
+        "growth_rate": round(overall_growth, 2),
+        "revenue_growth": round(revenue_growth, 2),
+        "orders_growth": round(orders_growth, 2),
+        "customer_growth": round(customer_growth, 2),
+        "total_expenses": float(total_expenses),
+        "gross_profit": gross_profit
+    }
+
+def get_chart_data(db: Session, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+    """Get data for dashboard charts"""
+    
+    # Monthly revenue and expenses for the last 6 months
+    chart_months = []
+    revenue_data = []
+    expenses_data = []
+    
+    current_date = start_date
+    for i in range(6):
+        month_start = current_date.replace(day=1)
+        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        
+        month_revenue = db.query(func.sum(SalesOrder.total_amount)).filter(
+            SalesOrder.order_date.between(month_start, month_end),
+            SalesOrder.status.in_(["delivered", "shipped"])
+        ).scalar() or 0
+        
+        month_expenses = db.query(func.sum(PurchaseOrder.total_amount)).filter(
+            PurchaseOrder.order_date.between(month_start, month_end),
+            PurchaseOrder.status.in_(["received", "shipped"])
+        ).scalar() or 0
+        
+        chart_months.append(month_start.strftime("%b"))
+        revenue_data.append(float(month_revenue))
+        expenses_data.append(float(month_expenses))
+        
+        current_date = month_start - timedelta(days=1)
+    
+    # Orders status distribution
+    orders_status = db.query(SalesOrder.status, func.count(SalesOrder.id)).filter(
+        SalesOrder.order_date.between(start_date, end_date)
+    ).group_by(SalesOrder.status).all()
+    
+    orders_labels = [status for status, count in orders_status]
+    orders_data = [count for status, count in orders_status]
+    
+    # Inventory status distribution
+    inventory_status = [
+        ("In Stock", db.query(InventoryItem).filter(InventoryItem.quantity_available > 10).count()),
+        ("Low Stock", db.query(InventoryItem).filter(
+            InventoryItem.quantity_available.between(1, 10)
+        ).count()),
+        ("Out of Stock", db.query(InventoryItem).filter(InventoryItem.quantity_available == 0).count())
+    ]
+    
+    inventory_labels = [status for status, count in inventory_status]
+    inventory_data = [count for status, count in inventory_status]
+    
+    return {
+        "months": chart_months,
+        "revenue_data": revenue_data,
+        "expenses_data": expenses_data,
+        "orders_labels": orders_labels,
+        "orders_data": orders_data,
+        "inventory_labels": inventory_labels,
+        "inventory_data": inventory_data
     }
 
 def get_recent_sales(db: Session, limit: int = 5) -> List[Dict]:
@@ -398,7 +511,7 @@ def get_top_customers(db: Session, start_date: datetime, end_date: datetime, lim
 
 def generate_financial_summary(db: Session, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
     """Generate financial summary report"""
-    metrics = calculate_key_metrics(db, start_date, end_date)
+    metrics = calculate_comprehensive_metrics(db, start_date, end_date)
     
     # Monthly trends
     monthly_data = []
@@ -437,18 +550,93 @@ def generate_financial_summary(db: Session, start_date: datetime, end_date: date
 
 def generate_revenue_report(db: Session, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
     """Generate detailed revenue report"""
-    # Implementation would include detailed revenue breakdown
-    return {"message": "Revenue report data"}
+    # Calculate revenue metrics
+    total_revenue = db.query(func.sum(SalesOrder.total_amount)).filter(
+        SalesOrder.order_date.between(start_date, end_date),
+        SalesOrder.status.in_(["delivered", "shipped"])
+    ).scalar() or 0
+    
+    # Revenue by month
+    monthly_revenue = []
+    current_date = start_date
+    while current_date <= end_date:
+        month_start = current_date.replace(day=1)
+        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        
+        month_rev = db.query(func.sum(SalesOrder.total_amount)).filter(
+            SalesOrder.order_date.between(month_start, month_end),
+            SalesOrder.status.in_(["delivered", "shipped"])
+        ).scalar() or 0
+        
+        monthly_revenue.append({
+            "month": current_date.strftime("%Y-%m"),
+            "revenue": float(month_rev)
+        })
+        
+        current_date = (current_date + timedelta(days=32)).replace(day=1)
+    
+    return {
+        "total_revenue": float(total_revenue),
+        "monthly_revenue": monthly_revenue,
+        "report_type": "revenue"
+    }
 
 def generate_expense_report(db: Session, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
     """Generate detailed expense report"""
-    # Implementation would include detailed expense breakdown
-    return {"message": "Expense report data"}
+    # Calculate expense metrics
+    total_expenses = db.query(func.sum(PurchaseOrder.total_amount)).filter(
+        PurchaseOrder.order_date.between(start_date, end_date),
+        PurchaseOrder.status.in_(["received", "shipped"])
+    ).scalar() or 0
+    
+    # Expenses by month
+    monthly_expenses = []
+    current_date = start_date
+    while current_date <= end_date:
+        month_start = current_date.replace(day=1)
+        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        
+        month_exp = db.query(func.sum(PurchaseOrder.total_amount)).filter(
+            PurchaseOrder.order_date.between(month_start, month_end),
+            PurchaseOrder.status.in_(["received", "shipped"])
+        ).scalar() or 0
+        
+        monthly_expenses.append({
+            "month": current_date.strftime("%Y-%m"),
+            "expenses": float(month_exp)
+        })
+        
+        current_date = (current_date + timedelta(days=32)).replace(day=1)
+    
+    return {
+        "total_expenses": float(total_expenses),
+        "monthly_expenses": monthly_expenses,
+        "report_type": "expenses"
+    }
 
 def generate_profit_report(db: Session, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
     """Generate detailed profit report"""
-    # Implementation would include detailed profit analysis
-    return {"message": "Profit report data"}
+    # Calculate profit metrics
+    total_revenue = db.query(func.sum(SalesOrder.total_amount)).filter(
+        SalesOrder.order_date.between(start_date, end_date),
+        SalesOrder.status.in_(["delivered", "shipped"])
+    ).scalar() or 0
+    
+    total_expenses = db.query(func.sum(PurchaseOrder.total_amount)).filter(
+        PurchaseOrder.order_date.between(start_date, end_date),
+        PurchaseOrder.status.in_(["received", "shipped"])
+    ).scalar() or 0
+    
+    net_profit = float(total_revenue - total_expenses)
+    profit_margin = (net_profit / float(total_revenue)) * 100 if total_revenue > 0 else 0
+    
+    return {
+        "total_revenue": float(total_revenue),
+        "total_expenses": float(total_expenses),
+        "net_profit": net_profit,
+        "profit_margin": round(profit_margin, 2),
+        "report_type": "profit"
+    }
 
 def generate_inventory_overview(db: Session) -> Dict[str, Any]:
     """Generate inventory overview report"""
@@ -478,30 +666,192 @@ def generate_inventory_overview(db: Session) -> Dict[str, Any]:
 
 def generate_low_stock_report(db: Session) -> Dict[str, Any]:
     """Generate low stock report"""
-    # Implementation would include detailed low stock analysis
-    return {"message": "Low stock report data"}
+    # Get low stock items
+    low_stock_items = db.query(InventoryItem).join(Product).filter(
+        InventoryItem.quantity_available <= Product.reorder_point,
+        InventoryItem.quantity_available > 0
+    ).count()
+    
+    # Get out of stock items
+    out_of_stock_items = db.query(InventoryItem).filter(
+        InventoryItem.quantity_available == 0
+    ).count()
+    
+    # Get items below safety stock
+    safety_stock_items = db.query(InventoryItem).join(Product).filter(
+        InventoryItem.quantity_available < (Product.reorder_point * 0.5),
+        InventoryItem.quantity_available > 0
+    ).count()
+    
+    return {
+        "low_stock_items": low_stock_items,
+        "out_of_stock_items": out_of_stock_items,
+        "safety_stock_items": safety_stock_items,
+        "total_critical_items": low_stock_items + out_of_stock_items
+    }
 
 def generate_expiry_report(db: Session) -> Dict[str, Any]:
     """Generate expiry report"""
-    # Implementation would include detailed expiry analysis
-    return {"message": "Expiry report data"}
+    # Get items expiring in 30 days
+    expiring_30_days = db.query(InventoryItem).filter(
+        InventoryItem.expiry_date.isnot(None),
+        InventoryItem.expiry_date <= datetime.utcnow() + timedelta(days=30),
+        InventoryItem.expiry_date > datetime.utcnow(),
+        InventoryItem.quantity_available > 0
+    ).count()
+    
+    # Get items expiring in 7 days
+    expiring_7_days = db.query(InventoryItem).filter(
+        InventoryItem.expiry_date.isnot(None),
+        InventoryItem.expiry_date <= datetime.utcnow() + timedelta(days=7),
+        InventoryItem.expiry_date > datetime.utcnow(),
+        InventoryItem.quantity_available > 0
+    ).count()
+    
+    # Get expired items
+    expired_items = db.query(InventoryItem).filter(
+        InventoryItem.expiry_date.isnot(None),
+        InventoryItem.expiry_date <= datetime.utcnow(),
+        InventoryItem.quantity_available > 0
+    ).count()
+    
+    return {
+        "expiring_30_days": expiring_30_days,
+        "expiring_7_days": expiring_7_days,
+        "expired_items": expired_items,
+        "total_expiry_risk": expiring_30_days + expired_items
+    }
 
 def generate_movement_report(db: Session) -> Dict[str, Any]:
     """Generate stock movement report"""
-    # Implementation would include detailed movement analysis
-    return {"message": "Movement report data"}
+    # Get recent stock movements
+    recent_movements = db.query(StockMovement).order_by(
+        StockMovement.created_at.desc()
+    ).limit(10).count()
+    
+    # Get movements by type
+    inbound_movements = db.query(StockMovement).filter(
+        StockMovement.movement_type == "in"
+    ).count()
+    
+    outbound_movements = db.query(StockMovement).filter(
+        StockMovement.movement_type == "out"
+    ).count()
+    
+    # Get average movement value
+    avg_movement_value = db.query(func.avg(StockMovement.quantity * InventoryItem.cost_price)).join(
+        InventoryItem, StockMovement.inventory_item_id == InventoryItem.id
+    ).scalar() or 0
+    
+    return {
+        "recent_movements": recent_movements,
+        "inbound_movements": inbound_movements,
+        "outbound_movements": outbound_movements,
+        "total_movements": inbound_movements + outbound_movements,
+        "avg_movement_value": float(avg_movement_value)
+    }
 
 def generate_inventory_value_report(db: Session) -> Dict[str, Any]:
     """Generate inventory value report"""
-    # Implementation would include detailed value analysis
-    return {"message": "Inventory value report data"}
+    # Total inventory value
+    total_value = db.query(func.sum(
+        InventoryItem.quantity_available * InventoryItem.cost_price
+    )).scalar() or 0
+    
+    # Value by category
+    category_values = db.query(
+        Category.name,
+        func.sum(InventoryItem.quantity_available * InventoryItem.cost_price).label('value')
+    ).join(Product, Category.id == Product.category_id).join(
+        InventoryItem, Product.id == InventoryItem.product_id
+    ).group_by(Category.name).all()
+    
+    # Average item value
+    avg_item_value = db.query(func.avg(
+        InventoryItem.quantity_available * InventoryItem.cost_price
+    )).scalar() or 0
+    
+    # High value items (>$1000)
+    high_value_items = db.query(InventoryItem).filter(
+        (InventoryItem.quantity_available * InventoryItem.cost_price) > 1000
+    ).count()
+    
+    return {
+        "total_value": float(total_value),
+        "avg_item_value": float(avg_item_value),
+        "high_value_items": high_value_items,
+        "category_values": [
+            {"category": cat.name, "value": float(val)} 
+            for cat, val in category_values
+        ]
+    }
 
 def generate_customer_analytics(db: Session, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
     """Generate customer analytics"""
-    # Implementation would include detailed customer analysis
-    return {"message": "Customer analytics data"}
+    # Get customers with their order data
+    customers_data = db.query(
+        Customer,
+        func.count(SalesOrder.id).label('total_orders'),
+        func.sum(SalesOrder.total_amount).label('total_revenue')
+    ).outerjoin(SalesOrder, Customer.id == SalesOrder.customer_id).filter(
+        SalesOrder.order_date.between(start_date, end_date)
+    ).group_by(Customer.id).order_by(
+        func.sum(SalesOrder.total_amount).desc()
+    ).all()
+    
+    # Convert to list of dictionaries
+    customers = []
+    for customer, orders, revenue in customers_data:
+        customers.append({
+            "id": customer.id,
+            "name": customer.name,
+            "total_orders": orders or 0,
+            "total_revenue": float(revenue or 0)
+        })
+    
+    # Calculate summary metrics
+    total_customers = len(customers)
+    total_revenue = sum(c['total_revenue'] for c in customers)
+    avg_revenue_per_customer = total_revenue / total_customers if total_customers > 0 else 0
+    
+    return {
+        "customers": customers,
+        "total_customers": total_customers,
+        "total_revenue": total_revenue,
+        "avg_revenue_per_customer": round(avg_revenue_per_customer, 2)
+    }
 
 def generate_vendor_analytics(db: Session, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
     """Generate vendor analytics"""
-    # Implementation would include detailed vendor analysis
-    return {"message": "Vendor analytics data"} 
+    # Get vendors with their purchase data
+    vendors_data = db.query(
+        Vendor,
+        func.count(PurchaseOrder.id).label('total_orders'),
+        func.sum(PurchaseOrder.total_amount).label('total_spent')
+    ).outerjoin(PurchaseOrder, Vendor.id == PurchaseOrder.vendor_id).filter(
+        PurchaseOrder.order_date.between(start_date, end_date)
+    ).group_by(Vendor.id).order_by(
+        func.sum(PurchaseOrder.total_amount).desc()
+    ).all()
+    
+    # Convert to list of dictionaries
+    vendors = []
+    for vendor, orders, spent in vendors_data:
+        vendors.append({
+            "id": vendor.id,
+            "name": vendor.name,
+            "total_orders": orders or 0,
+            "total_spent": float(spent or 0)
+        })
+    
+    # Calculate summary metrics
+    total_vendors = len(vendors)
+    total_spent = sum(v['total_spent'] for v in vendors)
+    avg_spent_per_vendor = total_spent / total_vendors if total_vendors > 0 else 0
+    
+    return {
+        "vendors": vendors,
+        "total_vendors": total_vendors,
+        "total_spent": total_spent,
+        "avg_spent_per_vendor": round(avg_spent_per_vendor, 2)
+    } 

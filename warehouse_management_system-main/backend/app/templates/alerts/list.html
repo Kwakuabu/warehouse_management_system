@@ -1,195 +1,442 @@
 {% extends "base.html" %}
 
-{% block title %}Alerts - Alive Pharmaceuticals{% endblock %}
+{% block title %}System Alerts - Alive Pharmaceuticals{% endblock %}
 
-{% block additional_styles %}
+{% block extra_css %}
 <style>
-    .alerts-container {
-        margin-top: 2rem;
+    .alerts-dashboard {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
     }
+
+    .dashboard-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .dashboard-header h1 {
+        color: #1f2937;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .dashboard-header p {
+        color: #6b7280;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .header-actions .btn-clear-all {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    .header-actions .btn-clear-all:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+        color: white;
+    }
+
+    .alerts-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .section-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: white;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .section-title {
+        color: #1f2937;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
     .alerts-list {
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
     }
+
     .alert-item {
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        border-radius: 15px;
+        padding: 1.5rem;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
         display: flex;
         align-items: flex-start;
-        background: #fff;
-        border-radius: 16px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.07);
-        padding: 1.5rem 2rem;
-        transition: box-shadow 0.2s, transform 0.2s;
-        border-left: 6px solid #e5e7eb;
-        position: relative;
+        gap: 1.5rem;
     }
+
     .alert-item:hover {
-        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.13);
-        transform: translateY(-2px) scale(1.01);
+        transform: translateY(-3px);
+        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.15);
     }
-    .alert-item.error { border-left-color: #ef4444; }
-    .alert-item.warning { border-left-color: #f59e0b; }
-    .alert-item.info { border-left-color: #3b82f6; }
-    .alert-item.success { border-left-color: #10b981; }
+
+    .alert-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+    }
+
+    .alert-item.error::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
+    .alert-item.warning::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+    .alert-item.info::before { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+    .alert-item.success::before { background: linear-gradient(90deg, #10b981, #059669); }
+
     .alert-icon {
-        margin-right: 1.5rem;
-        font-size: 2rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         width: 48px;
         height: 48px;
         border-radius: 12px;
-        background: #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        flex-shrink: 0;
     }
-    .alert-item.error .alert-icon { background: #fee2e2; color: #b91c1c; }
-    .alert-item.warning .alert-icon { background: #fef3c7; color: #b45309; }
-    .alert-item.info .alert-icon { background: #dbeafe; color: #1d4ed8; }
-    .alert-item.success .alert-icon { background: #d1fae5; color: #047857; }
+
+    .alert-item.error .alert-icon { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .alert-item.warning .alert-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .alert-item.info .alert-icon { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .alert-item.success .alert-icon { background: linear-gradient(135deg, #10b981, #059669); }
+
     .alert-content {
         flex: 1;
     }
+
     .alert-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.75rem;
     }
-    .alert-header h3 {
+
+    .alert-title {
+        color: #1f2937;
         font-size: 1.2rem;
-        margin: 0;
         font-weight: 600;
+        margin: 0;
     }
+
     .alert-time {
-        font-size: 0.95rem;
         color: #6b7280;
-        margin-left: 1rem;
+        font-size: 0.9rem;
+        font-weight: 500;
     }
-    .alert-details {
-        background: #f9fafb;
-        border-radius: 8px;
-        padding: 0.5rem 1rem;
-        margin-top: 0.5rem;
-        font-size: 0.97rem;
+
+    .alert-message {
         color: #374151;
+        font-size: 1rem;
+        line-height: 1.5;
+        margin-bottom: 0.75rem;
     }
+
+    .alert-details {
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        color: #4b5563;
+        border-left: 3px solid #d1d5db;
+    }
+
     .alert-actions {
         display: flex;
-        flex-direction: column;
         gap: 0.5rem;
-        margin-left: 1.5rem;
+        margin-left: auto;
     }
+
     .btn-dismiss {
-        background: #f3f4f6;
+        background: rgba(239, 68, 68, 0.1);
         color: #ef4444;
-        border: none;
+        border: 1px solid rgba(239, 68, 68, 0.2);
         border-radius: 8px;
-        padding: 0.5rem 0.8rem;
-        font-size: 1.1rem;
-        transition: background 0.2s, color 0.2s;
+        padding: 0.5rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
         cursor: pointer;
-        text-align: center;
-    }
-    .btn-dismiss:hover {
-        background: #fee2e2;
-        color: #b91c1c;
-    }
-    .header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 2rem;
-    }
-    .header-actions .btn-secondary {
-        background: #f3f4f6;
-        color: #374151;
-        border-radius: 8px;
-        padding: 0.5rem 1.2rem;
-        font-weight: 500;
-        transition: background 0.2s, color 0.2s;
-        border: none;
-        text-decoration: none;
-    }
-    .header-actions .btn-secondary:hover {
-        background: #e5e7eb;
-        color: #ef4444;
-    }
-    .empty-state {
-        text-align: center;
-        margin: 3rem 0;
-        color: #6b7280;
-    }
-    .empty-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        color: #d1d5db;
-    }
-    .stats-section {
-        margin-top: 3rem;
-    }
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 1.5rem;
-        margin-top: 1.5rem;
-    }
-    .stat-card {
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        padding: 1.2rem 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        transition: box-shadow 0.2s, transform 0.2s;
-    }
-    .stat-card:hover {
-        box-shadow: 0 6px 24px rgba(31, 38, 135, 0.10);
-        transform: translateY(-2px) scale(1.01);
-    }
-    .stat-icon {
-        font-size: 1.7rem;
-        padding: 0.7rem;
-        border-radius: 50%;
-        background: #f3f4f6;
         display: flex;
         align-items: center;
         justify-content: center;
+        width: 36px;
+        height: 36px;
     }
-    .stat-icon.error { background: #fee2e2; color: #b91c1c; }
-    .stat-icon.warning { background: #fef3c7; color: #b45309; }
-    .stat-icon.info { background: #dbeafe; color: #1d4ed8; }
-    .stat-icon.success { background: #d1fae5; color: #047857; }
-    .stat-content h3 {
-        margin: 0;
-        font-size: 1.3rem;
-        font-weight: 600;
+
+    .btn-dismiss:hover {
+        background: rgba(239, 68, 68, 0.2);
+        color: #dc2626;
+        transform: scale(1.05);
     }
-    .stat-content p {
-        margin: 0;
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
         color: #6b7280;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        color: #9ca3af;
+        opacity: 0.7;
+    }
+
+    .empty-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #374151;
+    }
+
+    .empty-message {
         font-size: 1rem;
+        margin: 0;
+        color: #9ca3af;
+    }
+
+    .stats-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .stats-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stats-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: white;
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    }
+
+    .stats-title {
+        color: #1f2937;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        border-radius: 15px;
+        padding: 1.5rem;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.15);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .stat-icon.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .stat-icon.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .stat-icon.info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .stat-icon.success { background: linear-gradient(135deg, #10b981, #059669); }
+
+    .stat-content h3 {
+        color: #1f2937;
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0 0 0.25rem 0;
+    }
+
+    .stat-content p {
+        color: #6b7280;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 0;
+    }
+
+    .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .page-link {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .page-link:hover {
+        background: rgba(102, 126, 234, 0.2);
+        color: #667eea;
+        transform: translateY(-1px);
+    }
+
+    .page-info {
+        color: #6b7280;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+        
+        .dashboard-header h1 {
+            font-size: 2rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .alert-item {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .alert-actions {
+            margin-left: 0;
+            align-self: flex-end;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-    <!-- Header -->
-    <div class="header">
+<div class="alerts-dashboard">
+    <!-- Enhanced Header -->
+    <div class="dashboard-header">
         <div>
-            <h1>System Alerts</h1>
-            <p>Monitor and manage system notifications</p>
+            <h1>🚨 System Alerts</h1>
+            <p>Monitor and manage system notifications with real-time insights</p>
         </div>
         <div class="header-actions">
-            <a href="/alerts/clear-all" class="btn-secondary" onclick="return confirm('Clear all alerts?')">
+            <a href="/alerts/clear-all" class="btn-clear-all" onclick="return confirm('Clear all alerts?')">
                 <i class="fas fa-trash"></i>
                 Clear All
             </a>
         </div>
     </div>
 
-    <!-- Alerts List -->
-    <div class="alerts-container">
+    <!-- Alerts Section -->
+    <div class="alerts-section">
+        <div class="section-header">
+            <div class="section-icon">
+                <i class="fas fa-bell"></i>
+            </div>
+            <h2 class="section-title">Active Alerts</h2>
+        </div>
+
         {% if alerts %}
             <div class="alerts-list">
                 {% for alert in alerts %}
@@ -207,10 +454,10 @@
                     </div>
                     <div class="alert-content">
                         <div class="alert-header">
-                            <h3>{{ alert.title }}</h3>
+                            <h3 class="alert-title">{{ alert.title }}</h3>
                             <span class="alert-time">{{ alert.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
                         </div>
-                        <p>{{ alert.message }}</p>
+                        <p class="alert-message">{{ alert.message }}</p>
                         {% if alert.details %}
                         <div class="alert-details">
                             <strong>Details:</strong> {{ alert.details }}
@@ -252,15 +499,20 @@
                 <div class="empty-icon">
                     <i class="fas fa-bell-slash"></i>
                 </div>
-                <h3>No Alerts</h3>
-                <p>You're all caught up! No system alerts at the moment.</p>
+                <h3 class="empty-title">No Alerts</h3>
+                <p class="empty-message">You're all caught up! No system alerts at the moment.</p>
             </div>
         {% endif %}
     </div>
 
     <!-- Alert Statistics -->
     <div class="stats-section">
-        <h2>Alert Statistics</h2>
+        <div class="stats-header">
+            <div class="stats-icon">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <h2 class="stats-title">Alert Statistics</h2>
+        </div>
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon error">
@@ -300,4 +552,5 @@
             </div>
         </div>
     </div>
+</div>
 {% endblock %} 

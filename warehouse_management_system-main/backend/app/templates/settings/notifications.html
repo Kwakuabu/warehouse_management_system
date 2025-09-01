@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+
+{% block title %}Notification Settings - Alive Pharmaceuticals{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notifications-dashboard {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .dashboard-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .dashboard-header h1 {
+        color: #1f2937;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .dashboard-header p {
+        color: #6b7280;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .header-actions .btn-back {
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    .header-actions .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(107, 114, 128, 0.4);
+        color: white;
+    }
+
+    .settings-form {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .form-section {
+        margin-bottom: 2.5rem;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+    }
+
+    .section-icon.email { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .section-icon.sms { background: linear-gradient(135deg, #10b981, #059669); }
+    .section-icon.push { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+    .section-icon.alerts { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .section-icon.reports { background: linear-gradient(135deg, #ec4899, #be185d); }
+
+    .section-title {
+        color: #1f2937;
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        color: #374151;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-control[type="number"] {
+        width: 100%;
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #667eea;
+    }
+
+    .checkbox-group label {
+        margin: 0;
+        color: #374151;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        padding-top: 2rem;
+        border-top: 2px solid #e5e7eb;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.75rem 2rem;
+        font-weight: 500;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-reset {
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.75rem 2rem;
+        font-weight: 500;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .btn-reset:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(107, 114, 128, 0.4);
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid;
+    }
+
+    .alert-success {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: #10b981;
+        color: #065f46;
+    }
+
+    .alert-error {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: #ef4444;
+        color: #991b1b;
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+        
+        .dashboard-header h1 {
+            font-size: 2rem;
+        }
+        
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notifications-dashboard">
+    <!-- Enhanced Header -->
+    <div class="dashboard-header">
+        <div>
+            <h1>🔔 Notification Settings</h1>
+            <p>Configure how and when you receive system notifications and alerts</p>
+        </div>
+        <div class="header-actions">
+            <a href="/settings/" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Back to Settings
+            </a>
+        </div>
+    </div>
+
+    <!-- Settings Form -->
+    <div class="settings-form">
+        {% if success %}
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            Notification settings updated successfully!
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST">
+            <!-- Email Notifications -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon email">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <h2 class="section-title">Email Notifications</h2>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="email_notifications" name="email_notifications" value="true" {% if settings.email_notifications %}checked{% endif %}>
+                            <label for="email_notifications">Enable email notifications</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="order_confirmation_email" name="order_confirmation_email" value="true" {% if settings.order_confirmation_email %}checked{% endif %}>
+                            <label for="order_confirmation_email">Order confirmation emails</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="order_status_updates" name="order_status_updates" value="true" {% if settings.order_status_updates %}checked{% endif %}>
+                            <label for="order_status_updates">Order status updates</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SMS Notifications -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon sms">
+                        <i class="fas fa-sms"></i>
+                    </div>
+                    <h2 class="section-title">SMS Notifications</h2>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="sms_notifications" name="sms_notifications" value="true" {% if settings.sms_notifications %}checked{% endif %}>
+                            <label for="sms_notifications">Enable SMS notifications</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Push Notifications -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon push">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h2 class="section-title">Push Notifications</h2>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="push_notifications" name="push_notifications" value="true" {% if settings.push_notifications %}checked{% endif %}>
+                            <label for="push_notifications">Enable push notifications</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alert Thresholds -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon alerts">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h2 class="section-title">Alert Thresholds</h2>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="low_stock_threshold">Low Stock Threshold</label>
+                        <input type="number" id="low_stock_threshold" name="low_stock_threshold" value="{{ settings.low_stock_threshold or 10 }}" class="form-control" min="1" max="100">
+                        <small style="color: #6b7280;">Minimum quantity before low stock alert</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="expiry_warning_days">Expiry Warning Days</label>
+                        <input type="number" id="expiry_warning_days" name="expiry_warning_days" value="{{ settings.expiry_warning_days or 30 }}" class="form-control" min="1" max="365">
+                        <small style="color: #6b7280;">Days before expiry to send warning</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="temperature_alert_threshold">Temperature Alert Threshold (°C)</label>
+                        <input type="number" id="temperature_alert_threshold" name="temperature_alert_threshold" value="{{ settings.temperature_alert_threshold or 8.0 }}" class="form-control" step="0.1" min="-20" max="50">
+                        <small style="color: #6b7280;">Temperature limit for cold storage alerts</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Notifications -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon reports">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h2 class="section-title">Report Notifications</h2>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="daily_reports" name="daily_reports" value="true" {% if settings.daily_reports %}checked{% endif %}>
+                            <label for="daily_reports">Daily reports</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="weekly_reports" name="weekly_reports" value="true" {% if settings.weekly_reports %}checked{% endif %}>
+                            <label for="weekly_reports">Weekly reports</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="monthly_reports" name="monthly_reports" value="true" {% if settings.monthly_reports %}checked{% endif %}>
+                            <label for="monthly_reports">Monthly reports</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="system_alerts" name="system_alerts" value="true" {% if settings.system_alerts %}checked{% endif %}>
+                            <label for="system_alerts">System alerts</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="reset" class="btn-reset">
+                    <i class="fas fa-undo"></i>
+                    Reset to Defaults
+                </button>
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-save"></i>
+                    Save Settings
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -28,6 +28,46 @@ async def settings_dashboard(
     total_users = db.query(User).count()
     active_users = db.query(User).filter(User.is_active == True).count()
     
+    # Get system information
+    import platform
+    import sqlite3
+    from datetime import datetime
+    
+    # System info
+    system_info = {
+        "platform": platform.system(),
+        "platform_version": platform.version(),
+        "python_version": platform.python_version(),
+        "architecture": platform.architecture()[0]
+    }
+    
+    # Memory and CPU info (with error handling)
+    memory_info = None
+    cpu_info = None
+    
+    try:
+        import psutil
+        memory_info = {
+            "total": psutil.virtual_memory().total,
+            "available": psutil.virtual_memory().available,
+            "percent": psutil.virtual_memory().percent
+        }
+        
+        cpu_info = {
+            "count": psutil.cpu_count(),
+            "percent": psutil.cpu_percent(interval=1)
+        }
+    except ImportError:
+        # psutil not available, skip system monitoring
+        pass
+    except Exception as e:
+        # Other errors, skip system monitoring
+        print(f"Error getting system info: {e}")
+        pass
+    
+    # Database info
+    db_info = get_database_info()
+    
     # Get default settings (in a real system, these would come from a settings table)
     system_settings = get_default_system_settings()
     user_preferences = get_default_user_preferences()
@@ -40,6 +80,10 @@ async def settings_dashboard(
         "system_settings": system_settings,
         "user_preferences": user_preferences,
         "company_settings": company_settings,
+        "system_info": system_info,
+        "memory_info": memory_info,
+        "cpu_info": cpu_info,
+        "db_info": db_info,
         "current_user": current_user
     })
 
@@ -586,7 +630,85 @@ def save_security_settings(settings: Dict[str, Any]):
 def save_notification_settings(settings: Dict[str, Any]):
     """Save notification settings (placeholder)"""
     # In a real system, this would save to a database table
-    print(f"Saving notification settings: {settings}") 
+    print(f"Saving notification settings: {settings}")
+
+def get_database_info() -> Dict[str, Any]:
+    """Get database information"""
+    try:
+        import os
+        from datetime import datetime
+        
+        db_path = os.getenv("DATABASE_URL", "sqlite:///./warehouse_db.sqlite")
+        if db_path.startswith("sqlite:///"):
+            file_path = db_path.replace("sqlite:///", "")
+            
+            if os.path.exists(file_path):
+                # Get file size
+                file_size = os.path.getsize(file_path)
+                file_size_mb = round(file_size / (1024 * 1024), 2)
+                
+                # Get last modified time
+                last_modified = datetime.fromtimestamp(os.path.getmtime(file_path))
+                
+                # Get database stats
+                try:
+                    import sqlite3
+                    conn = sqlite3.connect(file_path)
+                    cursor = conn.cursor()
+                    
+                    # Get table count
+                    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+                    tables = cursor.fetchall()
+                    table_count = len(tables)
+                    
+                    # Get total records
+                    total_records = 0
+                    for table in tables:
+                        try:
+                            cursor.execute(f"SELECT COUNT(*) FROM {table[0]}")
+                            count = cursor.fetchone()[0]
+                            total_records += count
+                        except:
+                            pass
+                    
+                    conn.close()
+                    
+                    return {
+                        "type": "SQLite",
+                        "file_path": file_path,
+                        "file_size_mb": file_size_mb,
+                        "last_modified": last_modified.strftime("%Y-%m-%d %H:%M:%S"),
+                        "table_count": table_count,
+                        "total_records": total_records,
+                        "status": "Connected and healthy"
+                    }
+                except Exception as db_error:
+                    return {
+                        "type": "SQLite",
+                        "file_path": file_path,
+                        "file_size_mb": file_size_mb,
+                        "last_modified": last_modified.strftime("%Y-%m-%d %H:%M:%S"),
+                        "status": "Connected and healthy",
+                        "note": f"Database stats unavailable: {str(db_error)}"
+                    }
+            else:
+                return {
+                    "type": "SQLite",
+                    "status": "Database file not found",
+                    "error": "Database file does not exist"
+                }
+        else:
+            return {
+                "type": "MySQL/PostgreSQL",
+                "status": "Connected and healthy",
+                "note": "Detailed stats not available for this database type"
+            }
+    except Exception as e:
+        return {
+            "type": "Unknown",
+            "status": "Error getting database info",
+            "error": str(e)
+        } 
 
 @router.get("/backup", response_class=HTMLResponse)
 async def backup_page(
