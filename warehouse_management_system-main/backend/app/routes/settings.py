@@ -406,6 +406,7 @@ async def add_user_submit(
     full_name: str = Form(...),
     password: str = Form(...),
     role: str = Form("staff"),
+    hospital_id: str = Form(""),
     db: Session = Depends(get_db),
     current_user: User = Depends(check_user_role_from_cookie("admin"))
 ):
@@ -414,6 +415,35 @@ async def add_user_submit(
         return templates.TemplateResponse("settings/users_add.html", {"request": request, "current_user": current_user, "error": "Username already exists"})
     if db.query(User).filter(User.email == email).first():
         return templates.TemplateResponse("settings/users_add.html", {"request": request, "current_user": current_user, "error": "Email already exists"})
+    
+    # Initialize hospital_id_int
+    hospital_id_int = None
+    
+    # Validate hospital assignment for staff users
+    if role == "staff":
+        if not hospital_id or hospital_id.strip() == "":
+            return templates.TemplateResponse("settings/users_add.html", {"request": request, "current_user": current_user, "error": "Staff users must be assigned to a hospital"})
+        
+        # Convert hospital_id to integer
+        try:
+            hospital_id_int = int(hospital_id)
+        except ValueError:
+            return templates.TemplateResponse("settings/users_add.html", {"request": request, "current_user": current_user, "error": "Invalid hospital selection"})
+        
+        # Verify the hospital exists and is a valid hospital
+        from app.models.models import Customer
+        hospital = db.query(Customer).filter(
+            Customer.id == hospital_id_int,
+            Customer.is_active == True
+        ).first()
+        
+        if not hospital:
+            return templates.TemplateResponse("settings/users_add.html", {"request": request, "current_user": current_user, "error": "Selected hospital not found"})
+        
+        # Check if it's a valid hospital (not "Nathaniel Amponsah" which is ID 1)
+        if hospital_id_int == 1:  # Nathaniel Amponsah is not a hospital
+            return templates.TemplateResponse("settings/users_add.html", {"request": request, "current_user": current_user, "error": "Please select a valid hospital"})
+    
     from app.utils.auth import get_password_hash
     hashed_password = get_password_hash(password)
     user = User(
@@ -422,6 +452,9 @@ async def add_user_submit(
         full_name=full_name,
         hashed_password=hashed_password,
         role=role,
+        hospital_id=hospital_id_int,  # Will be None for non-staff users
+        requires_approval=False,  # Admin-created users don't need approval
+        is_approved=True,  # Admin-created users are automatically approved
         is_active=True
     )
     db.add(user)
