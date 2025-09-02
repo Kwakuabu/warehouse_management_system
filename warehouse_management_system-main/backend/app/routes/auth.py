@@ -144,7 +144,7 @@ async def register_form(
     password: str = Form(...),
     confirm_password: str = Form(...),
     role: str = Form("staff"),
-    hospital_id: int = Form(None),
+    hospital_id: str = Form(""),
     db: Session = Depends(get_db)
 ):
     """Handle form-based registration"""
@@ -169,18 +169,30 @@ async def register_form(
             {"request": request, "error": "Email already registered"}
         )
     
+    # Initialize hospital_id_int
+    hospital_id_int = None
+    
     # Validate hospital assignment for staff users
     if role == "staff":
-        if not hospital_id:
+        if not hospital_id or hospital_id.strip() == "":
             return templates.TemplateResponse(
                 "register.html", 
                 {"request": request, "error": "Staff users must be assigned to a hospital"}
             )
         
+        # Convert hospital_id to integer
+        try:
+            hospital_id_int = int(hospital_id)
+        except ValueError:
+            return templates.TemplateResponse(
+                "register.html", 
+                {"request": request, "error": "Invalid hospital selection"}
+            )
+        
         # Verify the hospital exists and is a valid hospital (not a regular customer)
         from app.models.models import Customer
         hospital = db.query(Customer).filter(
-            Customer.id == hospital_id,
+            Customer.id == hospital_id_int,
             Customer.is_active == True
         ).first()
         
@@ -191,7 +203,7 @@ async def register_form(
             )
         
         # Check if it's a valid hospital (not "Nathaniel Amponsah" which is ID 1)
-        if hospital_id == 1:  # Nathaniel Amponsah is not a hospital
+        if hospital_id_int == 1:  # Nathaniel Amponsah is not a hospital
             return templates.TemplateResponse(
                 "register.html", 
                 {"request": request, "error": "Please select a valid hospital"}
@@ -205,7 +217,7 @@ async def register_form(
         full_name=full_name,
         hashed_password=hashed_password,
         role=role,
-        hospital_id=hospital_id if role == "staff" else None,  # Assign hospital for staff users
+        hospital_id=hospital_id_int,  # Will be None for non-staff users
         requires_approval=True,
         is_approved=False,
         is_active=False  # Inactive until approved
