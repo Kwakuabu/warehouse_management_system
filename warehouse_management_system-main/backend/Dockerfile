@@ -18,7 +18,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir email-validator==2.1.0 pydantic[email]==2.11.7
 
 # Production stage
 FROM python:3.11-slim
