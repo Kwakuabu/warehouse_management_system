@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Sales Order - Alive Pharmaceuticals{% endblock %}
+
+{% block content %}
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>Edit Sales Order</h1>
+            <p>Edit sales order {{ sales_order.order_number }}</p>
+        </div>
+        <a href="/sales-orders/{{ sales_order.id }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Order Details
+        </a>
+    </div>
+
+    <!-- Form -->
+    <div class="form-container">
+        {% if error %}
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i> {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/sales-orders/{{ sales_order.id }}/edit" id="salesOrderForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="customer_id">Customer *</label>
+                    <select id="customer_id" name="customer_id" class="form-control" required>
+                        <option value="">Select a customer</option>
+                        {% for customer in customers %}
+                        <option value="{{ customer.id }}" {{ 'selected' if customer.id == sales_order.customer_id else '' }}>
+                            {{ customer.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="order_date">Order Date *</label>
+                    <input type="date" id="order_date" name="order_date" class="form-control" 
+                           value="{{ sales_order.order_date.strftime('%Y-%m-%d') }}" readonly>
+                    <small class="form-text text-muted">Order date cannot be changed</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="delivery_date">Expected Delivery Date</label>
+                    <input type="date" id="delivery_date" name="delivery_date" 
+                           class="form-control" 
+                           value="{{ sales_order.delivery_date.strftime('%Y-%m-%d') if sales_order.delivery_date else '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="discount_percentage">Discount %</label>
+                    <input type="number" id="discount_percentage" name="discount_percentage" 
+                           class="form-control" min="0" max="100" step="0.01" 
+                           value="{{ sales_order.discount_percentage }}">
+                </div>
+            </div>
+
+            <!-- Products Section -->
+            <div class="form-group">
+                <label>Products *</label>
+                <div id="products-container">
+                    {% for item in sales_order.items %}
+                    <div class="product-row">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <select name="product_ids" class="form-control" required>
+                                    <option value="">Select Product</option>
+                                    {% for product in products %}
+                                    <option value="{{ product.id }}" {{ 'selected' if product.id == item.product_id else '' }}>
+                                        {{ product.name }} ({{ product.sku }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" name="quantities" class="form-control" 
+                                       placeholder="Quantity" min="1" required 
+                                       value="{{ item.quantity_ordered }}">
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" name="unit_prices" class="form-control" 
+                                       placeholder="Unit Price" min="0" step="0.01" required 
+                                       value="{{ item.unit_price }}">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger remove-product" style="display:none;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" id="add-product" class="btn btn-secondary mt-2">
+                    <i class="fas fa-plus"></i> Add Another Product
+                </button>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Notes</label>
+                <textarea id="notes" name="notes" class="form-control" 
+                          placeholder="Enter order notes...">{{ sales_order.notes or '' }}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <a href="/sales-orders/{{ sales_order.id }}" class="btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i>
+                    Update Sales Order
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('salesOrderForm');
+            const customerSelect = document.getElementById('customer_id');
+            const addProductBtn = document.getElementById('add-product');
+            const productsContainer = document.getElementById('products-container');
+            
+            // Add product row functionality
+            addProductBtn.addEventListener('click', function() {
+                const productRow = document.querySelector('.product-row').cloneNode(true);
+                
+                // Clear values in cloned row
+                productRow.querySelectorAll('select, input').forEach(field => {
+                    field.value = '';
+                });
+                
+                // Show remove button
+                const removeBtn = productRow.querySelector('.remove-product');
+                removeBtn.style.display = 'block';
+                removeBtn.addEventListener('click', function() {
+                    productRow.remove();
+                    updateRemoveButtons();
+                });
+                
+                productsContainer.appendChild(productRow);
+                updateRemoveButtons();
+            });
+            
+            // Update remove button visibility
+            function updateRemoveButtons() {
+                const rows = productsContainer.querySelectorAll('.product-row');
+                rows.forEach((row, index) => {
+                    const removeBtn = row.querySelector('.remove-product');
+                    removeBtn.style.display = rows.length > 1 ? 'block' : 'none';
+                });
+            }
+            
+            // Initialize remove buttons
+            updateRemoveButtons();
+            
+            // Form validation
+            form.addEventListener('submit', function(e) {
+                const customerId = customerSelect.value;
+                const productSelects = document.querySelectorAll('select[name="product_ids"]');
+                const quantities = document.querySelectorAll('input[name="quantities"]');
+                const unitPrices = document.querySelectorAll('input[name="unit_prices"]');
+                
+                if (!customerId) {
+                    e.preventDefault();
+                    alert('Please select a customer');
+                    customerSelect.focus();
+                    return false;
+                }
+                
+                // Validate at least one product
+                let hasProducts = false;
+                for (let i = 0; i < productSelects.length; i++) {
+                    if (productSelects[i].value && quantities[i].value && unitPrices[i].value) {
+                        hasProducts = true;
+                        break;
+                    }
+                }
+                
+                if (!hasProducts) {
+                    e.preventDefault();
+                    alert('Please add at least one product with quantity and price');
+                    return false;
+                }
+            });
+
+            // Auto-focus on customer select
+            customerSelect.focus();
+        });
+    </script>
+{% endblock %} 

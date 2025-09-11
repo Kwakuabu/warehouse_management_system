@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Create Purchase Order - Alive Pharmaceuticals{% endblock %}
+
+{% block content %}
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>Create Purchase Order</h1>
+            <p>Create a new purchase order from vendor</p>
+        </div>
+        <a href="/purchase-orders" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Purchase Orders
+        </a>
+    </div>
+
+    <!-- Form -->
+    <div class="form-container">
+        {% if error %}
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i> {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/purchase-orders/create" id="purchaseOrderForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="vendor_id">Vendor *</label>
+                    <select id="vendor_id" name="vendor_id" class="form-control" required>
+                        <option value="">Select a vendor</option>
+                        {% for vendor in vendors %}
+                        <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="order_date">Order Date *</label>
+                    <input type="date" id="order_date" name="order_date" class="form-control" 
+                           value="{{ today }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="expected_delivery_date">Expected Delivery Date</label>
+                    <input type="date" id="expected_delivery_date" name="expected_delivery_date" 
+                           class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="status">Status *</label>
+                    <select id="status" name="status" class="form-control" required>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="received">Received</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Notes</label>
+                <textarea id="notes" name="notes" class="form-control" 
+                          placeholder="Enter order notes..."></textarea>
+            </div>
+
+            <div class="form-actions">
+                <a href="/purchase-orders" class="btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i>
+                    Create Purchase Order
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('purchaseOrderForm');
+            const vendorSelect = document.getElementById('vendor_id');
+            const orderDateInput = document.getElementById('order_date');
+            const statusSelect = document.getElementById('status');
+            
+            // Form validation
+            form.addEventListener('submit', function(e) {
+                const vendorId = vendorSelect.value;
+                const orderDate = orderDateInput.value;
+                const status = statusSelect.value;
+                
+                if (!vendorId) {
+                    e.preventDefault();
+                    alert('Please select a vendor');
+                    vendorSelect.focus();
+                    return false;
+                }
+                
+                if (!orderDate) {
+                    e.preventDefault();
+                    alert('Please select an order date');
+                    orderDateInput.focus();
+                    return false;
+                }
+                
+                if (!status) {
+                    e.preventDefault();
+                    alert('Please select a status');
+                    statusSelect.focus();
+                    return false;
+                }
+            });
+
+            // Auto-focus on vendor select
+            vendorSelect.focus();
+        });
+    </script>
+{% endblock %}

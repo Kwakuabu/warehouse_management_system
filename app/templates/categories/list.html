@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Categories - Warehouse Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">
+                        <i class="fas fa-tags me-2"></i>Categories
+                    </h2>
+                    {% if current_user.role in ['admin', 'manager'] %}
+                    <a href="/categories/add" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add Category
+                    </a>
+                    {% endif %}
+                </div>
+
+                <!-- Search and Filter Section -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" id="searchInput" class="form-control" placeholder="Search categories...">
+                            <button id="clearSearchBtn" class="btn btn-outline-secondary" type="button" style="display:none;"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="statusFilter" class="form-select">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="sortFilter" class="form-select">
+                            <option value="name">Sort by Name</option>
+                            <option value="products">Sort by Products</option>
+                            <option value="created">Sort by Created</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Categories Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Products</th>
+                                <th>Created</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesTableBody">
+                            {% for category in categories %}
+                            <tr data-status="{{ category.is_active }}" data-products="{{ category.products|length }}">
+                                <td>{{ category.id }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="category-icon me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #e8f5e8; border-radius: 4px;">
+                                            <i class="fas fa-tag text-success"></i>
+                                        </div>
+                                        <div>
+                                            <strong>{{ category.name }}</strong>
+                                            {% if category.code %}
+                                            <br><small class="text-muted">Code: {{ category.code }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if category.description %}
+                                    {{ category.description[:100] }}{% if category.description|length > 100 %}...{% endif %}
+                                    {% else %}
+                                    <span class="text-muted">No description</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ category.products|length }} products</span>
+                                </td>
+                                <td>
+                                    {% if category.created_at %}
+                                    {{ category.created_at.strftime('%Y-%m-%d') }}
+                                    {% else %}
+                                    <span class="text-muted">Unknown</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if category.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="/categories/{{ category.id }}" class="btn btn-sm btn-outline-primary" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if current_user.role in ['admin', 'manager'] %}
+                                        <a href="/categories/{{ category.id }}/edit" class="btn btn-sm btn-outline-warning" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="if(confirm('Are you sure you want to delete &quot;{{ category.name }}&quot;? This action cannot be undone. If this category has products, they will become uncategorized.')) { fetch('/categories/{{ category.id }}/delete', {method: 'POST', headers: {'Content-Type': 'application/json'}}).then(function(response) { if(response.ok) location.reload(); else alert('Error deleting category'); }).catch(function(error) { console.error('Error:', error); alert('Error deleting category'); }); }" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tbody id="noResultsRow" style="display:none;">
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">No categories found.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if pagination.pages > 1 %}
+                <nav aria-label="Categories pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if pagination.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="/categories?page={{ pagination.prev_num }}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for page_num in pagination.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != pagination.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="/categories?page={{ page_num }}">{{ page_num }}</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                                {% endif %}
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if pagination.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="/categories?page={{ pagination.next_num }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete confirmation now uses browser's built-in confirm dialog -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Enhanced Search, Filter, and Sort Functionality
+
+document.addEventListener('DOMContentLoaded', function() {
+    var searchInput = document.getElementById('searchInput');
+    var statusFilter = document.getElementById('statusFilter');
+    var sortFilter = document.getElementById('sortFilter');
+    var clearSearchBtn = document.getElementById('clearSearchBtn');
+    var noResultsRow = document.getElementById('noResultsRow');
+
+    function updateClearBtn() {
+        clearSearchBtn.style.display = searchInput.value ? '' : 'none';
+    }
+
+    function filterCategories() {
+        var searchTerm = searchInput.value.toLowerCase();
+        var statusVal = statusFilter.value;
+        var rows = document.querySelectorAll('#categoriesTableBody tr');
+        var visibleCount = 0;
+        rows.forEach(function(row) {
+            var name = row.cells[1].textContent.toLowerCase();
+            var status = row.getAttribute('data-status') === 'True' ? 'active' : 'inactive';
+            var matchesSearch = name.includes(searchTerm);
+            var matchesStatus = !statusVal || status === statusVal;
+            if (matchesSearch && matchesStatus) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        // Show/hide no results row
+        if (noResultsRow) noResultsRow.style.display = visibleCount === 0 ? '' : 'none';
+    }
+
+    function sortCategories() {
+        var sortBy = sortFilter.value;
+        var tbody = document.getElementById('categoriesTableBody');
+        var rows = Array.from(tbody.querySelectorAll('tr'));
+        rows.sort(function(a, b) {
+            var aValue, bValue;
+            switch (sortBy) {
+                case 'name':
+                    aValue = a.cells[1].textContent.toLowerCase();
+                    bValue = b.cells[1].textContent.toLowerCase();
+                    break;
+                case 'products':
+                    aValue = parseInt(a.getAttribute('data-products'));
+                    bValue = parseInt(b.getAttribute('data-products'));
+                    break;
+                case 'created':
+                    aValue = a.cells[4].textContent;
+                    bValue = b.cells[4].textContent;
+                    break;
+                default:
+                    return 0;
+            }
+            if (aValue < bValue) return -1;
+            if (aValue > bValue) return 1;
+            return 0;
+        });
+        rows.forEach(function(row) { tbody.appendChild(row); });
+        filterCategories(); // Re-filter after sort
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            filterCategories();
+            updateClearBtn();
+        });
+    }
+    if (statusFilter) statusFilter.addEventListener('change', filterCategories);
+    if (sortFilter) sortFilter.addEventListener('change', sortCategories);
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            updateClearBtn();
+            filterCategories();
+        });
+    }
+    // Initial state
+    updateClearBtn();
+    filterCategories();
+});
+</script>
+{% endblock %}

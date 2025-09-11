@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Receive Inventory - Alive Pharmaceuticals{% endblock %}
+
+{% block content %}
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>Receive Inventory</h1>
+            <p>Receive products into warehouse inventory</p>
+        </div>
+        <a href="/inventory" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Inventory
+        </a>
+    </div>
+
+    <!-- Form -->
+    <div class="form-container">
+        {% if error %}
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i> {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/inventory/receive" id="receiveForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="product_id">Product *</label>
+                    <select id="product_id" name="product_id" class="form-control" required>
+                        <option value="">Select a product</option>
+                        {% for product in products %}
+                        <option value="{{ product.id }}">{{ product.name }} ({{ product.sku }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="quantity">Quantity *</label>
+                    <input type="number" id="quantity" name="quantity" class="form-control" 
+                           placeholder="Enter quantity" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cost_price">Cost Price *</label>
+                    <input type="number" id="cost_price" name="cost_price" class="form-control" 
+                           placeholder="Enter cost price" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="selling_price">Selling Price *</label>
+                    <input type="number" id="selling_price" name="selling_price" class="form-control" 
+                           placeholder="Enter selling price" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="batch_number">Batch Number *</label>
+                    <input type="text" id="batch_number" name="batch_number" class="form-control" 
+                           placeholder="Enter batch number" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="expiry_date">Expiry Date</label>
+                    <input type="date" id="expiry_date" name="expiry_date" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Notes</label>
+                <textarea id="notes" name="notes" class="form-control" 
+                          placeholder="Enter receiving notes..."></textarea>
+            </div>
+
+            <div class="form-actions">
+                <a href="/inventory" class="btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i>
+                    Receive Inventory
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('receiveForm');
+            const productSelect = document.getElementById('product_id');
+            const quantityInput = document.getElementById('quantity');
+            
+            // Form validation
+            form.addEventListener('submit', function(e) {
+                const productId = productSelect.value;
+                const quantity = parseInt(quantityInput.value);
+                const costPrice = parseFloat(document.getElementById('cost_price').value);
+                const sellingPrice = parseFloat(document.getElementById('selling_price').value);
+                const batchNumber = document.getElementById('batch_number').value.trim();
+                
+                if (!productId) {
+                    e.preventDefault();
+                    alert('Please select a product');
+                    productSelect.focus();
+                    return false;
+                }
+                
+                if (!quantity || quantity < 1) {
+                    e.preventDefault();
+                    alert('Please enter a valid quantity (minimum 1)');
+                    quantityInput.focus();
+                    return false;
+                }
+                
+                if (!costPrice || costPrice < 0) {
+                    e.preventDefault();
+                    alert('Please enter a valid cost price (minimum 0)');
+                    document.getElementById('cost_price').focus();
+                    return false;
+                }
+                
+                if (!sellingPrice || sellingPrice < 0) {
+                    e.preventDefault();
+                    alert('Please enter a valid selling price (minimum 0)');
+                    document.getElementById('selling_price').focus();
+                    return false;
+                }
+                
+                if (!batchNumber) {
+                    e.preventDefault();
+                    alert('Please enter a batch number');
+                    document.getElementById('batch_number').focus();
+                    return false;
+                }
+            });
+
+            // Auto-focus on product select
+            productSelect.focus();
+        });
+    </script>
+{% endblock %}

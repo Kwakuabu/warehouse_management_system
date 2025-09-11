@@ -1,0 +1,769 @@
+{% extends "base.html" %}
+
+{% block title %}Sales Order {{ sales_order.order_number }} - Alive Pharmaceuticals{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header glass-card">
+        <div class="header-content">
+            <div class="header-text">
+                <h1 class="page-title">Order {{ sales_order.order_number }}</h1>
+                <p class="page-subtitle">Sales order details and management</p>
+            </div>
+            <div class="header-actions">
+                <span class="status-badge status-{{ sales_order.status }}">
+                    <i class="fas fa-check-circle"></i>
+                    {{ sales_order.status|title }}
+                </span>
+                <a href="/sales-orders" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Back
+                </a>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print"></i>
+                    Print
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Order Information -->
+        <div class="col-md-6">
+            <div class="glass-card">
+                <div class="card-header">
+                    <i class="fas fa-info-circle"></i>
+                    <h3>Order Information</h3>
+                </div>
+                <div class="card-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <i class="fas fa-user"></i>
+                            <span class="info-label">Customer:</span>
+                            <span class="info-value">{{ sales_order.customer.name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span class="info-label">Location:</span>
+                            <span class="info-value">{{ sales_order.customer.city or 'Unknown location' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-user"></i>
+                            <span class="info-label">Contact:</span>
+                            <span class="info-value">{{ sales_order.customer.contact_person or sales_order.customer.name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-envelope"></i>
+                            <span class="info-label">Email:</span>
+                            <span class="info-value">{{ sales_order.customer.email }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-phone"></i>
+                            <span class="info-label">Phone:</span>
+                            <span class="info-value">{{ sales_order.customer.phone }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Details -->
+        <div class="col-md-6">
+            <div class="glass-card">
+                <div class="card-header">
+                    <i class="fas fa-receipt"></i>
+                    <h3>Order Details</h3>
+                </div>
+                <div class="card-body">
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Order Number:</span>
+                            <span class="detail-value">{{ sales_order.order_number }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Order Date:</span>
+                            <span class="detail-value">{{ sales_order.order_date.strftime('%Y-%m-%d %H:%M') }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Delivery Date:</span>
+                            <span class="detail-value">{{ sales_order.delivery_date.strftime('%Y-%m-%d') if sales_order.delivery_date else 'Not specified' }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Total Items:</span>
+                            <span class="detail-value">{{ sales_order.items|length }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Status:</span>
+                            <span class="detail-value">
+                                <span class="status-badge status-{{ sales_order.status }}">
+                                    {{ sales_order.status|title }}
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Details -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="glass-card">
+                <div class="card-header">
+                    <i class="fas fa-dollar-sign"></i>
+                    <h3>Financial Details</h3>
+                </div>
+                <div class="card-body">
+                    <div class="financial-grid">
+                        <div class="financial-item">
+                            <span class="financial-label">Discount:</span>
+                            <span class="financial-value">{{ "%.1f"|format(sales_order.discount_percentage) }}%</span>
+                        </div>
+                        <div class="financial-item">
+                            <span class="financial-label">Payment Terms:</span>
+                            <span class="financial-value">{{ sales_order.customer.payment_terms or 'Net 30' }}</span>
+                        </div>
+                        <div class="financial-item total">
+                            <span class="financial-label">Order Value:</span>
+                            <span class="financial-value">${{ "%.2f"|format(sales_order.total_amount) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Status Update -->
+        <div class="col-md-6">
+            <div class="glass-card">
+                <div class="card-header">
+                    <i class="fas fa-tasks"></i>
+                    <h3>Order Status</h3>
+                </div>
+                <div class="card-body">
+                    <div class="status-update">
+                        <div class="current-status">
+                            <span class="status-label">Current Status:</span>
+                            <span class="status-badge status-{{ sales_order.status }}">
+                                {{ sales_order.status|title }}
+                            </span>
+                        </div>
+                        
+                        <!-- Warehouse Processing Actions for Admin/Manager -->
+                        {% if current_user.role in ['admin', 'manager'] %}
+                        <div class="warehouse-actions mt-3">
+                            <h6 class="mb-3 fw-bold text-primary">
+                                <i class="fas fa-warehouse me-2"></i>Warehouse Processing Actions
+                            </h6>
+                            
+                            {% if sales_order.status == 'pending' %}
+                            <div class="action-group mb-3">
+                                <button class="btn btn-primary me-2" onclick="confirmOrder({{ sales_order.id }})">
+                                    <i class="fas fa-check me-2"></i>Confirm Order
+                                </button>
+                                <button class="btn btn-info me-2" onclick="addWarehouseNotes({{ sales_order.id }})">
+                                    <i class="fas fa-sticky-note me-2"></i>Add Notes
+                                </button>
+                                <button class="btn btn-warning me-2" onclick="handleOrderIssues({{ sales_order.id }})">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>Handle Issues
+                                </button>
+                            </div>
+                            {% elif sales_order.status == 'confirmed' %}
+                            <div class="action-group mb-3">
+                                <button class="btn btn-warning me-2" onclick="processOrder({{ sales_order.id }})">
+                                    <i class="fas fa-boxes me-2"></i>Process Order
+                                </button>
+                                <button class="btn btn-success me-2" onclick="shipOrder({{ sales_order.id }})">
+                                    <i class="fas fa-truck me-2"></i>Ship Order
+                                </button>
+                                <button class="btn btn-info me-2" onclick="addWarehouseNotes({{ sales_order.id }})">
+                                    <i class="fas fa-sticky-note me-2"></i>Add Notes
+                                </button>
+                            </div>
+                            {% elif sales_order.status == 'shipped' %}
+                            <div class="action-group mb-3">
+                                <button class="btn btn-success me-2" onclick="deliverOrder({{ sales_order.id }})">
+                                    <i class="fas fa-check-circle me-2"></i>Mark Delivered
+                                </button>
+                                <button class="btn btn-info me-2" onclick="addWarehouseNotes({{ sales_order.id }})">
+                                    <i class="fas fa-sticky-note me-2"></i>Add Notes
+                                </button>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Status Update Form (Advanced) -->
+                            <div class="mt-3 p-3 bg-light rounded">
+                                <h6 class="mb-2 fw-bold">Advanced Status Management</h6>
+                                <form class="status-form" method="POST" action="/sales-orders/{{ sales_order.id }}/update-status">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="new_status">Update Status:</label>
+                                                <select name="status" id="new_status" class="form-control">
+                                                    <option value="pending" {% if sales_order.status == 'pending' %}selected{% endif %}>Pending</option>
+                                                    <option value="confirmed" {% if sales_order.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                                                    <option value="shipped" {% if sales_order.status == 'shipped' %}selected{% endif %}>Shipped</option>
+                                                    <option value="delivered" {% if sales_order.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                                                    <option value="cancelled" {% if sales_order.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>&nbsp;</label>
+                                                <button type="submit" class="btn btn-secondary w-100">
+                                                    <i class="fas fa-sync-alt me-2"></i>Update Status
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        {% else %}
+                        <!-- Hospital staff can only view status, not change it -->
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Order Status:</strong> This order is currently being processed by warehouse staff. 
+                            You will be notified when the status changes.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="row">
+        <div class="col-12">
+            <div class="glass-card">
+                <div class="card-header">
+                    <i class="fas fa-boxes"></i>
+                    <h3>Order Items</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Description</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in sales_order.items %}
+                                <tr>
+                                    <td>
+                                        <div class="product-info">
+                                            <div class="product-name">{{ item.product.name }}</div>
+                                            <div class="product-category">{{ item.product.category.name if item.product.category else 'Uncategorized' }}</div>
+                                        </div>
+                                    </td>
+                                    <td>{{ item.product.description[:50] + '...' if item.product.description and item.product.description|length > 50 else (item.product.description or 'No description') }}</td>
+                                    <td>
+                                        <span class="quantity-badge">{{ item.quantity_ordered }}</span>
+                                    </td>
+                                    <td>${{ "%.2f"|format(item.unit_price) }}</td>
+                                    <td>${{ "%.2f"|format(item.total_price) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Timeline -->
+    <div class="row">
+        <div class="col-12">
+            <div class="glass-card">
+                <div class="card-header">
+                    <i class="fas fa-clock"></i>
+                    <h3>Order Timeline</h3>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h4>Order Created</h4>
+                                <p>Order {{ sales_order.order_number }} was created on {{ sales_order.order_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                                <span class="timeline-date">{{ sales_order.order_date.strftime('%Y-%m-%d %H:%M') }}</span>
+                            </div>
+                        </div>
+                        {% if sales_order.status in ['confirmed', 'shipped', 'delivered'] %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h4>Order Confirmed</h4>
+                                <p>Order was confirmed and processing began</p>
+                                <span class="timeline-date">{{ sales_order.order_date.strftime('%Y-%m-%d %H:%M') }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if sales_order.status in ['shipped', 'delivered'] %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h4>Order Shipped</h4>
+                                <p>Order was shipped to customer</p>
+                                <span class="timeline-date">{{ sales_order.order_date.strftime('%Y-%m-%d %H:%M') }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if sales_order.status == 'delivered' %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h4>Order Delivered</h4>
+                                <p>Order was successfully delivered to customer</p>
+                                <span class="timeline-date">{{ sales_order.order_date.strftime('%Y-%m-%d %H:%M') }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 2rem;
+        padding: 2rem;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: black;
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: black;
+    }
+
+    .page-subtitle {
+        font-size: 1.1rem;
+        opacity: 1;
+        margin: 0;
+        color: black;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-confirmed { background: #d1ecf1; color: #0c5460; }
+    .status-shipped { background: #d4edda; color: #155724; }
+    .status-delivered { background: #d1f2eb; color: #0f5132; }
+    .status-cancelled { background: #f8d7da; color: #721c24; }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        margin-bottom: 2rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .glass-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.15);
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .card-header i {
+        color: #667eea;
+        font-size: 1.2rem;
+    }
+
+    .card-header h3 {
+        margin: 0;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .info-grid, .details-grid, .financial-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .info-item, .detail-item, .financial-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: rgba(102, 126, 234, 0.05);
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+
+    .info-item i, .detail-item i {
+        color: #667eea;
+        width: 20px;
+        text-align: center;
+    }
+
+    .info-label, .detail-label, .financial-label {
+        font-weight: 600;
+        color: #555;
+        min-width: 100px;
+    }
+
+    .info-value, .detail-value, .financial-value {
+        color: #333;
+        font-weight: 500;
+    }
+
+    .financial-item.total {
+        background: rgba(102, 126, 234, 0.1);
+        border-left-color: #667eea;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .quantity-badge {
+        background: #667eea;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .product-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .product-name {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .product-category {
+        font-size: 0.8rem;
+        color: #666;
+        background: rgba(102, 126, 234, 0.1);
+        padding: 0.2rem 0.5rem;
+        border-radius: 10px;
+        display: inline-block;
+    }
+
+    .table {
+        margin: 0;
+    }
+
+    .table th {
+        border-top: none;
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+        color: #495057;
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    .table td {
+        vertical-align: middle;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 0.5rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #667eea;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -1.5rem;
+        top: 0.5rem;
+        width: 1rem;
+        height: 1rem;
+        background: #667eea;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 0 0 3px #667eea;
+    }
+
+    .timeline-content h4 {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .timeline-content p {
+        color: #666;
+        margin-bottom: 0.5rem;
+    }
+
+    .timeline-date {
+        font-size: 0.8rem;
+        color: #999;
+        background: rgba(102, 126, 234, 0.1);
+        padding: 0.2rem 0.5rem;
+        border-radius: 8px;
+    }
+
+    .status-update {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .current-status {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(102, 126, 234, 0.05);
+        border-radius: 8px;
+    }
+
+    .status-label {
+        font-weight: 600;
+        color: #555;
+    }
+
+    .status-form {
+        display: flex;
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .form-group {
+        flex: 1;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #555;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #5a6fd8;
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+        .header-content {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .header-actions {
+            justify-content: center;
+        }
+
+        .status-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .timeline {
+            padding-left: 1rem;
+        }
+
+        .timeline-marker {
+            left: -1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Warehouse Processing Functions
+    function confirmOrder(orderId) {
+        if (confirm('Are you sure you want to confirm this sales order? This will move it to the processing stage.')) {
+            fetch('/sales-orders/' + orderId + '/update-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'status=confirmed'
+            })
+            .then(function(response) {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error confirming order');
+                }
+            });
+        }
+    }
+
+    function processOrder(orderId) {
+        if (confirm('Are you ready to process this order? This will pick and pack the items for shipping.')) {
+            // For now, just show a message. In a real system, this would open a processing form
+            alert('Order processing initiated. Please pick and pack the items, then use the Ship button when ready.');
+        }
+    }
+
+    function shipOrder(orderId) {
+        if (confirm('Are you sure you want to ship this sales order?')) {
+            fetch('/sales-orders/' + orderId + '/update-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'status=shipped'
+            })
+            .then(function(response) {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error shipping order');
+                }
+            });
+        }
+    }
+
+    function addWarehouseNotes(orderId) {
+        const notes = prompt('Add warehouse processing notes:');
+        if (notes !== null && notes.trim() !== '') {
+            // In a real system, this would send to a notes API endpoint
+            alert('Notes added successfully! (This would save to the database in production)');
+        }
+    }
+
+    function handleOrderIssues(orderId) {
+        const issue = prompt('Describe the issue (backorder, substitution, etc.):');
+        if (issue !== null && issue.trim() !== '') {
+            // In a real system, this would open an issues management form
+            alert('Issue logged successfully! (This would create an issue ticket in production)');
+        }
+    }
+
+    function deliverOrder(orderId) {
+        if (confirm('Are you sure you want to mark this order as delivered?')) {
+            fetch('/sales-orders/' + orderId + '/update-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'status=delivered'
+            })
+            .then(function(response) {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error marking order as delivered');
+                }
+            });
+        }
+    }
+</script>
+{% endblock %}
