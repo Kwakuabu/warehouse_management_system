@@ -10,8 +10,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install
-COPY warehouse_management_system-main/backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements_simple.txt .
+RUN pip install --no-cache-dir -r requirements_simple.txt
 
 # Copy application
 COPY warehouse_management_system-main/backend/ .
