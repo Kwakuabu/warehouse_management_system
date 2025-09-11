@@ -1,5 +1,5 @@
-# main.py - RAILWAY FIX - UNIQUE ID: BACKEND_FIX_003
-print("DEBUG: Using backend main.py - UNIQUE ID: BACKEND_FIX_003")
+# main.py - RAILWAY FIX - UNIQUE ID: BACKEND_FIX_004 - FORCE FRESH DEPLOYMENT
+print("DEBUG: Using backend main.py - UNIQUE ID: BACKEND_FIX_004 - FORCE FRESH DEPLOYMENT")
 from fastapi import FastAPI, Depends, HTTPException, Request, Cookie
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database import get_db, create_tables
 from app.models.models import User
+# CORRECT IMPORTS - sales_order (singular), not sales_orders (plural)
 from app.routes import auth, categories, products, customers, inventory, purchase_orders, dashboard, vendors, reports, alerts, settings
 from app.routes import sales_order
 from app.utils.auth import get_current_user_from_cookie
