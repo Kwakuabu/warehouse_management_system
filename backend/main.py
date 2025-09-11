@@ -1,5 +1,5 @@
-# main.py - RAILWAY FIX - UNIQUE ID: BACKEND_FIX_004 - FORCE FRESH DEPLOYMENT
-print("DEBUG: Using backend main.py - UNIQUE ID: BACKEND_FIX_004 - FORCE FRESH DEPLOYMENT")
+# main.py - RAILWAY FIX - UNIQUE ID: BACKEND_FIX_005 - FINAL FIX
+print("DEBUG: Using backend main.py - UNIQUE ID: BACKEND_FIX_005 - FINAL FIX - CORRECT ROUTER REFERENCE")
 from fastapi import FastAPI, Depends, HTTPException, Request, Cookie
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -85,6 +85,7 @@ app.include_router(products.router, prefix="/products", tags=["products"])
 app.include_router(customers.router, prefix="/customers", tags=["customers"])
 app.include_router(inventory.router, prefix="/inventory", tags=["inventory"])
 app.include_router(purchase_orders.router, prefix="/purchase-orders", tags=["purchase_orders"])
+# CORRECT: sales_order (singular) NOT sales_orders (plural)
 app.include_router(sales_order.router, prefix="/sales-orders", tags=["sales_orders"])
 app.include_router(vendors.router, prefix="/vendors", tags=["vendors"])
 app.include_router(reports.router, prefix="/reports", tags=["reports"])
