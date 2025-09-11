@@ -7,12 +7,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Database URL from environment variable with fallback for Railway
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./warehouse_db.sqlite")
+# Database URL from environment variable - Railway MySQL
+DATABASE_URL = os.getenv("MYSQL_URL", os.getenv("DATABASE_URL", "sqlite:///./warehouse_db.sqlite"))
 
 # Handle Railway PostgreSQL URL format
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# Handle Railway MySQL URL format
+if DATABASE_URL.startswith("mysql://"):
+    # MySQL URL is already in correct format for PyMySQL
+    pass
 
 # Create SQLAlchemy engine with better error handling
 engine = create_engine(
