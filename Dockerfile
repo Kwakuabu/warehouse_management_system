@@ -10,11 +10,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install
-COPY requirements_simple.txt .
-RUN pip install --no-cache-dir -r requirements_simple.txt
+COPY requirements_simple.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
+# Ensure email-validator is installed explicitly
+RUN pip install --no-cache-dir email-validator==2.1.0
 
 # Copy application
-COPY warehouse_management_system-main/backend/ .
+COPY warehouse_management_system-main/backend/ /app/
 
 # Expose port
 EXPOSE 8000
