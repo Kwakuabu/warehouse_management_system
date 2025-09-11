@@ -111,7 +111,9 @@ def seed_users(db: Session):
                 full_name=user_data["full_name"],
                 hashed_password=hashed_password,
                 role=user_data["role"],
-                is_active=True
+                is_active=True,
+                requires_approval=False,  # Pre-approved users don't need approval
+                is_approved=True  # Mark as approved
             )
             db.add(user)
     
