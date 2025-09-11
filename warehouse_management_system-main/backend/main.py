@@ -1,4 +1,5 @@
-# main.py
+# main.py - RAILWAY FIX - UNIQUE ID: BACKEND_FIX_003
+print("DEBUG: Using backend main.py - UNIQUE ID: BACKEND_FIX_003")
 from fastapi import FastAPI, Depends, HTTPException, Request, Cookie
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
