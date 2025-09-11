@@ -1,5 +1,5 @@
-# main.py - RAILWAY FIX - UNIQUE ID: MAIN_FIX_001 - COMPLETE CORRECT VERSION
-print("DEBUG: Using complete correct main.py - UNIQUE ID: MAIN_FIX_001")
+# main.py - RAILWAY FIX - UNIQUE ID: MAIN_FIX_003 - FORCE WORKING DEPLOYMENT
+print("DEBUG: Using complete correct main.py - UNIQUE ID: MAIN_FIX_003 - FORCE WORKING DEPLOYMENT")
 from fastapi import FastAPI, Depends, HTTPException, Request, Cookie
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
