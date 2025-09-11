@@ -1,5 +1,5 @@
-# main.py - RAILWAY FIX - UNIQUE ID: BACKEND_FIX_005 - FINAL FIX
-print("DEBUG: Using backend main.py - UNIQUE ID: BACKEND_FIX_005 - FINAL FIX - CORRECT ROUTER REFERENCE")
+# main.py - RAILWAY FIX - UNIQUE ID: BACKEND_FIX_006 - STATIC FILES FIX
+print("DEBUG: Using backend main.py - UNIQUE ID: BACKEND_FIX_006 - STATIC FILES FIX")
 from fastapi import FastAPI, Depends, HTTPException, Request, Cookie
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -93,6 +93,7 @@ app.include_router(alerts.router, prefix="/alerts", tags=["alerts"])
 app.include_router(settings.router, prefix="/settings", tags=["settings"])
 
 # Mount static files
+# Mount static files - CORRECT PATH: app/static (relative to backend directory)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Templates
