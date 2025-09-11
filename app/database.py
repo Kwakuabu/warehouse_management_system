@@ -7,15 +7,20 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Database URL from environment variable
+# Database URL from environment variable with fallback for Railway
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./warehouse_db.sqlite")
 
-# Create SQLAlchemy engine
+# Handle Railway PostgreSQL URL format
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# Create SQLAlchemy engine with better error handling
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
     pool_recycle=300,
-    echo=True  # Set to False in production
+    echo=False,  # Set to False in production
+    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
 )
 
 # Create SessionLocal class

@@ -31,30 +31,55 @@ async def lifespan(app: FastAPI):
         db = next(get_db())
         from sqlalchemy import text
         
-        # Check if approval columns exist
-        result = db.execute(text("SHOW COLUMNS FROM users LIKE 'requires_approval'"))
-        if not result.fetchone():
-            print("Adding user approval columns to database...")
-            
-            # Add new columns
-            db.execute(text("ALTER TABLE users ADD COLUMN requires_approval BOOLEAN DEFAULT 1"))
-            db.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT 0"))
-            db.execute(text("ALTER TABLE users ADD COLUMN approved_by INT"))
-            db.execute(text("ALTER TABLE users ADD COLUMN approved_at DATETIME"))
-            
-            # Update existing users to be approved
-            db.execute(text("""
-                UPDATE users 
-                SET requires_approval = 0, 
-                    is_approved = 1, 
-                    approved_at = NOW() 
-                WHERE requires_approval = 1 OR is_approved = 0
-            """))
+        # Check if approval columns exist (database-agnostic approach)
+        try:
+            # Try to query the users table structure
+            if "sqlite" in str(db.bind.url):
+                # SQLite approach
+                result = db.execute(text("PRAGMA table_info(users)"))
+                columns = [row[1] for row in result.fetchall()]
+                if 'requires_approval' not in columns:
+                    print("Adding user approval columns to SQLite database...")
+                    db.execute(text("ALTER TABLE users ADD COLUMN requires_approval BOOLEAN DEFAULT 1"))
+                    db.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT 0"))
+                    db.execute(text("ALTER TABLE users ADD COLUMN approved_by INTEGER"))
+                    db.execute(text("ALTER TABLE users ADD COLUMN approved_at DATETIME"))
+                    
+                    # Update existing users to be approved
+                    db.execute(text("""
+                        UPDATE users 
+                        SET requires_approval = 0, 
+                            is_approved = 1, 
+                            approved_at = datetime('now') 
+                        WHERE requires_approval = 1 OR is_approved = 0
+                    """))
+            else:
+                # PostgreSQL/MySQL approach
+                result = db.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'requires_approval'"))
+                if not result.fetchone():
+                    print("Adding user approval columns to database...")
+                    
+                    # Add new columns
+                    db.execute(text("ALTER TABLE users ADD COLUMN requires_approval BOOLEAN DEFAULT true"))
+                    db.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT false"))
+                    db.execute(text("ALTER TABLE users ADD COLUMN approved_by INTEGER"))
+                    db.execute(text("ALTER TABLE users ADD COLUMN approved_at TIMESTAMP"))
+                    
+                    # Update existing users to be approved
+                    db.execute(text("""
+                        UPDATE users 
+                        SET requires_approval = false, 
+                            is_approved = true, 
+                            approved_at = NOW() 
+                        WHERE requires_approval = true OR is_approved = false
+                    """))
             
             db.commit()
             print("User approval system migration completed successfully!")
-        else:
-            print("User approval columns already exist.")
+        except Exception as col_error:
+            print(f"Column check/migration error: {col_error}")
+            # If columns already exist or other error, continue
+            pass
             
     except Exception as e:
         print(f"Migration error: {e}")
