@@ -1,12 +1,12 @@
 # app/models/schemas.py
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
 # User schemas
 class UserBase(BaseModel):
     username: str
-    email: EmailStr
+    email: str  # Temporarily using str instead of EmailStr
     full_name: str
     role: str = "staff"
 
@@ -16,7 +16,7 @@ class UserCreate(UserBase):
 
 class UserUpdate(BaseModel):
     username: Optional[str] = None
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None  # Temporarily using str instead of EmailStr
     full_name: Optional[str] = None
     role: Optional[str] = None
     is_active: Optional[bool] = None
