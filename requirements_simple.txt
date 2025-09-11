@@ -1,3 +1,7 @@
+# Critical Dependencies - Install First
+email-validator==2.1.1
+dnspython==2.4.2
+
 # Core Framework
 fastapi==0.116.1
 uvicorn==0.35.0
@@ -13,7 +17,6 @@ bcrypt==4.3.0
 passlib==1.7.4
 python-jose[cryptography]==3.5.0
 python-multipart==0.0.20
-email-validator==2.1.0
 
 # Data Processing
 pandas==2.3.1
