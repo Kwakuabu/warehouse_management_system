@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database import get_db, create_tables
 from app.models.models import User
-from app.routes import auth, categories, products, customers, inventory, purchase_orders, sales_order, dashboard, vendors, reports, alerts, settings
+from app.routes import auth, categories, products, customers, inventory, purchase_orders, dashboard, vendors, reports, alerts, settings
+from app.routes import sales_order
 from app.utils.auth import get_current_user_from_cookie
 from app.utils.seed_data import seed_all_data
 from typing import Optional
