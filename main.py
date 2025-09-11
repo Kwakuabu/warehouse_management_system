@@ -1,4 +1,5 @@
-# main.py - Fixed import issues
+# main.py - Fixed import issues - DEBUG VERSION
+print("DEBUG: Using main.py from project root - sales_order import")
 from fastapi import FastAPI, Depends, HTTPException, Request, Cookie
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
