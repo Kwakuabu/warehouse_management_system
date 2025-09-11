@@ -1,0 +1,623 @@
+{% extends "base.html" %}
+
+{% block title %}Security Settings - Alive Pharmaceuticals{% endblock %}
+
+{% block extra_css %}
+<style>
+    .security-dashboard {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .dashboard-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .dashboard-header h1 {
+        color: #333;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .dashboard-header p {
+        color: #666;
+        font-size: 1.1rem;
+        margin: 0.5rem 0 0 0;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .security-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .card-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+    }
+
+    .card-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1.5rem;
+    }
+
+    .card-icon i {
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .card-title {
+        color: #333;
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .card-subtitle {
+        color: #666;
+        font-size: 1rem;
+        margin: 0.25rem 0 0 0;
+    }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .settings-section {
+        background: rgba(255, 255, 255, 0.7);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .settings-section:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.1);
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+    }
+
+    .section-title i {
+        margin-right: 0.75rem;
+        color: #667eea;
+        font-size: 1.1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid rgba(102, 126, 234, 0.2);
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        background: white;
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid rgba(102, 126, 234, 0.2);
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        background: white;
+    }
+
+    .form-checkbox {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 10px;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .form-checkbox:hover {
+        background: rgba(255, 255, 255, 0.8);
+        border-color: rgba(102, 126, 234, 0.3);
+    }
+
+    .form-checkbox input[type="checkbox"] {
+        margin-right: 0.75rem;
+        width: 20px;
+        height: 20px;
+        accent-color: #667eea;
+    }
+
+    .form-checkbox label {
+        font-weight: 500;
+        color: #333;
+        cursor: pointer;
+        flex: 1;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        padding-top: 2rem;
+        border-top: 2px solid rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-secondary {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border: 2px solid #667eea;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(102, 126, 234, 0.2);
+        transform: translateY(-2px);
+        color: #667eea;
+        text-decoration: none;
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    }
+
+    .info-text {
+        color: #666;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        font-style: italic;
+    }
+
+    .warning-text {
+        color: #d97706;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        font-weight: 500;
+    }
+
+    .danger-text {
+        color: #dc2626;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        font-weight: 500;
+    }
+
+    .security-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .status-secure {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .status-danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    @media (max-width: 768px) {
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .dashboard-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="security-dashboard">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div>
+            <h1>Security Settings</h1>
+            <p>Configure password policies, authentication methods, and security features</p>
+        </div>
+        <div class="header-actions">
+            <a href="/settings" class="btn-primary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Settings
+            </a>
+        </div>
+    </div>
+
+    <!-- Security Settings Card -->
+    <div class="security-card">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div>
+                <h2 class="card-title">Security Configuration</h2>
+                <p class="card-subtitle">Manage authentication, authorization, and security policies</p>
+            </div>
+        </div>
+
+        <form method="POST" action="/settings/security">
+            <div class="settings-grid">
+                <!-- Password Policy -->
+                <div class="settings-section">
+                    <div class="section-title">
+                        <i class="fas fa-key"></i>
+                        Password Policy
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password_min_length" class="form-label">Minimum Password Length</label>
+                        <input type="number" id="password_min_length" name="password_min_length" class="form-input" 
+                               value="{{ settings.password_min_length if settings else 8 }}" min="6" max="20" required>
+                        <div class="info-text">Minimum number of characters required in passwords</div>
+                    </div>
+
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="password_require_uppercase" name="password_require_uppercase" 
+                               {% if settings and settings.password_require_uppercase %}checked{% endif %}>
+                        <label for="password_require_uppercase">Require Uppercase Letters</label>
+                    </div>
+
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="password_require_lowercase" name="password_require_lowercase" 
+                               {% if settings and settings.password_require_lowercase %}checked{% endif %}>
+                        <label for="password_require_lowercase">Require Lowercase Letters</label>
+                    </div>
+
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="password_require_numbers" name="password_require_numbers" 
+                               {% if settings and settings.password_require_numbers %}checked{% endif %}>
+                        <label for="password_require_numbers">Require Numbers</label>
+                    </div>
+
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="password_require_special" name="password_require_special" 
+                               {% if settings and settings.password_require_special %}checked{% endif %}>
+                        <label for="password_require_special">Require Special Characters</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password_expiry_days" class="form-label">Password Expiry (days)</label>
+                        <input type="number" id="password_expiry_days" name="password_expiry_days" class="form-input" 
+                               value="{{ settings.password_expiry_days if settings else 90 }}" min="30" max="365">
+                        <div class="info-text">Number of days before passwords expire (0 = never)</div>
+                    </div>
+                </div>
+
+                <!-- Session Management -->
+                <div class="settings-section">
+                    <div class="section-title">
+                        <i class="fas fa-clock"></i>
+                        Session Management
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="session_timeout_minutes" class="form-label">Session Timeout (minutes)</label>
+                        <input type="number" id="session_timeout_minutes" name="session_timeout_minutes" class="form-input" 
+                               value="{{ settings.session_timeout_minutes if settings else 30 }}" min="5" max="1440">
+                        <div class="info-text">How long before user sessions expire due to inactivity</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="max_login_attempts" class="form-label">Max Login Attempts</label>
+                        <input type="number" id="max_login_attempts" name="max_login_attempts" class="form-input" 
+                               value="{{ settings.max_login_attempts if settings else 5 }}" min="3" max="10">
+                        <div class="info-text">Maximum failed login attempts before account lockout</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lockout_duration_minutes" class="form-label">Lockout Duration (minutes)</label>
+                        <input type="number" id="lockout_duration_minutes" name="lockout_duration_minutes" class="form-input" 
+                               value="{{ settings.lockout_duration_minutes if settings else 15 }}" min="5" max="1440">
+                        <div class="info-text">How long accounts remain locked after max failed attempts</div>
+                    </div>
+                </div>
+
+                <!-- Two-Factor Authentication -->
+                <div class="settings-section">
+                    <div class="section-title">
+                        <i class="fas fa-mobile-alt"></i>
+                        Two-Factor Authentication
+                    </div>
+                    
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="enable_two_factor" name="enable_two_factor" 
+                               {% if settings and settings.enable_two_factor %}checked{% endif %}>
+                        <label for="enable_two_factor">Enable Two-Factor Authentication</label>
+                    </div>
+
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="require_two_factor_admin" name="require_two_factor_admin" 
+                               {% if settings and settings.require_two_factor_admin %}checked{% endif %}>
+                        <label for="require_two_factor_admin">Require 2FA for Administrators</label>
+                    </div>
+
+                    <div class="info-text">
+                        <i class="fas fa-info-circle"></i>
+                        Two-factor authentication adds an extra layer of security using SMS or authenticator apps
+                    </div>
+                </div>
+
+                <!-- IP Security -->
+                <div class="settings-section">
+                    <div class="section-title">
+                        <i class="fas fa-network-wired"></i>
+                        IP Security
+                    </div>
+                    
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="enable_ip_whitelist" name="enable_ip_whitelist" 
+                               {% if settings and settings.enable_ip_whitelist %}checked{% endif %}>
+                        <label for="enable_ip_whitelist">Enable IP Whitelist</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="allowed_ips" class="form-label">Allowed IP Addresses</label>
+                        <textarea id="allowed_ips" name="allowed_ips" class="form-input" rows="3" 
+                                  placeholder="192.168.1.0/24&#10;10.0.0.0/8&#10;172.16.0.0/12">{{ settings.allowed_ips if settings else '' }}</textarea>
+                        <div class="info-text">Enter IP addresses or ranges (one per line). Leave empty to allow all IPs.</div>
+                    </div>
+                </div>
+
+                <!-- Audit & Logging -->
+                <div class="settings-section">
+                    <div class="section-title">
+                        <i class="fas fa-clipboard-list"></i>
+                        Audit & Logging
+                    </div>
+                    
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="enable_audit_log" name="enable_audit_log" 
+                               {% if settings and settings.enable_audit_log %}checked{% endif %}>
+                        <label for="enable_audit_log">Enable Audit Logging</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="audit_log_retention_days" class="form-label">Log Retention (days)</label>
+                        <input type="number" id="audit_log_retention_days" name="audit_log_retention_days" class="form-input" 
+                               value="{{ settings.audit_log_retention_days if settings else 365 }}" min="30" max="3650">
+                        <div class="info-text">How long to keep audit logs before automatic deletion</div>
+                    </div>
+
+                    <div class="security-status status-secure">
+                        <i class="fas fa-shield-check"></i>
+                        Audit logging is currently active
+                    </div>
+                </div>
+
+                <!-- Security Status -->
+                <div class="settings-section">
+                    <div class="section-title">
+                        <i class="fas fa-chart-line"></i>
+                        Security Status
+                    </div>
+                    
+                    <div class="security-status status-secure">
+                        <i class="fas fa-check-circle"></i>
+                        System security is properly configured
+                    </div>
+
+                    <div class="info-text" style="margin-top: 1rem;">
+                        <strong>Last Security Scan:</strong> {{ "2024-01-15 14:30:00" }}<br>
+                        <strong>Vulnerabilities Found:</strong> 0<br>
+                        <strong>Security Score:</strong> 95/100
+                    </div>
+
+                    <div class="warning-text" style="margin-top: 1rem;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Consider enabling two-factor authentication for enhanced security
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="/settings" class="btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn-success">
+                    <i class="fas fa-save"></i>
+                    Save Security Settings
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation and confirmation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const passwordMinLength = parseInt(document.getElementById('password_min_length').value);
+        const sessionTimeout = parseInt(document.getElementById('session_timeout_minutes').value);
+        const maxLoginAttempts = parseInt(document.getElementById('max_login_attempts').value);
+        
+        // Validate password minimum length
+        if (passwordMinLength < 6) {
+            e.preventDefault();
+            alert('Minimum password length must be at least 6 characters.');
+            return;
+        }
+        
+        // Validate session timeout
+        if (sessionTimeout < 5) {
+            e.preventDefault();
+            alert('Session timeout must be at least 5 minutes.');
+            return;
+        }
+        
+        // Validate max login attempts
+        if (maxLoginAttempts < 3) {
+            e.preventDefault();
+            alert('Maximum login attempts must be at least 3.');
+            return;
+        }
+        
+        // Confirm before saving security settings
+        if (!confirm('Are you sure you want to save these security settings? Some changes may affect user access immediately.')) {
+            e.preventDefault();
+            return;
+        }
+    });
+
+    // Dynamic form interactions
+    document.getElementById('enable_ip_whitelist').addEventListener('change', function() {
+        const allowedIpsField = document.getElementById('allowed_ips');
+        if (this.checked) {
+            allowedIpsField.required = true;
+            allowedIpsField.style.borderColor = '#667eea';
+        } else {
+            allowedIpsField.required = false;
+            allowedIpsField.style.borderColor = 'rgba(102, 126, 234, 0.2)';
+        }
+    });
+
+    // Initialize form state
+    document.addEventListener('DOMContentLoaded', function() {
+        const ipWhitelistCheckbox = document.getElementById('enable_ip_whitelist');
+        const allowedIpsField = document.getElementById('allowed_ips');
+        
+        if (ipWhitelistCheckbox.checked) {
+            allowedIpsField.required = true;
+        }
+    });
+</script>
+{% endblock %} 

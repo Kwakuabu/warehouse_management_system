@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alive Pharmaceuticals - Warehouse Management System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1e293b;
+            --light-color: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .status-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .status-card h2 {
+            color: var(--success-color);
+            margin-bottom: 15px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .feature-card h3 i {
+            margin-right: 10px;
+            font-size: 1.5rem;
+        }
+
+        .demo-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            margin-bottom: 30px;
+        }
+
+        .demo-section h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .demo-item {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .demo-item h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin: 10px;
+            transition: transform 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
+        }
+
+        .setup-instructions {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+
+        .setup-instructions h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .setup-instructions ol {
+            padding-left: 20px;
+        }
+
+        .setup-instructions li {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+        }
+
+        .setup-instructions code {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--dark-color);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-pills"></i> Alive Pharmaceuticals</h1>
+            <p>Warehouse Management System - Demo & Testing</p>
+        </div>
+
+        <!-- Status Card -->
+        <div class="status-card">
+            <h2><i class="fas fa-check-circle"></i> System Ready for Testing</h2>
+            <p>The warehouse management system has been successfully set up and is ready for demonstration!</p>
+        </div>
+
+        <!-- Demo Statistics -->
+        <div class="demo-section">
+            <h2><i class="fas fa-chart-line"></i> Demo Dashboard</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Products</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">Vendors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Categories</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">₵15.2K</div>
+                    <div class="stat-label">Inventory Value</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">Low Stock Alerts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">Expiring Soon</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Cards -->
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3><i class="fas fa-boxes"></i> Inventory Management</h3>
+                <p>Track products with batch numbers, expiry dates, and temperature requirements. Monitor stock levels and receive alerts for low inventory.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3><i class="fas fa-shopping-cart"></i> Purchase Orders</h3>
+                <p>Complete purchase order lifecycle from creation to receipt. Track vendor relationships and manage procurement workflows.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3><i class="fas fa-truck"></i> Sales Orders</h3>
+                <p>Process customer orders with inventory allocation. Manage hospital relationships and delivery schedules.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3><i class="fas fa-hospital"></i> Customer Management</h3>
+                <p>Manage hospital and supplier relationships. Track contact information, credit limits, and payment terms.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3><i class="fas fa-chart-bar"></i> Real-time Dashboard</h3>
+                <p>Live statistics and monitoring with interactive charts. Track key performance indicators and system alerts.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3><i class="fas fa-shield-alt"></i> Security & Compliance</h3>
+                <p>JWT authentication with role-based access control. Complete audit trails for pharmaceutical compliance.</p>
+            </div>
+        </div>
+
+        <!-- Demo Features -->
+        <div class="demo-section">
+            <h2><i class="fas fa-play-circle"></i> Demo Features</h2>
+            <div class="demo-grid">
+                <div class="demo-item">
+                    <h4><i class="fas fa-user-plus"></i> User Registration</h4>
+                    <p>Create new user accounts with role-based permissions</p>
+                    <button class="btn" onclick="showDemo('registration')">Try Demo</button>
+                </div>
+                
+                <div class="demo-item">
+                    <h4><i class="fas fa-sign-in-alt"></i> User Login</h4>
+                    <p>Secure authentication with JWT tokens</p>
+                    <button class="btn" onclick="showDemo('login')">Try Demo</button>
+                </div>
+                
+                <div class="demo-item">
+                    <h4><i class="fas fa-plus"></i> Add Product</h4>
+                    <p>Create new products with detailed specifications</p>
+                    <button class="btn" onclick="showDemo('product')">Try Demo</button>
+                </div>
+                
+                <div class="demo-item">
+                    <h4><i class="fas fa-search"></i> Search Inventory</h4>
+                    <p>Search and filter inventory items</p>
+                    <button class="btn" onclick="showDemo('search')">Try Demo</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Setup Instructions -->
+        <div class="setup-instructions">
+            <h2><i class="fas fa-cogs"></i> Setup Instructions</h2>
+            <ol>
+                <li><strong>Install Python 3.11+</strong> - Download from <a href="https://python.org" target="_blank">python.org</a></li>
+                <li><strong>Install Dependencies:</strong> <code>pip install -r requirements.txt</code></li>
+                <li><strong>Set up Database:</strong> Install MySQL or use SQLite for testing</li>
+                <li><strong>Configure Environment:</strong> Copy <code>env.example</code> to <code>.env</code></li>
+                <li><strong>Run Migrations:</strong> <code>alembic upgrade head</code></li>
+                <li><strong>Start Application:</strong> <code>python main.py</code></li>
+                <li><strong>Access System:</strong> Open <a href="http://localhost:8000" target="_blank">http://localhost:8000</a></li>
+            </ol>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-secondary" onclick="showFullSetup()">View Full Setup Guide</button>
+                <button class="btn btn-warning" onclick="showDockerSetup()">Docker Setup</button>
+            </div>
+        </div>
+
+        <!-- Demo Modals -->
+        <div id="demo-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+            <div style="background: white; padding: 30px; border-radius: 15px; max-width: 500px; width: 90%;">
+                <h3 id="demo-title">Demo</h3>
+                <p id="demo-content">Demo content will appear here.</p>
+                <button class="btn" onclick="closeDemo()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showDemo(type) {
+            const modal = document.getElementById('demo-modal');
+            const title = document.getElementById('demo-title');
+            const content = document.getElementById('demo-content');
+            
+            const demos = {
+                registration: {
+                    title: 'User Registration Demo',
+                    content: 'This would show a user registration form with fields for username, email, password, and role selection. The system validates input and creates new user accounts with proper password hashing.'
+                },
+                login: {
+                    title: 'User Login Demo',
+                    content: 'This would show a login form that authenticates users and returns JWT tokens for secure access to the system. Includes error handling for invalid credentials.'
+                },
+                product: {
+                    title: 'Add Product Demo',
+                    content: 'This would show a product creation form with fields for SKU, name, description, category, vendor, unit of measure, and pharmaceutical-specific fields like cold chain requirements.'
+                },
+                search: {
+                    title: 'Search Inventory Demo',
+                    content: 'This would show a search interface with filters for product name, SKU, category, vendor, stock level, and expiry date. Results are displayed in a sortable table.'
+                }
+            };
+            
+            title.textContent = demos[type].title;
+            content.textContent = demos[type].content;
+            modal.classList.remove('hidden');
+        }
+        
+        function closeDemo() {
+            document.getElementById('demo-modal').classList.add('hidden');
+        }
+        
+        function showFullSetup() {
+            alert('Full setup instructions are available in the README.md file. This includes detailed steps for installation, configuration, and deployment.');
+        }
+        
+        function showDockerSetup() {
+            alert('Docker setup is available using docker-compose.yml. Run "docker-compose up -d" to start the complete system with MySQL, Redis, and Nginx.');
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('demo-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDemo();
+            }
+        });
+    </script>
+</body>
+</html> 

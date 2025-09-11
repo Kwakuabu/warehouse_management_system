@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Add Category - Alive Pharmaceuticals{% endblock %}
+
+{% block content %}
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>Add New Category</h1>
+            <p>Create a new product category for better organization</p>
+        </div>
+        <a href="/categories" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Categories
+        </a>
+    </div>
+
+    <!-- Form -->
+    <div class="form-container">
+        {% if error %}
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i> {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/categories/add" id="categoryForm">
+            <div class="form-group">
+                <label for="name">Category Name *</label>
+                <input type="text" id="name" name="name" class="form-control" 
+                       placeholder="Enter category name (e.g., Dialyzers, Blood Tubing)" 
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" 
+                          placeholder="Enter a brief description of this category..."></textarea>
+            </div>
+
+            <div class="form-actions">
+                <a href="/categories" class="btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i>
+                    Save Category
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('categoryForm');
+            const nameInput = document.getElementById('name');
+            
+            // Form validation
+            form.addEventListener('submit', function(e) {
+                const name = nameInput.value.trim();
+                
+                if (!name) {
+                    e.preventDefault();
+                    alert('Please enter a category name');
+                    nameInput.focus();
+                    return false;
+                }
+                
+                if (name.length < 2) {
+                    e.preventDefault();
+                    alert('Category name must be at least 2 characters long');
+                    nameInput.focus();
+                    return false;
+                }
+            });
+
+            // Auto-focus on name input
+            nameInput.focus();
+        });
+    </script>
+{% endblock %}

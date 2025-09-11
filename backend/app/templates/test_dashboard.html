@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Test Dashboard</h1>
+    
+    <div class="success">
+        <h2>✅ Dashboard Template Works!</h2>
+        <p>If you can see this, the dashboard template is rendering correctly.</p>
+    </div>
+    
+    <h3>User Information:</h3>
+    <p><strong>Username:</strong> {{ current_user.username if current_user else "No user" }}</p>
+    <p><strong>Role:</strong> {{ current_user.role if current_user else "No role" }}</p>
+    <p><strong>User Role (from context):</strong> {{ user_role }}</p>
+    
+    <h3>Stats:</h3>
+    <ul>
+        <li>Total Products: {{ stats.total_products }}</li>
+        <li>Low Stock Alerts: {{ stats.low_stock_alerts }}</li>
+        <li>Expiring Soon: {{ stats.expiring_soon }}</li>
+    </ul>
+    
+    <h3>Navigation:</h3>
+    <ul>
+        <li><a href="/debug/simple">Test Simple Route</a></li>
+        <li><a href="/debug/auth">Test Auth Status</a></li>
+        <li><a href="/auth/login">Go to Login</a></li>
+        <li><a href="/dashboard/">Go to Real Dashboard</a></li>
+    </ul>
+</body>
+</html> 

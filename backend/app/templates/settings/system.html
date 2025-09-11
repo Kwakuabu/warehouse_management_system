@@ -1,0 +1,817 @@
+{% extends "base.html" %}
+
+{% block title %}System Settings - Alive Pharmaceuticals{% endblock %}
+
+{% block extra_css %}
+<style>
+    .system-dashboard {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .dashboard-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .dashboard-header h1 {
+        color: #333;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .dashboard-header p {
+        color: #666;
+        font-size: 1.1rem;
+        margin: 0.5rem 0 0 0;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .system-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .card-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+    }
+
+    .card-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1.5rem;
+    }
+
+    .card-icon i {
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .card-title {
+        color: #333;
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .card-subtitle {
+        color: #666;
+        font-size: 1rem;
+        margin: 0.25rem 0 0 0;
+    }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .settings-section {
+        background: rgba(255, 255, 255, 0.7);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .settings-section:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.1);
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+    }
+
+    .section-title i {
+        margin-right: 0.75rem;
+        color: #667eea;
+        font-size: 1.1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid rgba(102, 126, 234, 0.2);
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        background: white;
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid rgba(102, 126, 234, 0.2);
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        background: white;
+    }
+
+    .form-checkbox {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 10px;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .form-checkbox:hover {
+        background: rgba(255, 255, 255, 0.8);
+        border-color: rgba(102, 126, 234, 0.3);
+    }
+
+    .form-checkbox input[type="checkbox"] {
+        margin-right: 0.75rem;
+        width: 20px;
+        height: 20px;
+        accent-color: #667eea;
+    }
+
+    .form-checkbox label {
+        font-weight: 500;
+        color: #333;
+        cursor: pointer;
+        flex: 1;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        padding-top: 2rem;
+        border-top: 2px solid rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-secondary {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border: 2px solid #667eea;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(102, 126, 234, 0.2);
+        transform: translateY(-2px);
+        color: #667eea;
+        text-decoration: none;
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    }
+
+    .info-text {
+        color: #666;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        font-style: italic;
+    }
+
+    .warning-text {
+        color: #d97706;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        font-weight: 500;
+    }
+
+    .danger-text {
+        color: #dc2626;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        font-weight: 500;
+    }
+
+    .system-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .status-operational {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .status-maintenance {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .system-info {
+        background: rgba(102, 126, 234, 0.1);
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .system-info h5 {
+        color: #667eea;
+        margin: 0 0 0.5rem 0;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .system-info p {
+        color: #4c51bf;
+        margin: 0;
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+
+    .required-field {
+        color: #dc2626;
+        margin-left: 0.25rem;
+    }
+
+    .setting-preview {
+        background: rgba(255, 255, 255, 0.8);
+        padding: 1rem;
+        border-radius: 10px;
+        margin-top: 0.5rem;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+    }
+
+    .preview-label {
+        font-size: 0.8rem;
+        color: #666;
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+    }
+
+    .preview-value {
+        font-size: 0.9rem;
+        color: #333;
+        font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .dashboard-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="system-dashboard">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div>
+            <h1>System Settings</h1>
+            <p>Configure system-wide settings, preferences, and application behavior</p>
+        </div>
+        <div class="header-actions">
+            <a href="/settings" class="btn-primary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Settings
+            </a>
+        </div>
+    </div>
+
+    <!-- System Settings Card -->
+    <div class="system-card">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-cogs"></i>
+            </div>
+            <div>
+                <h2 class="card-title">System Configuration</h2>
+                <p class="card-subtitle">Manage system settings, database configuration, and application preferences</p>
+            </div>
+        </div>
+
+        <!-- System Status Overview -->
+        <div class="system-info">
+            <h5>
+                <i class="fas fa-info-circle"></i>
+                Current System Status
+            </h5>
+            <p>
+                <strong>Database:</strong> Connected and healthy | 
+                <strong>Uptime:</strong> {{ "2 days, 14 hours" }} | 
+                <strong>Last Backup:</strong> {{ "2024-01-15 14:30:00" }} | 
+                <strong>Active Users:</strong> {{ "3" }}
+            </p>
+        </div>
+
+        <form method="POST" action="/settings/system" id="systemSettingsForm">
+            <div class="settings-grid">
+                <!-- Database Configuration -->
+                <div class="settings-section">
+                    <div class="section-title">
+                        <i class="fas fa-database"></i>
+                        Database Configuration
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="db_host" class="form-label">
+                            Database Host
+                            <span class="required-field">*</span>
+                        </label>
+                        <input type="text" id="db_host" name="db_host" class="form-input" 
+                               value="{{ settings.db_host if settings else 'localhost' }}" required 
+                               placeholder="localhost">
+                        <div class="info-text">Database server hostname or IP address</div>
+                        <div class="setting-preview">
+                            <div class="preview-label">Current Connection:</div>
+                            <div class="preview-value">{{ "localhost:3306" }}</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="db_port" class="form-label">Database Port</label>
+                        <input type="number" id="db_port" name="db_port" class="form-input" 
+                               value="{{ settings.db_port if settings else 3306 }}" min="1" max="65535">
+                        <div class="info-text">Database server port number</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="db_name" class="form-label">
+                            Database Name
+                            <span class="required-field">*</span>
+                        </label>
+                        <input type="text" id="db_name" name="db_name" class="form-input" 
+                               value="{{ settings.db_name if settings else 'warehouse_db' }}" required>
+                        <div class="info-text">Name of the database to connect to</div>
+                    </div>
+
+                    <div class="system-status status-operational">
+                        <i class="fas fa-check-circle"></i>
+                        Database connection is healthy and operational
+                    </div>
+                </div>
+
+                <!-- Security Configuration -->
+                <div class="settings-section">
+                    <div class="section-title">
+                        <i class="fas fa-shield-alt"></i>
+                        Security Configuration
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="session_timeout" class="form-label">Session Timeout (minutes)</label>
+                        <input type="number" id="session_timeout" name="session_timeout" class="form-input" 
+                               value="{{ settings.session_timeout if settings else 30 }}" min="5" max="1440">
+                        <div class="info-text">How long before user sessions expire due to inactivity</div>
+                        <div class="setting-preview">
+                            <div class="preview-label">Current Setting:</div>
+                            <div class="preview-value">{{ "30 minutes" }}</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="max_login_attempts" class="form-label">Max Login Attempts</label>
+                        <input type="number" id="max_login_attempts" name="max_login_attempts" class="form-input" 
+                               value="{{ settings.max_login_attempts if settings else 5 }}" min="3" max="10">
+                        <div class="info-text">Maximum failed login attempts before account lockout</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password_min_length" class="form-label">Minimum Password Length</label>
+                        <input type="number" id="password_min_length" name="password_min_length" class="form-input" 
+                               value="{{ settings.password_min_length if settings else 8 }}" min="6" max="20">
+                        <div class="info-text">Minimum required password length</div>
+                    </div>
+
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="require_strong_password" name="require_strong_password" 
+                               {% if settings and settings.require_strong_password %}checked{% endif %}>
+                        <label for="require_strong_password">Require Strong Passwords</label>
+                    </div>
+
+                    <div class="system-status status-operational">
+                        <i class="fas fa-shield-check"></i>
+                        Security settings are properly configured
+                    </div>
+                </div>
+
+                <!-- Notification & Alerts -->
+                <div class="settings-section">
+                    <div class="section-title">
+                        <i class="fas fa-bell"></i>
+                        Notification & Alerts
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email_notifications" class="form-label">Email Notifications</label>
+                        <select id="email_notifications" name="email_notifications" class="form-select">
+                            <option value="enabled" {% if settings and settings.email_notifications == 'enabled' %}selected{% endif %}>Enabled</option>
+                            <option value="disabled" {% if settings and settings.email_notifications == 'disabled' %}selected{% endif %}>Disabled</option>
+                        </select>
+                        <div class="info-text">Enable or disable email notifications for system alerts</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="alert_threshold" class="form-label">Low Stock Alert Threshold</label>
+                        <input type="number" id="alert_threshold" name="alert_threshold" class="form-input" 
+                               value="{{ settings.alert_threshold if settings else 10 }}" min="1" max="100">
+                        <div class="info-text">Percentage of reorder point to trigger low stock alerts</div>
+                    </div>
+
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="auto_backup" name="auto_backup" 
+                               {% if settings and settings.auto_backup %}checked{% endif %}>
+                        <label for="auto_backup">Enable Automatic Backups</label>
+                    </div>
+
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="maintenance_mode" name="maintenance_mode" 
+                               {% if settings and settings.maintenance_mode %}checked{% endif %}>
+                        <label for="maintenance_mode">Maintenance Mode</label>
+                        <div class="warning-text">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            When enabled, only administrators can access the system
+                        </div>
+                    </div>
+
+                    <div class="system-status status-operational">
+                        <i class="fas fa-bell"></i>
+                        Notification system is active and functioning
+                    </div>
+                </div>
+
+                <!-- Performance & Optimization -->
+                <div class="settings-section">
+                    <div class="section-title">
+                        <i class="fas fa-chart-line"></i>
+                        Performance & Optimization
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cache_timeout" class="form-label">Cache Timeout (seconds)</label>
+                        <input type="number" id="cache_timeout" name="cache_timeout" class="form-input" 
+                               value="{{ settings.cache_timeout if settings else 300 }}" min="60" max="3600">
+                        <div class="info-text">How long to cache frequently accessed data</div>
+                        <div class="setting-preview">
+                            <div class="preview-label">Current Setting:</div>
+                            <div class="preview-value">{{ "5 minutes" }}</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="max_upload_size" class="form-label">Max Upload Size (MB)</label>
+                        <input type="number" id="max_upload_size" name="max_upload_size" class="form-input" 
+                               value="{{ settings.max_upload_size if settings else 10 }}" min="1" max="100">
+                        <div class="info-text">Maximum file upload size in megabytes</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="log_level" class="form-label">Log Level</label>
+                        <select id="log_level" name="log_level" class="form-select">
+                            <option value="DEBUG" {% if settings and settings.log_level == 'DEBUG' %}selected{% endif %}>Debug</option>
+                            <option value="INFO" {% if settings and settings.log_level == 'INFO' %}selected{% endif %}>Info</option>
+                            <option value="WARNING" {% if settings and settings.log_level == 'WARNING' %}selected{% endif %}>Warning</option>
+                            <option value="ERROR" {% if settings and settings.log_level == 'ERROR' %}selected{% endif %}>Error</option>
+                        </select>
+                        <div class="info-text">Level of detail for system logs</div>
+                    </div>
+
+                    <div class="system-status status-operational">
+                        <i class="fas fa-tachometer-alt"></i>
+                        System performance is optimized and running smoothly
+                    </div>
+                </div>
+
+                <!-- System Information -->
+                <div class="settings-section">
+                    <div class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        System Information
+                    </div>
+                    
+                    <div class="system-info">
+                        <h5>
+                            <i class="fas fa-server"></i>
+                            Server Details
+                        </h5>
+                        <p>
+                            <strong>Platform:</strong> {{ "Windows 10" }}<br>
+                            <strong>Python Version:</strong> {{ "3.11.0" }}<br>
+                            <strong>Database:</strong> {{ "SQLite 3.42.0" }}<br>
+                            <strong>Uptime:</strong> {{ "2 days, 14 hours" }}
+                        </p>
+                    </div>
+
+                    <div class="system-info">
+                        <h5>
+                            <i class="fas fa-database"></i>
+                            Database Statistics
+                        </h5>
+                        <p>
+                            <strong>Total Tables:</strong> {{ "12" }}<br>
+                            <strong>Total Records:</strong> {{ "1,247" }}<br>
+                            <strong>Database Size:</strong> {{ "2.3 MB" }}<br>
+                            <strong>Last Backup:</strong> {{ "2024-01-15" }}
+                        </p>
+                    </div>
+
+                    <div class="system-status status-operational">
+                        <i class="fas fa-check-circle"></i>
+                        All systems are operational and healthy
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="/settings" class="btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn-success">
+                    <i class="fas fa-save"></i>
+                    Save System Settings
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation and confirmation
+    document.getElementById('systemSettingsForm').addEventListener('submit', function(e) {
+        const dbHost = document.getElementById('db_host').value.trim();
+        const dbName = document.getElementById('db_name').value.trim();
+        const sessionTimeout = parseInt(document.getElementById('session_timeout').value);
+        const maxLoginAttempts = parseInt(document.getElementById('max_login_attempts').value);
+        const passwordMinLength = parseInt(document.getElementById('password_min_length').value);
+        
+        // Validate required fields
+        if (!dbHost) {
+            e.preventDefault();
+            alert('Database host is required.');
+            document.getElementById('db_host').focus();
+            return;
+        }
+        
+        if (!dbName) {
+            e.preventDefault();
+            alert('Database name is required.');
+            document.getElementById('db_name').focus();
+            return;
+        }
+        
+        // Validate session timeout
+        if (sessionTimeout < 5) {
+            e.preventDefault();
+            alert('Session timeout must be at least 5 minutes.');
+            document.getElementById('session_timeout').focus();
+            return;
+        }
+        
+        // Validate max login attempts
+        if (maxLoginAttempts < 3) {
+            e.preventDefault();
+            alert('Maximum login attempts must be at least 3.');
+            document.getElementById('max_login_attempts').focus();
+            return;
+        }
+        
+        // Validate password minimum length
+        if (passwordMinLength < 6) {
+            e.preventDefault();
+            alert('Minimum password length must be at least 6 characters.');
+            document.getElementById('password_min_length').focus();
+            return;
+        }
+        
+        // Confirm before saving system settings
+        if (!confirm('Are you sure you want to save these system settings? Some changes may require a system restart to take effect.')) {
+            e.preventDefault();
+            return;
+        }
+    });
+    
+    // Real-time validation feedback
+    document.getElementById('db_host').addEventListener('input', function() {
+        const value = this.value.trim();
+        if (value.length === 0) {
+            this.style.borderColor = '#dc2626';
+        } else {
+            this.style.borderColor = 'rgba(102, 126, 234, 0.2)';
+        }
+    });
+    
+    document.getElementById('db_name').addEventListener('input', function() {
+        const value = this.value.trim();
+        if (value.length === 0) {
+            this.style.borderColor = '#dc2626';
+        } else {
+            this.style.borderColor = 'rgba(102, 126, 234, 0.2)';
+        }
+    });
+    
+    // Maintenance mode warning
+    document.getElementById('maintenance_mode').addEventListener('change', function() {
+        if (this.checked) {
+            const warningDiv = document.createElement('div');
+            warningDiv.className = 'system-status status-maintenance';
+            warningDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> WARNING: Maintenance mode will restrict access to administrators only!';
+            
+            const section = this.closest('.settings-section');
+            section.appendChild(warningDiv);
+            
+            // Remove warning after 5 seconds
+            setTimeout(() => {
+                if (warningDiv.parentNode) {
+                    warningDiv.remove();
+                }
+            }, 5000);
+        }
+    });
+    
+    // Auto-backup dependency check
+    document.getElementById('auto_backup').addEventListener('change', function() {
+        if (this.checked) {
+            // Show additional backup settings if needed
+            console.log('Auto-backup enabled - additional settings may be required');
+        }
+    });
+    
+    // Log level change handler
+    document.getElementById('log_level').addEventListener('change', function() {
+        const level = this.value;
+        console.log(`Log level changed to: ${level}`);
+        
+        // Show preview of what this log level means
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'setting-preview';
+        previewDiv.innerHTML = `
+            <div class="preview-label">Log Level Description:</div>
+            <div class="preview-value">${getLogLevelDescription(level)}</div>
+        `;
+        
+        // Remove existing preview if any
+        const existingPreview = this.parentNode.querySelector('.setting-preview:not(:first-child)');
+        if (existingPreview) {
+            existingPreview.remove();
+        }
+        
+        this.parentNode.appendChild(previewDiv);
+    });
+    
+    function getLogLevelDescription(level) {
+        const descriptions = {
+            'DEBUG': 'Detailed debug information for development',
+            'INFO': 'General information about program execution',
+            'WARNING': 'Warning messages for potentially problematic situations',
+            'ERROR': 'Error messages for serious problems'
+        };
+        return descriptions[level] || 'Select a log level';
+    }
+    
+    // Initialize form state
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set initial log level description
+        const logLevel = document.getElementById('log_level').value;
+        if (logLevel) {
+            document.getElementById('log_level').dispatchEvent(new Event('change'));
+        }
+    });
+</script>
+{% endblock %} 

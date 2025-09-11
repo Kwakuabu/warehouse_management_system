@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Sales Report{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Sales Report</h2>
+    <form method="get" class="form-inline mb-3">
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date" name="start_date" value="{{ start_date.strftime('%Y-%m-%d') }}" class="form-control mx-2">
+        <label for="end_date">End Date:</label>
+        <input type="date" id="end_date" name="end_date" value="{{ end_date.strftime('%Y-%m-%d') }}" class="form-control mx-2">
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Sales Orders</h5>
+                    <p class="card-text display-4">{{ total_sales_orders }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Revenue</h5>
+                    <p class="card-text display-4">${{ '%.2f'|format(total_revenue) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <h4>Recent Sales Orders</h4>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Order #</th>
+                <th>Customer</th>
+                <th>Total Amount</th>
+                <th>Status</th>
+                <th>Order Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sale in recent_sales %}
+            <tr>
+                <td>{{ sale.order_number }}</td>
+                <td>{{ sale.customer_name }}</td>
+                <td>${{ '%.2f'|format(sale.total_amount) }}</td>
+                <td>{{ sale.status|capitalize }}</td>
+                <td>{{ sale.order_date.strftime('%Y-%m-%d') }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5">No sales orders found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %} 

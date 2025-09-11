@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login - Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .form-group { margin: 10px 0; }
+        label { display: block; margin-bottom: 5px; }
+        input { padding: 8px; width: 200px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        .result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Test Login Debug</h1>
+    
+    <h2>Test Authentication</h2>
+    <form id="testForm">
+        <div class="form-group">
+            <label>Username:</label>
+            <input type="text" id="username" name="username" value="admin">
+        </div>
+        <div class="form-group">
+            <label>Password:</label>
+            <input type="password" id="password" name="password" value="admin123">
+        </div>
+        <button type="submit">Test Login</button>
+    </form>
+    
+    <div id="result" class="result" style="display: none;"></div>
+    
+    <h2>Check Database</h2>
+    <button onclick="checkDatabase()">Check Database</button>
+    <div id="dbResult" class="result" style="display: none;"></div>
+    
+    <h2>Check Users</h2>
+    <button onclick="checkUsers()">Check Users</button>
+    <div id="usersResult" class="result" style="display: none;"></div>
+    
+    <h2>Test Auth Status</h2>
+    <button onclick="checkAuth()">Check Auth Status</button>
+    <div id="authResult" class="result" style="display: none;"></div>
+
+    <script>
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('username', document.getElementById('username').value);
+            formData.append('password', document.getElementById('password').value);
+            
+            try {
+                const response = await fetch('/test-login', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        });
+        
+        async function checkDatabase() {
+            try {
+                const response = await fetch('/api/test-db');
+                const result = await response.json();
+                document.getElementById('dbResult').style.display = 'block';
+                document.getElementById('dbResult').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('dbResult').style.display = 'block';
+                document.getElementById('dbResult').innerHTML = 'Error: ' + error.message;
+            }
+        }
+        
+        async function checkUsers() {
+            try {
+                const response = await fetch('/api/users');
+                const result = await response.json();
+                document.getElementById('usersResult').style.display = 'block';
+                document.getElementById('usersResult').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('usersResult').style.display = 'block';
+                document.getElementById('usersResult').innerHTML = 'Error: ' + error.message;
+            }
+        }
+        
+        async function checkAuth() {
+            try {
+                const response = await fetch('/debug/auth');
+                const result = await response.json();
+                document.getElementById('authResult').style.display = 'block';
+                document.getElementById('authResult').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('authResult').style.display = 'block';
+                document.getElementById('authResult').innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html> 

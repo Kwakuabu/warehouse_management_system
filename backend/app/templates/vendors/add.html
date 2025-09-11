@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Add Vendor - Alive Pharmaceuticals{% endblock %}
+
+{% block content %}
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>Add New Vendor</h1>
+            <p>Create a new vendor account</p>
+        </div>
+        <a href="/vendors" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Vendors
+        </a>
+    </div>
+
+    <!-- Form -->
+    <div class="form-container">
+        {% if error %}
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i> {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/vendors/add" id="vendorForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="name">Vendor Name *</label>
+                    <input type="text" id="name" name="name" class="form-control" 
+                           placeholder="Enter vendor name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" name="email" class="form-control" 
+                           placeholder="Enter email address" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone *</label>
+                    <input type="tel" id="phone" name="phone" class="form-control" 
+                           placeholder="Enter phone number" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="contact_person">Contact Person</label>
+                    <input type="text" id="contact_person" name="contact_person" class="form-control" 
+                           placeholder="Enter contact person name">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="address">Address</label>
+                <textarea id="address" name="address" class="form-control" 
+                          placeholder="Enter vendor address..."></textarea>
+            </div>
+
+            <div class="form-actions">
+                <a href="/vendors" class="btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i>
+                    Save Vendor
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('vendorForm');
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+            const phoneInput = document.getElementById('phone');
+            
+            // Form validation
+            form.addEventListener('submit', function(e) {
+                const name = nameInput.value.trim();
+                const email = emailInput.value.trim();
+                const phone = phoneInput.value.trim();
+                
+                if (!name) {
+                    e.preventDefault();
+                    alert('Please enter a vendor name');
+                    nameInput.focus();
+                    return false;
+                }
+                
+                if (!email) {
+                    e.preventDefault();
+                    alert('Please enter an email address');
+                    emailInput.focus();
+                    return false;
+                }
+                
+                if (!phone) {
+                    e.preventDefault();
+                    alert('Please enter a phone number');
+                    phoneInput.focus();
+                    return false;
+                }
+                
+                // Basic email validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    e.preventDefault();
+                    alert('Please enter a valid email address');
+                    emailInput.focus();
+                    return false;
+                }
+            });
+
+            // Auto-focus on name input
+            nameInput.focus();
+        });
+    </script>
+{% endblock %} 

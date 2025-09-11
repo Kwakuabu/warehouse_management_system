@@ -1,0 +1,563 @@
+{% extends "base.html" %}
+
+{% block title %}Category Details - Alive Pharmaceuticals{% endblock %}
+
+{% block additional_styles %}
+<style>
+    .category-detail-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 2rem;
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        margin-bottom: 2rem;
+    }
+
+    .category-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .category-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 2rem;
+    }
+
+    .category-icon i {
+        color: white;
+        font-size: 2rem;
+    }
+
+    .category-info h1 {
+        color: #333;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .category-meta {
+        display: flex;
+        gap: 2rem;
+        color: #666;
+        font-size: 0.9rem;
+        flex-wrap: wrap;
+    }
+
+    .category-content {
+        margin-bottom: 2rem;
+    }
+
+    .category-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .detail-section {
+        background: rgba(255, 255, 255, 0.7);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .section-title i {
+        margin-right: 0.5rem;
+        color: #667eea;
+    }
+
+    .detail-item {
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .detail-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .detail-value {
+        color: #333;
+        font-size: 1rem;
+    }
+
+    .category-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .category-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border: 1px solid #667eea;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(102, 126, 234, 0.2);
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+    }
+
+    .btn-warning:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+    }
+
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    .action-btn i {
+        margin-right: 0.5rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .back-link:hover {
+        transform: translateX(-5px);
+    }
+
+    .back-link i {
+        margin-right: 0.5rem;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-active {
+        background: rgba(16, 185, 129, 0.2);
+        color: #059669;
+    }
+
+    .status-inactive {
+        background: rgba(239, 68, 68, 0.2);
+        color: #dc2626;
+    }
+
+    .products-section {
+        background: rgba(255, 255, 255, 0.7);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        margin-top: 2rem;
+    }
+
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .product-card {
+        background: rgba(255, 255, 255, 0.5);
+        padding: 1rem;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .product-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .product-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .product-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 0.75rem;
+    }
+
+    .product-icon i {
+        color: white;
+        font-size: 1rem;
+    }
+
+    .product-name {
+        font-weight: 600;
+        color: #333;
+        font-size: 1rem;
+    }
+
+    .product-meta {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .product-stock {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+
+    .stock-level {
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .stock-high {
+        background: rgba(16, 185, 129, 0.2);
+        color: #059669;
+    }
+
+    .stock-medium {
+        background: rgba(245, 158, 11, 0.2);
+        color: #d97706;
+    }
+
+    .stock-low {
+        background: rgba(239, 68, 68, 0.2);
+        color: #dc2626;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="header">
+    <div>
+        <a href="/categories" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            Back to Categories
+        </a>
+        <h1>Category Details</h1>
+        <p>View category information and products</p>
+    </div>
+</div>
+
+<!-- Category Detail Card -->
+<div class="category-detail-card">
+    {% if category %}
+    <div class="category-header">
+        <div class="category-icon">
+            <i class="fas fa-tags"></i>
+        </div>
+        <div class="category-info">
+            <h1>{{ category.name }}</h1>
+            <div class="category-meta">
+                <span><i class="fas fa-boxes"></i> {{ category.products|length if category.products else 0 }} Products</span>
+                <span><i class="fas fa-calendar"></i> Created {{ category.created_at.strftime('%B %d, %Y') if category.created_at else 'Unknown' }}</span>
+                <span class="status-badge status-{% if category.is_active %}active{% else %}inactive{% endif %}">
+                    {% if category.is_active %}Active{% else %}Inactive{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="category-content">
+        <!-- Category Statistics -->
+        <div class="category-stats">
+            <div class="stat-card">
+                <div class="stat-value">{{ category.products|length if category.products else 0 }}</div>
+                <div class="stat-label">Total Products</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ category.active_products|length if category.active_products else 0 }}</div>
+                <div class="stat-label">Active Products</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ category.low_stock_products|length if category.low_stock_products else 0 }}</div>
+                <div class="stat-label">Low Stock Items</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ category.out_of_stock_products|length if category.out_of_stock_products else 0 }}</div>
+                <div class="stat-label">Out of Stock</div>
+            </div>
+        </div>
+
+        <!-- Category Details -->
+        <div class="category-details">
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    Basic Information
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Category Name</div>
+                    <div class="detail-value">{{ category.name }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Description</div>
+                    <div class="detail-value">{{ category.description or 'No description' }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value">
+                        <span class="status-badge status-{% if category.is_active %}active{% else %}inactive{% endif %}">
+                            {% if category.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="fas fa-cog"></i>
+                    Category Settings
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Sort Order</div>
+                    <div class="detail-value">{{ category.sort_order or 'Default' }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Parent Category</div>
+                    <div class="detail-value">
+                        {% if category.parent_category %}
+                        <a href="/categories/{{ category.parent_category.id }}" style="color: #667eea;">{{ category.parent_category.name }}</a>
+                        {% else %}
+                        No parent category
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Created By</div>
+                    <div class="detail-value">{{ category.created_by_user.full_name if category.created_by_user else 'Unknown' }}</div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="fas fa-chart-bar"></i>
+                    Performance Metrics
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Total Value</div>
+                    <div class="detail-value">₵{{ "%.2f"|format(category.total_value) if category.total_value else 0 }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Average Price</div>
+                    <div class="detail-value">₵{{ "%.2f"|format(category.average_price) if category.average_price else 0 }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Last Updated</div>
+                    <div class="detail-value">{{ category.updated_at.strftime('%B %d, %Y at %I:%M %p') if category.updated_at else 'Unknown' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products in Category -->
+        {% if category.products %}
+        <div class="products-section">
+            <div class="section-title">
+                <i class="fas fa-boxes"></i>
+                Products in This Category
+            </div>
+            
+            <div class="products-grid">
+                {% for product in category.products %}
+                <div class="product-card">
+                    <div class="product-header">
+                        <div class="product-icon">
+                            <i class="fas fa-pills"></i>
+                        </div>
+                        <div class="product-name">{{ product.name }}</div>
+                    </div>
+                    <div class="product-meta">
+                        SKU: {{ product.sku }} • {{ product.unit_of_measure }}
+                    </div>
+                    <div class="product-stock">
+                        <span>Stock: {{ product.total_stock or 0 }}</span>
+                        <span class="stock-level stock-{% if product.total_stock > product.reorder_point %}high{% elif product.total_stock > 0 %}medium{% else %}low{% endif %}">
+                            {% if product.total_stock > product.reorder_point %}In Stock{% elif product.total_stock > 0 %}Low Stock{% else %}Out of Stock{% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="category-actions">
+            {% if current_user.role in ['admin', 'manager'] %}
+            <a href="/categories/edit/{{ category.id }}" class="action-btn btn-warning">
+                <i class="fas fa-edit"></i>
+                Edit Category
+            </a>
+            <a href="/products/add?category_id={{ category.id }}" class="action-btn btn-success">
+                <i class="fas fa-plus"></i>
+                Add Product
+            </a>
+            {% endif %}
+            
+            <a href="/categories" class="action-btn btn-secondary">
+                <i class="fas fa-list"></i>
+                Back to Categories
+            </a>
+            
+            {% if current_user.role in ['admin', 'manager'] %}
+            <button class="action-btn btn-danger" onclick="deleteCategory({{ category.id }}, '{{ category.name }}')">
+                <i class="fas fa-trash"></i>
+                Delete Category
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="category-content">
+        <div class="detail-section">
+            <h3><i class="fas fa-exclamation-circle"></i> Category Not Found</h3>
+            <p>The requested category could not be found or you don't have permission to view it.</p>
+        </div>
+        
+        <div class="category-actions">
+            <a href="/categories" class="action-btn btn-primary">
+                <i class="fas fa-list"></i>
+                Back to Categories
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+    function deleteCategory(categoryId, categoryName) {
+        if (confirm(`Are you sure you want to delete the category "${categoryName}"? This action cannot be undone.`)) {
+            fetch(`/categories/${categoryId}/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/categories';
+                } else {
+                    alert('Error deleting category. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting category. Please try again.');
+            });
+        }
+    }
+</script>
+{% endblock %} 

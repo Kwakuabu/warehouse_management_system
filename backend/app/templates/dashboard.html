@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Alive Pharmaceuticals{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1">Dashboard</h1>
+            {% if user_role in ['admin', 'manager'] %}
+            <p class="text-muted">Real-time overview of your warehouse operations</p>
+            {% else %}
+            <p class="text-muted">Welcome to your medical supplies ordering portal</p>
+            {% endif %}
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" onclick="location.reload()">
+                <i class="fas fa-sync-alt me-2"></i>Refresh
+            </button>
+        </div>
+    </div>
+
+    {% if user_role in ['admin', 'manager'] %}
+    <!-- Warehouse Management KPI Cards for Admin/Manager -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="kpi-card">
+                <div class="icon text-primary">
+                    <i class="fas fa-pills"></i>
+                </div>
+                <div class="value text-primary">{{ stats.total_products }}</div>
+                <div class="label">Total Products</div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="kpi-card">
+                <div class="icon text-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="value text-warning">{{ stats.low_stock_alerts }}</div>
+                <div class="label">Low Stock Alerts</div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="kpi-card">
+                <div class="icon text-danger">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="value text-danger">{{ stats.expiring_soon }}</div>
+                <div class="label">Expiring Soon</div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="kpi-card">
+                <div class="icon text-success">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="value text-success">${{ "%.1f"|format(stats.total_inventory_value / 1000000) }}M</div>
+                <div class="label">Inventory Value</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Row KPI Cards for Admin/Manager -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="kpi-card">
+                <div class="icon text-info">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <div class="value text-info">{{ stats.pending_purchase_orders }}</div>
+                <div class="label">Pending Orders</div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="kpi-card">
+                <div class="icon text-primary">
+                    <i class="fas fa-hospital"></i>
+                </div>
+                <div class="value text-primary">{{ stats.active_customers }}</div>
+                <div class="label">Active Hospitals</div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="kpi-card">
+                <div class="icon text-success">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="value text-success">{{ stats.recent_movements }}</div>
+                <div class="label">Recent Movements</div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="kpi-card">
+                <div class="icon text-warning">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <div class="value text-warning">{{ stats.total_vendors }}</div>
+                <div class="label">Total Vendors</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Warehouse Management Quick Actions for Admin/Manager -->
+    <div class="card">
+        <div class="card-header bg-transparent border-0">
+            <h5 class="mb-0">
+                <i class="fas fa-bolt text-warning me-2"></i>
+                Warehouse Management Actions
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-2 col-sm-4 col-6 mb-3">
+                    <a href="/categories/add" class="btn btn-primary w-100">
+                        <i class="fas fa-tag me-2"></i>
+                        Add Category
+                    </a>
+                </div>
+                <div class="col-md-2 col-sm-4 col-6 mb-3">
+                    <a href="/products/add" class="btn btn-success w-100">
+                        <i class="fas fa-plus me-2"></i>
+                        Add Product
+                    </a>
+                </div>
+                <div class="col-md-2 col-sm-4 col-6 mb-3">
+                    <a href="/purchase-orders/create" class="btn btn-info w-100">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        Create PO
+                    </a>
+                </div>
+                <div class="col-md-2 col-sm-4 col-6 mb-3">
+                    <a href="/sales-orders/create" class="btn btn-warning w-100">
+                        <i class="fas fa-truck me-2"></i>
+                        Sales Order
+                    </a>
+                </div>
+                <div class="col-md-2 col-sm-4 col-6 mb-3">
+                    <a href="/inventory/" class="btn btn-secondary w-100">
+                        <i class="fas fa-search me-2"></i>
+                        Stock Inquiry
+                    </a>
+                </div>
+                <div class="col-md-2 col-sm-4 col-6 mb-3">
+                    <a href="/inventory/receive" class="btn btn-dark w-100">
+                        <i class="fas fa-box-open me-2"></i>
+                        Receive Stock
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Customer-Facing KPI Cards for Staff (Hospital Buyers) -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="kpi-card">
+                <div class="icon text-primary">
+                    <i class="fas fa-pills"></i>
+                </div>
+                <div class="value text-primary">{{ stats.products_with_stock }}</div>
+                <div class="label">Available Products</div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="kpi-card">
+                <div class="icon text-success">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="value text-success">{{ stats.total_sales_orders }}</div>
+                <div class="label">My Orders</div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="kpi-card">
+                <div class="icon text-warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="value text-warning">{{ stats.pending_sales_orders }}</div>
+                <div class="label">Pending Orders</div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="kpi-card">
+                <div class="icon text-info">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <div class="value text-info">{{ stats.total_inventory_items }}</div>
+                <div class="label">Stock Items</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer-Facing Quick Actions for Staff -->
+    <div class="card">
+        <div class="card-header bg-transparent border-0">
+            <h5 class="mb-0">
+                <i class="fas fa-shopping-cart text-primary me-2"></i>
+                Order Management
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a href="/sales-orders/create" class="btn btn-primary w-100">
+                        <i class="fas fa-plus me-2"></i>
+                        New Order
+                    </a>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a href="/sales-orders/" class="btn btn-info w-100">
+                        <i class="fas fa-list me-2"></i>
+                        View Orders
+                    </a>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a href="/inventory/" class="btn btn-success w-100">
+                        <i class="fas fa-search me-2"></i>
+                        Browse Products
+                    </a>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a href="/products/" class="btn btn-warning w-100">
+                        <i class="fas fa-pills me-2"></i>
+                        Product Catalog
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Products for Staff -->
+    {% if available_products %}
+    <div class="card mt-4">
+        <div class="card-header bg-transparent border-0">
+            <h5 class="mb-0">
+                <i class="fas fa-star text-warning me-2"></i>
+                Featured Products
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for product in available_products %}
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-pills fa-2x text-primary mb-2"></i>
+                            <h6 class="card-title">{{ product.name }}</h6>
+                            <p class="card-text small text-muted">{{ product.description[:50] }}{% if product.description|length > 50 %}...{% endif %}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-success">In Stock</span>
+                                <small class="text-muted">{{ product.unit_of_measure }}</small>
+                            </div>
+                            <a href="/products/{{ product.id }}" class="btn btn-outline-primary btn-sm mt-2 w-100">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% endif %}
+
+    <!-- Recent Activities -->
+    {% if recent_activities %}
+    <div class="card mt-4">
+        <div class="card-header bg-transparent border-0">
+            <h5 class="mb-0">
+                <i class="fas fa-history text-info me-2"></i>
+                Recent Activities
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="list-group list-group-flush">
+                {% for activity in recent_activities %}
+                <div class="list-group-item border-0 bg-transparent">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="{{ activity.icon }} text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <p class="mb-1">{{ activity.message }}</p>
+                            <small class="text-muted">{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Alerts Section (Admin/Manager Only) -->
+    {% if user_role in ['admin', 'manager'] and alerts %}
+    <div class="card mt-4">
+        <div class="card-header bg-transparent border-0">
+            <h5 class="mb-0">
+                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                Active Alerts
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="list-group list-group-flush">
+                {% for alert in alerts %}
+                <div class="list-group-item border-0 bg-transparent">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <span class="badge bg-{{ 'danger' if alert.severity == 'critical' else 'warning' if alert.severity == 'high' else 'info' }}">
+                                {{ alert.severity.title() }}
+                            </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <p class="mb-1">{{ alert.message }}</p>
+                            <small class="text-muted">{{ alert.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh dashboard every 30 seconds
+    setInterval(function() {
+        // Only refresh if user is on dashboard page
+        if (window.location.pathname === '/dashboard/') {
+            location.reload();
+        }
+    }, 30000);
+</script>
+{% endblock %}

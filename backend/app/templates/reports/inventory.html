@@ -1,0 +1,516 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory Reports - Alive Pharmaceuticals{% endblock %}
+
+{% block extra_css %}
+<style>
+    .inventory-dashboard {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .dashboard-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .dashboard-header h1 {
+        color: #1f2937;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .dashboard-header p {
+        color: #6b7280;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+
+    .analytics-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .analytics-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .analytics-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: white;
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    }
+
+    .analytics-info h2 {
+        color: #1f2937;
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .analytics-info p {
+        color: #6b7280;
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    .filters-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .filters-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .filters-header h3 {
+        color: #1f2937;
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .filters-header p {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        align-items: end;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-label {
+        color: #374151;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-select {
+        padding: 0.75rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        background: white;
+        color: #1f2937;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .filter-btn {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    .filter-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .data-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .data-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .data-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: white;
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .data-title {
+        color: #1f2937;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .metric-card {
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        border-radius: 15px;
+        padding: 1.5rem;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.15);
+    }
+
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+
+    .metric-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+
+    .metric-value {
+        color: #1f2937;
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .metric-value.currency::before {
+        content: '₵';
+        font-size: 1.5rem;
+        margin-right: 0.25rem;
+    }
+
+    .metric-value.percentage::after {
+        content: '%';
+        font-size: 1.5rem;
+        margin-left: 0.25rem;
+    }
+
+    .no-data-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: #6b7280;
+    }
+
+    .no-data-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #9ca3af;
+    }
+
+    .no-data-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #374151;
+    }
+
+    .no-data-message {
+        font-size: 0.9rem;
+        margin: 0;
+        color: #9ca3af;
+    }
+
+    .export-actions {
+        display: flex;
+        justify-content: flex-start;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .action-btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .btn-secondary {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border: 1px solid rgba(102, 126, 234, 0.2);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(102, 126, 234, 0.2);
+        color: #667eea;
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .metrics-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .dashboard-header h1 {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="inventory-dashboard">
+    <!-- Enhanced Header -->
+    <div class="dashboard-header">
+        <h1>📦 Inventory Reports</h1>
+        <p>Track stock levels, movement, and inventory valuation with comprehensive analytics</p>
+    </div>
+
+    <!-- Analytics Section -->
+    <div class="analytics-section">
+        <div class="analytics-header">
+            <div class="analytics-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="analytics-info">
+                <h2>Inventory Analytics</h2>
+                <p>Comprehensive inventory analytics and trends for strategic decision making</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section">
+        <div class="filters-header">
+            <h3>📊 Report Configuration</h3>
+            <p>Select report type and category to generate customized inventory insights</p>
+        </div>
+        <form method="GET" action="/reports/inventory">
+            <div class="filters-grid">
+                <div class="form-group">
+                    <label for="report_type" class="form-label">Report Type</label>
+                    <select id="report_type" name="report_type" class="form-select">
+                        <option value="overview" {% if report_type == 'overview' %}selected{% endif %}>📋 Overview</option>
+                        <option value="low_stock" {% if report_type == 'low_stock' %}selected{% endif %}>⚠️ Low Stock</option>
+                        <option value="expiry" {% if report_type == 'expiry' %}selected{% endif %}>⏰ Expiry</option>
+                        <option value="movements" {% if report_type == 'movements' %}selected{% endif %}>🔄 Movements</option>
+                        <option value="value" {% if report_type == 'value' %}selected{% endif %}>💰 Value</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="category_id" class="form-label">Category</label>
+                    <select id="category_id" name="category_id" class="form-select">
+                        <option value="">🏷️ All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if selected_category == category.id %}selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="filter-btn">
+                        <i class="fas fa-filter"></i>
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Data Section -->
+    <div class="data-section">
+        <div class="data-header">
+            <div class="data-icon">
+                <i class="fas fa-database"></i>
+            </div>
+            <h3 class="data-title">Inventory Data</h3>
+        </div>
+
+        {% if inventory_data %}
+        <div class="metrics-grid">
+            {% if report_type == 'overview' %}
+                <div class="metric-card">
+                    <div class="metric-label">Total Items</div>
+                    <div class="metric-value">{{ inventory_data.total_items }}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Total Value</div>
+                    <div class="metric-value currency">${{ "%.2f"|format(inventory_data.total_value) }}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Low Stock Items</div>
+                    <div class="metric-value">{{ inventory_data.low_stock_items }}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Expiring Soon</div>
+                    <div class="metric-value">{{ inventory_data.expiring_soon }}</div>
+                </div>
+            {% elif report_type == 'low_stock' %}
+                <div class="metric-card">
+                    <div class="metric-label">Low Stock Items</div>
+                    <div class="metric-value">{{ inventory_data.low_stock_items }}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Out of Stock</div>
+                    <div class="metric-value">{{ inventory_data.out_of_stock_items }}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Safety Stock Items</div>
+                    <div class="metric-value">{{ inventory_data.safety_stock_items }}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Critical Items</div>
+                    <div class="metric-value">{{ inventory_data.total_critical_items }}</div>
+                </div>
+            {% elif report_type == 'expiry' %}
+                <div class="metric-card">
+                    <div class="metric-label">Expiring in 30 Days</div>
+                    <div class="metric-value">{{ inventory_data.expiring_30_days }}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Expiring in 7 Days</div>
+                    <div class="metric-value">{{ inventory_data.expiring_7_days }}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Expired Items</div>
+                    <div class="metric-value">{{ inventory_data.expired_items }}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Total Expiry Risk</div>
+                    <div class="metric-value">{{ inventory_data.total_expiry_risk }}</div>
+                </div>
+            {% elif report_type == 'movements' %}
+                <div class="metric-card">
+                    <div class="metric-label">Recent Movements</div>
+                    <div class="metric-value">{{ inventory_data.recent_movements }}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Inbound Movements</div>
+                    <div class="metric-value">{{ inventory_data.inbound_movements }}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Outbound Movements</div>
+                    <div class="metric-value">{{ inventory_data.outbound_movements }}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Total Movements</div>
+                    <div class="metric-value">{{ inventory_data.total_movements }}</div>
+                </div>
+            {% elif report_type == 'value' %}
+                <div class="metric-card">
+                    <div class="metric-label">Total Value</div>
+                    <div class="metric-value currency">${{ "%.2f"|format(inventory_data.total_value) }}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Average Item Value</div>
+                    <div class="metric-value currency">${{ "%.2f"|format(inventory_data.avg_item_value) }}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">High Value Items</div>
+                    <div class="metric-value">{{ inventory_data.high_value_items }}</div>
+                </div>
+            {% else %}
+                {% for key, value in inventory_data.items() %}
+                <div class="metric-card">
+                    <div class="metric-label">{{ key|replace('_', ' ')|title }}</div>
+                    <div class="metric-value 
+                        {% if 'value' in key.lower() %}currency{% endif %}
+                        {% if 'percentage' in key.lower() or 'margin' in key.lower() %}percentage{% endif %}">
+                        {% if 'value' in key.lower() and value is number %}${% endif %}{{ value }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="no-data-state">
+            <div class="no-data-icon">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <div class="no-data-title">No Data Available</div>
+            <div class="no-data-message">No inventory data available for the selected report type and filters</div>
+        </div>
+        {% endif %}
+
+        <div class="export-actions">
+            <a href="/reports" class="action-btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Reports
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

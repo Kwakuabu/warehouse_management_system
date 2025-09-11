@@ -1,0 +1,788 @@
+{% extends "base.html" %}
+
+{% block title %}Reports Dashboard - Alive Pharmaceuticals{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-dashboard {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .dashboard-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .dashboard-header h1 {
+        color: #1f2937;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .dashboard-header p {
+        color: #6b7280;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+
+    .dashboard-summary {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .summary-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #374151;
+        font-size: 0.9rem;
+    }
+
+    .summary-item i {
+        color: #667eea;
+        width: 16px;
+    }
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .kpi-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 16px 48px rgba(31, 38, 135, 0.4);
+    }
+
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #10b981, #3b82f6, #8b5cf6, #f59e0b);
+    }
+
+    .kpi-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .kpi-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .kpi-icon.revenue { background: linear-gradient(135deg, #10b981, #059669); }
+    .kpi-icon.orders { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .kpi-icon.inventory { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+    .kpi-icon.customers { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .kpi-icon.profit { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .kpi-icon.growth { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+
+    .kpi-trend {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .trend-up { color: #10b981; }
+    .trend-down { color: #ef4444; }
+    .trend-neutral { color: #6b7280; }
+
+    .kpi-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+
+    .kpi-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .charts-section {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .chart-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .chart-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .chart-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: 1px solid;
+        cursor: pointer;
+    }
+
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    .btn-outline-primary {
+        color: #667eea;
+        border-color: #667eea;
+        background: transparent;
+    }
+
+    .btn-outline-primary:hover {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-outline-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .chart-container {
+        height: 300px;
+        position: relative;
+    }
+
+    .mini-chart {
+        height: 200px;
+    }
+
+    .reports-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .report-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .report-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.4);
+    }
+
+    .report-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+
+    .report-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .report-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+    }
+
+    .report-icon.sales { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .report-icon.inventory { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+    .report-icon.financial { background: linear-gradient(135deg, #10b981, #059669); }
+    .report-icon.customers { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+    .report-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .report-description {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+
+    .report-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .btn-secondary {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(102, 126, 234, 0.2);
+        color: #667eea;
+    }
+
+
+
+    @media (max-width: 1024px) {
+        .charts-section {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .kpi-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .reports-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <!-- Enhanced Header -->
+    <div class="dashboard-header">
+        <h1>📊 Executive Dashboard</h1>
+        <p>Real-time insights and key performance indicators for strategic decision making</p>
+        <div class="dashboard-summary">
+            <div class="summary-item">
+                <i class="fas fa-calendar"></i>
+                <span>Period: {{ start_date.strftime('%B %d, %Y') }} - {{ end_date.strftime('%B %d, %Y') }}</span>
+            </div>
+            <div class="summary-item">
+                <i class="fas fa-clock"></i>
+                <span>Last Updated: {{ end_date.strftime('%B %d, %Y at %I:%M %p') }}</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="/reports/financial" class="btn-primary">
+                <i class="fas fa-download"></i>
+                Export Reports
+            </a>
+            <a href="/settings" class="btn-secondary">
+                <i class="fas fa-cog"></i>
+                Configure Alerts
+            </a>
+        </div>
+    </div>
+
+    <!-- Key Performance Indicators -->
+    <div class="kpi-grid">
+        {% if metrics %}
+        <!-- Revenue KPI -->
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-icon revenue">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="kpi-trend {% if metrics.revenue_growth > 0 %}trend-up{% elif metrics.revenue_growth < 0 %}trend-down{% else %}trend-neutral{% endif %}">
+                    <i class="fas fa-{% if metrics.revenue_growth > 0 %}arrow-up{% elif metrics.revenue_growth < 0 %}arrow-down{% else %}minus{% endif %}"></i>
+                    {% if metrics.revenue_growth != 0 %}{{ "%.1f"|format(metrics.revenue_growth) }}%{% else %}0.0%{% endif %}
+                </div>
+            </div>
+            <div class="kpi-value">₵{{ "%.0f"|format(metrics.monthly_revenue if metrics.monthly_revenue else 0) }}</div>
+            <div class="kpi-label">Monthly Revenue</div>
+        </div>
+
+        <!-- Orders KPI -->
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-icon orders">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="kpi-trend {% if metrics.orders_growth > 0 %}trend-up{% elif metrics.orders_growth < 0 %}trend-down{% else %}trend-neutral{% endif %}">
+                    <i class="fas fa-{% if metrics.orders_growth > 0 %}arrow-up{% elif metrics.orders_growth < 0 %}arrow-down{% else %}minus{% endif %}"></i>
+                    {% if metrics.orders_growth != 0 %}{{ "%.1f"|format(metrics.orders_growth) }}%{% else %}0.0%{% endif %}
+                </div>
+            </div>
+            <div class="kpi-value">{{ metrics.total_orders if metrics.total_orders else 0 }}</div>
+            <div class="kpi-label">Total Orders</div>
+        </div>
+
+        <!-- Inventory Value KPI -->
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-icon inventory">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <div class="kpi-trend trend-neutral">
+                    <i class="fas fa-minus"></i>
+                    0.0%
+                </div>
+            </div>
+            <div class="kpi-value">₵{{ "%.0f"|format(metrics.inventory_value if metrics.inventory_value else 0) }}</div>
+            <div class="kpi-label">Inventory Value</div>
+        </div>
+
+        <!-- Profit Margin KPI -->
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-icon profit">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="kpi-trend {% if metrics.profit_margin > 0 %}trend-up{% elif metrics.profit_margin < 0 %}trend-down{% else %}trend-neutral{% endif %}">
+                    <i class="fas fa-{% if metrics.profit_margin > 0 %}arrow-up{% elif metrics.profit_margin < 0 %}arrow-down{% else %}minus{% endif %}"></i>
+                    {% if metrics.profit_margin != 0 %}{{ "%.1f"|format(metrics.profit_margin) }}%{% else %}0.0%{% endif %}
+                </div>
+            </div>
+            <div class="kpi-value">{{ "%.1f"|format(metrics.profit_margin if metrics.profit_margin else 0) }}%</div>
+            <div class="kpi-label">Profit Margin</div>
+        </div>
+
+        <!-- Customer Growth KPI -->
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-icon customers">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="kpi-trend {% if metrics.customer_growth > 0 %}trend-up{% elif metrics.customer_growth < 0 %}trend-down{% else %}trend-neutral{% endif %}">
+                    <i class="fas fa-{% if metrics.customer_growth > 0 %}arrow-up{% elif metrics.customer_growth < 0 %}arrow-down{% else %}minus{% endif %}"></i>
+                    {% if metrics.customer_growth != 0 %}{{ "%.1f"|format(metrics.customer_growth) }}%{% else %}0.0%{% endif %}
+                </div>
+            </div>
+            <div class="kpi-value">{{ metrics.total_customers if metrics.total_customers else 0 }}</div>
+            <div class="kpi-label">Active Customers</div>
+        </div>
+
+        <!-- Growth Rate KPI -->
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-icon growth">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <div class="kpi-trend {% if metrics.growth_rate > 0 %}trend-up{% elif metrics.growth_rate < 0 %}trend-down{% else %}trend-neutral{% endif %}">
+                    <i class="fas fa-{% if metrics.growth_rate > 0 %}arrow-up{% elif metrics.growth_rate < 0 %}arrow-down{% else %}minus{% endif %}"></i>
+                    {% if metrics.growth_rate != 0 %}{{ "%.1f"|format(metrics.growth_rate) }}%{% else %}0.0%{% endif %}
+                </div>
+            </div>
+            <div class="kpi-value">{{ "%.1f"|format(metrics.growth_rate if metrics.growth_rate else 0) }}%</div>
+            <div class="kpi-label">Growth Rate</div>
+        </div>
+        {% else %}
+        <!-- No Data State -->
+        <div class="kpi-card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+            <div class="kpi-icon" style="margin: 0 auto 1rem;">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h3 style="color: #6b7280; margin-bottom: 0.5rem;">No Data Available</h3>
+            <p style="color: #9ca3af; margin: 0;">Start adding products, orders, and customers to see your dashboard metrics.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-section">
+        <!-- Main Chart -->
+        <div class="chart-card">
+                    <div class="chart-header">
+            <h3 class="chart-title">Revenue vs Expenses Trend</h3>
+            <div class="chart-controls">
+                <select id="dateRange" class="form-select" style="width: auto; margin-right: 1rem;">
+                    <option value="30">Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                    <option value="180">Last 6 Months</option>
+                </select>
+                <button id="refreshCharts" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+            <div class="chart-container">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Mini Charts -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">Quick Insights</h3>
+            </div>
+            <div class="mini-chart">
+                <canvas id="ordersChart"></canvas>
+            </div>
+            <div class="mini-chart">
+                <canvas id="inventoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Grid -->
+    <div class="reports-grid">
+        <!-- Sales Reports -->
+        <div class="report-card">
+            <div class="report-header">
+                <div class="report-icon sales">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <h3 class="report-title">Sales Analytics</h3>
+            </div>
+            <div class="report-description">
+                Comprehensive sales performance analysis with customer insights, product trends, and revenue forecasting.
+            </div>
+            <div class="report-actions">
+                <a href="/reports/sales" class="btn-primary">
+                    <i class="fas fa-chart-line"></i>
+                    View Report
+                </a>
+                <a href="/reports/sales/export" class="btn-secondary">
+                    <i class="fas fa-download"></i>
+                    Export
+                </a>
+            </div>
+        </div>
+
+        <!-- Inventory Reports -->
+        <div class="report-card">
+            <div class="report-header">
+                <div class="report-icon inventory">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <h3 class="report-title">Inventory Management</h3>
+            </div>
+            <div class="report-description">
+                Stock level monitoring, movement tracking, expiry alerts, and inventory optimization recommendations.
+            </div>
+            <div class="report-actions">
+                <a href="/reports/inventory" class="btn-primary">
+                    <i class="fas fa-chart-line"></i>
+                    View Report
+                </a>
+                <a href="/reports/inventory/export" class="btn-secondary">
+                    <i class="fas fa-download"></i>
+                    Export
+                </a>
+            </div>
+        </div>
+
+        <!-- Financial Reports -->
+        <div class="report-card">
+            <div class="report-header">
+                <div class="report-icon financial">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <h3 class="report-title">Financial Performance</h3>
+            </div>
+            <div class="report-description">
+                Revenue analysis, profit margins, expense tracking, and financial forecasting for strategic planning.
+            </div>
+            <div class="report-actions">
+                <a href="/reports/financial" class="btn-primary">
+                    <i class="fas fa-chart-line"></i>
+                    View Report
+                </a>
+                <a href="/reports/financial/export" class="btn-secondary">
+                    <i class="fas fa-download"></i>
+                    Export
+                </a>
+            </div>
+        </div>
+
+        <!-- Customer Reports -->
+        <div class="report-card">
+            <div class="report-header">
+                <div class="report-icon customers">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="report-title">Customer Insights</h3>
+            </div>
+            <div class="report-description">
+                Customer behavior analysis, satisfaction metrics, loyalty tracking, and market segmentation data.
+            </div>
+            <div class="report-actions">
+                <a href="/reports/customers" class="btn-primary">
+                    <i class="fas fa-chart-line"></i>
+                    View Report
+                </a>
+                <a href="/reports/customers/export" class="btn-secondary">
+                    <i class="fas fa-download"></i>
+                    Export
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Chart data from backend - Template variables will be replaced by Jinja2
+// eslint-disable-next-line
+const chartData = {
+    months: {{ chart_data.months | tojson }},
+    revenueData: {{ chart_data.revenue_data | tojson }},
+    expensesData: {{ chart_data.expenses_data | tojson }},
+    ordersLabels: {{ chart_data.orders_labels | tojson }},
+    ordersData: {{ chart_data.orders_data | tojson }},
+    inventoryLabels: {{ chart_data.inventory_labels | tojson }},
+    inventoryData: {{ chart_data.inventory_data | tojson }}
+};
+
+// Revenue vs Expenses Chart
+const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+const revenueChart = new Chart(revenueCtx, {
+    type: 'line',
+    data: {
+        labels: chartData.months,
+        datasets: [{
+            label: 'Revenue',
+            data: chartData.revenueData,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            tension: 0.4,
+            fill: true
+        }, {
+            label: 'Expenses',
+            data: chartData.expensesData,
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '₵' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Orders Chart
+const ordersCtx = document.getElementById('ordersChart').getContext('2d');
+const ordersChart = new Chart(ordersCtx, {
+    type: 'doughnut',
+    data: {
+        labels: chartData.ordersLabels,
+        datasets: [{
+            data: chartData.ordersData,
+            backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    boxWidth: 12
+                }
+            }
+        }
+    }
+});
+
+// Inventory Chart
+const inventoryCtx = document.getElementById('inventoryChart').getContext('2d');
+const inventoryChart = new Chart(inventoryCtx, {
+    type: 'bar',
+    data: {
+        labels: chartData.inventoryLabels,
+        datasets: [{
+            label: 'Products',
+            data: chartData.inventoryData,
+            backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Date range change handler
+document.getElementById('dateRange').addEventListener('change', function() {
+    const days = parseInt(this.value);
+    updateCharts(days);
+});
+
+// Refresh button handler
+document.getElementById('refreshCharts').addEventListener('click', function() {
+    const days = parseInt(document.getElementById('dateRange').value);
+    updateCharts(days);
+});
+
+// Function to update charts with new date range
+function updateCharts(days) {
+    // Show loading state
+    document.getElementById('refreshCharts').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    document.getElementById('refreshCharts').disabled = true;
+    
+    // Fetch new data from backend
+    fetch(`/reports/api/dashboard-data?days=${days}`)
+        .then(response => response.json())
+        .then(data => {
+            // Update revenue chart
+            revenueChart.data.labels = data.months;
+            revenueChart.data.datasets[0].data = data.revenue_data;
+            revenueChart.data.datasets[1].data = data.expenses_data;
+            revenueChart.update();
+            
+            // Update orders chart
+            ordersChart.data.labels = data.orders_labels;
+            ordersChart.data.datasets[0].data = data.orders_data;
+            ordersChart.update();
+            
+            // Update inventory chart
+            inventoryChart.data.labels = data.inventory_labels;
+            inventoryChart.data.datasets[0].data = data.inventory_data;
+            inventoryChart.update();
+            
+            // Reset button state
+            document.getElementById('refreshCharts').innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+            document.getElementById('refreshCharts').disabled = false;
+        })
+        .catch(error => {
+            console.error('Error updating charts:', error);
+            // Reset button state
+            document.getElementById('refreshCharts').innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+            document.getElementById('refreshCharts').disabled = false;
+        });
+}
+
+// Auto-refresh every 5 minutes
+setInterval(function() {
+    location.reload();
+}, 300000);
+</script>
+{% endblock %} 

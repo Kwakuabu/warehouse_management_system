@@ -1,0 +1,526 @@
+{% extends "base.html" %}
+
+{% block title %}Settings Dashboard - Alive Pharmaceuticals{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-dashboard {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .dashboard-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .dashboard-header h1 {
+        color: #1f2937;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .dashboard-header p {
+        color: #6b7280;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .header-actions .btn-system {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    .header-actions .btn-system:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        color: white;
+    }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .setting-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .setting-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 16px 48px rgba(31, 38, 135, 0.25);
+    }
+
+    .setting-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+
+    .setting-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .setting-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .setting-icon.system { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .setting-icon.users { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+    .setting-icon.security { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .setting-icon.backup { background: linear-gradient(135deg, #10b981, #059669); }
+
+    .setting-title {
+        color: #1f2937;
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .setting-content p {
+        color: #6b7280;
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .setting-actions .btn-primary {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .setting-actions .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .system-info-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .info-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .info-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: white;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .info-title {
+        color: #1f2937;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .info-card {
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        border-radius: 15px;
+        padding: 1.5rem;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .info-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.15);
+    }
+
+    .info-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+
+    .info-card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .info-card-icon.status { background: linear-gradient(135deg, #10b981, #059669); }
+    .info-card-icon.database { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .info-card-icon.backup { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+    .info-card-icon.users { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+    .info-card-content h3 {
+        color: #1f2937;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0 0 0.25rem 0;
+    }
+
+    .info-card-content p {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .status-indicator.operational {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+    }
+
+    .status-indicator.connected {
+        background: rgba(59, 130, 246, 0.1);
+        color: #2563eb;
+    }
+
+    .status-indicator.warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+        
+        .dashboard-header h1 {
+            font-size: 2rem;
+        }
+        
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-dashboard">
+    <!-- Enhanced Header -->
+    <div class="dashboard-header">
+        <div>
+            <h1>⚙️ Settings Dashboard</h1>
+            <p>Manage system configuration and preferences with centralized control</p>
+        </div>
+        <div class="header-actions">
+            <a href="/settings/system" class="btn-system">
+                <i class="fas fa-cog"></i>
+                System Settings
+            </a>
+        </div>
+    </div>
+
+    <!-- Settings Grid -->
+    <div class="settings-grid">
+        <!-- System Settings -->
+        <div class="setting-card">
+            <div class="setting-header">
+                <div class="setting-icon system">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <h3 class="setting-title">System Settings</h3>
+            </div>
+            <div class="setting-content">
+                <p>Configure system preferences, database settings, application parameters, and company information</p>
+                <div class="setting-actions">
+                    <a href="/settings/system" class="btn-primary">
+                        <i class="fas fa-arrow-right"></i>
+                        Configure System
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Management -->
+        <div class="setting-card">
+            <div class="setting-header">
+                <div class="setting-icon users">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="setting-title">User Management</h3>
+            </div>
+            <div class="setting-content">
+                <p>Manage user accounts, roles, permissions, and access controls for system security</p>
+                <div class="setting-actions">
+                    <a href="/settings/users" class="btn-primary">
+                        <i class="fas fa-arrow-right"></i>
+                        Manage Users
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Settings -->
+        <div class="setting-card">
+            <div class="setting-header">
+                <div class="setting-icon security">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 class="setting-title">Security Settings</h3>
+            </div>
+            <div class="setting-content">
+                <p>Configure security policies, authentication methods, password requirements, and access controls</p>
+                <div class="setting-actions">
+                    <a href="/settings/security" class="btn-primary">
+                        <i class="fas fa-arrow-right"></i>
+                        Security Config
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Backup & Restore -->
+        <div class="setting-card">
+            <div class="setting-header">
+                <div class="setting-icon backup">
+                    <i class="fas fa-database"></i>
+                </div>
+                <h3 class="setting-title">Backup & Restore</h3>
+            </div>
+            <div class="setting-content">
+                <p>Manage data backups, restore points, system recovery, and database maintenance</p>
+                <div class="setting-actions">
+                    <a href="/settings/backup" class="btn-primary">
+                        <i class="fas fa-arrow-right"></i>
+                        Backup Settings
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="setting-card">
+            <div class="setting-header">
+                <div class="setting-icon" style="background: linear-gradient(135deg, #ec4899, #be185d);">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <h3 class="setting-title">Notification Settings</h3>
+            </div>
+            <div class="setting-content">
+                <p>Configure email, SMS, and push notifications for alerts, reports, and system updates</p>
+                <div class="setting-actions">
+                    <a href="/settings/notifications" class="btn-primary">
+                        <i class="fas fa-arrow-right"></i>
+                        Configure Notifications
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Information -->
+    <div class="system-info-section">
+        <div class="info-header">
+            <div class="info-icon">
+                <i class="fas fa-info-circle"></i>
+            </div>
+            <h2 class="info-title">System Information</h2>
+        </div>
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-card-icon status">
+                    <i class="fas fa-server"></i>
+                </div>
+                <div class="info-card-content">
+                    <h3>System Status</h3>
+                    <p>
+                        <span class="status-indicator operational">
+                            <i class="fas fa-check-circle"></i>
+                            All systems operational
+                        </span>
+                    </p>
+                    {% if system_info %}
+                    <small style="color: #6b7280; display: block; margin-top: 0.25rem;">
+                        {{ system_info.platform }} • {{ system_info.architecture }}
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-card-icon database">
+                    <i class="fas fa-database"></i>
+                </div>
+                <div class="info-card-content">
+                    <h3>Database</h3>
+                    <p>
+                        <span class="status-indicator connected">
+                            <i class="fas fa-link"></i>
+                            {{ db_info.status if db_info else 'Connected and healthy' }}
+                        </span>
+                    </p>
+                    {% if db_info and db_info.type == 'SQLite' %}
+                    <small style="color: #6b7280; display: block; margin-top: 0.25rem;">
+                        {{ db_info.file_size_mb }} MB • {{ db_info.table_count }} tables
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-card-icon backup">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="info-card-content">
+                    <h3>Last Backup</h3>
+                    <p>{{ db_info.last_modified if db_info and db_info.last_modified else 'Never' }}</p>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-card-icon users">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="info-card-content">
+                    <h3>Active Users</h3>
+                    <p>{{ active_users or 0 }} users</p>
+                </div>
+            </div>
+            {% if memory_info %}
+            <div class="info-card">
+                <div class="info-card-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                    <i class="fas fa-memory"></i>
+                </div>
+                <div class="info-card-content">
+                    <h3>Memory Usage</h3>
+                    <p>
+                        <span class="status-indicator {% if memory_info.percent > 80 %}warning{% else %}operational{% endif %}">
+                            <i class="fas fa-{% if memory_info.percent > 80 %}exclamation-triangle{% else %}check-circle{% endif %}"></i>
+                            {{ memory_info.percent }}% used
+                        </span>
+                    </p>
+                    <small style="color: #6b7280; display: block; margin-top: 0.25rem;">
+                        {{ (memory_info.total / (1024**3)) | round(1) }} GB total
+                    </small>
+                </div>
+            </div>
+            {% endif %}
+            {% if cpu_info %}
+            <div class="info-card">
+                <div class="info-card-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                    <i class="fas fa-microchip"></i>
+                </div>
+                <div class="info-card-content">
+                    <h3>CPU Usage</h3>
+                    <p>
+                        <span class="status-indicator {% if cpu_info.percent > 80 %}warning{% else %}operational{% endif %}">
+                            <i class="fas fa-{% if cpu_info.percent > 80 %}exclamation-triangle{% else %}check-circle{% endif %}"></i>
+                            {{ cpu_info.percent }}% used
+                        </span>
+                    </p>
+                    <small style="color: #6b7280; display: block; margin-top: 0.25rem;">
+                        {{ cpu_info.count }} cores
+                    </small>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

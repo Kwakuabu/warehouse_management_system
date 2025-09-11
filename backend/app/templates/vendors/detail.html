@@ -1,0 +1,520 @@
+{% extends "base.html" %}
+
+{% block title %}Vendor Details - Alive Pharmaceuticals{% endblock %}
+
+{% block additional_styles %}
+<style>
+    .vendor-detail-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 2rem;
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        margin-bottom: 2rem;
+    }
+
+    .vendor-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .vendor-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 2rem;
+    }
+
+    .vendor-icon i {
+        color: white;
+        font-size: 2rem;
+    }
+
+    .vendor-info h1 {
+        color: #333;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .vendor-meta {
+        display: flex;
+        gap: 2rem;
+        color: #666;
+        font-size: 0.9rem;
+        flex-wrap: wrap;
+    }
+
+    .vendor-content {
+        margin-bottom: 2rem;
+    }
+
+    .vendor-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .detail-section {
+        background: rgba(255, 255, 255, 0.7);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .section-title i {
+        margin-right: 0.5rem;
+        color: #667eea;
+    }
+
+    .detail-item {
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .detail-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .detail-value {
+        color: #333;
+        font-size: 1rem;
+    }
+
+    .vendor-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .vendor-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border: 1px solid #667eea;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(102, 126, 234, 0.2);
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+    }
+
+    .btn-warning:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+    }
+
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    .action-btn i {
+        margin-right: 0.5rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .back-link:hover {
+        transform: translateX(-5px);
+    }
+
+    .back-link i {
+        margin-right: 0.5rem;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-active {
+        background: rgba(16, 185, 129, 0.2);
+        color: #059669;
+    }
+
+    .status-inactive {
+        background: rgba(239, 68, 68, 0.2);
+        color: #dc2626;
+    }
+
+    .recent-orders {
+        background: rgba(255, 255, 255, 0.7);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        margin-top: 2rem;
+    }
+
+    .order-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 10px;
+        margin-bottom: 0.5rem;
+    }
+
+    .order-info h4 {
+        color: #333;
+        margin-bottom: 0.25rem;
+    }
+
+    .order-meta {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .order-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .status-pending {
+        background: rgba(245, 158, 11, 0.2);
+        color: #d97706;
+    }
+
+    .status-confirmed {
+        background: rgba(59, 130, 246, 0.2);
+        color: #2563eb;
+    }
+
+    .status-shipped {
+        background: rgba(16, 185, 129, 0.2);
+        color: #059669;
+    }
+
+    .status-received {
+        background: rgba(16, 185, 129, 0.2);
+        color: #059669;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="header">
+    <div>
+        <a href="/vendors" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            Back to Vendors
+        </a>
+        <h1>Vendor Details</h1>
+        <p>View vendor information and performance</p>
+    </div>
+</div>
+
+<!-- Vendor Detail Card -->
+<div class="vendor-detail-card">
+    {% if vendor %}
+    <div class="vendor-header">
+        <div class="vendor-icon">
+            <i class="fas fa-industry"></i>
+        </div>
+        <div class="vendor-info">
+            <h1>{{ vendor.name }}</h1>
+            <div class="vendor-meta">
+                <span><i class="fas fa-user"></i> {{ vendor.contact_person or 'No contact person' }}</span>
+                <span><i class="fas fa-globe"></i> {{ vendor.country or 'No country specified' }}</span>
+                <span class="status-badge status-{% if vendor.is_active %}active{% else %}inactive{% endif %}">
+                    {% if vendor.is_active %}Active{% else %}Inactive{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="vendor-content">
+        <!-- Vendor Statistics -->
+        <div class="vendor-stats">
+            <div class="stat-card">
+                <div class="stat-value">{{ vendor.products|length if vendor.products else 0 }}</div>
+                <div class="stat-label">Products</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ vendor.purchase_orders|length if vendor.purchase_orders else 0 }}</div>
+                <div class="stat-label">Orders</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ vendor.lead_time_days or 0 }}</div>
+                <div class="stat-label">Lead Time (Days)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">₵{{ "%.0f"|format(vendor.total_spent) if vendor.total_spent else 0 }}K</div>
+                <div class="stat-label">Total Spent</div>
+            </div>
+        </div>
+
+        <!-- Vendor Details -->
+        <div class="vendor-details">
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    Contact Information
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Contact Person</div>
+                    <div class="detail-value">{{ vendor.contact_person or 'Not specified' }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Email</div>
+                    <div class="detail-value">
+                        {% if vendor.email %}
+                        <a href="mailto:{{ vendor.email }}" style="color: #667eea;">{{ vendor.email }}</a>
+                        {% else %}
+                        Not specified
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Phone</div>
+                    <div class="detail-value">
+                        {% if vendor.phone %}
+                        <a href="tel:{{ vendor.phone }}" style="color: #667eea;">{{ vendor.phone }}</a>
+                        {% else %}
+                        Not specified
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="fas fa-map-marker-alt"></i>
+                    Location
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Country</div>
+                    <div class="detail-value">{{ vendor.country or 'Not specified' }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Address</div>
+                    <div class="detail-value">{{ vendor.address or 'Not specified' }}</div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="fas fa-cog"></i>
+                    Business Terms
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Payment Terms</div>
+                    <div class="detail-value">{{ vendor.payment_terms or 'Not specified' }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Lead Time</div>
+                    <div class="detail-value">{{ vendor.lead_time_days or 0 }} days</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value">
+                        <span class="status-badge status-{% if vendor.is_active %}active{% else %}inactive{% endif %}">
+                            {% if vendor.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        {% if vendor.purchase_orders %}
+        <div class="recent-orders">
+            <div class="section-title">
+                <i class="fas fa-shopping-cart"></i>
+                Recent Purchase Orders
+            </div>
+            {% for order in vendor.purchase_orders[:5] %}
+            <div class="order-item">
+                <div class="order-info">
+                    <h4>{{ order.po_number }}</h4>
+                    <div class="order-meta">
+                        {{ order.order_date.strftime('%B %d, %Y') }} • ₵{{ "%.2f"|format(order.total_amount) }}
+                    </div>
+                </div>
+                <div class="order-status status-{{ order.status }}">
+                    {{ order.status.title() }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="vendor-actions">
+            {% if current_user.role in ['admin', 'manager'] %}
+            <a href="/vendors/edit/{{ vendor.id }}" class="action-btn btn-warning">
+                <i class="fas fa-edit"></i>
+                Edit Vendor
+            </a>
+            <a href="/purchase-orders/create?vendor_id={{ vendor.id }}" class="action-btn btn-success">
+                <i class="fas fa-plus"></i>
+                Create Order
+            </a>
+            {% endif %}
+            
+            <a href="/vendors" class="action-btn btn-secondary">
+                <i class="fas fa-list"></i>
+                Back to Vendors
+            </a>
+            
+            {% if current_user.role in ['admin', 'manager'] %}
+            <button class="action-btn btn-danger" onclick="deleteVendor({{ vendor.id }}, '{{ vendor.name }}')">
+                <i class="fas fa-trash"></i>
+                Delete Vendor
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="vendor-content">
+        <div class="detail-section">
+            <h3><i class="fas fa-exclamation-circle"></i> Vendor Not Found</h3>
+            <p>The requested vendor could not be found or you don't have permission to view it.</p>
+        </div>
+        
+        <div class="vendor-actions">
+            <a href="/vendors" class="action-btn btn-primary">
+                <i class="fas fa-list"></i>
+                Back to Vendors
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+    function deleteVendor(vendorId, vendorName) {
+        if (confirm(`Are you sure you want to delete the vendor "${vendorName}"? This action cannot be undone.`)) {
+            fetch(`/vendors/${vendorId}/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/vendors';
+                } else {
+                    alert('Error deleting vendor. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting vendor. Please try again.');
+            });
+        }
+    }
+</script>
+{% endblock %} 
