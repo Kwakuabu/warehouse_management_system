@@ -19,6 +19,11 @@ DATABASE_URL = (
     "sqlite:///./warehouse_db.sqlite"
 )
 
+# Convert MySQL URL to use PyMySQL driver (Railway compatibility)
+if DATABASE_URL.startswith("mysql://"):
+    DATABASE_URL = DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
+    print("DEBUG: Converted mysql:// to mysql+pymysql:// for PyMySQL compatibility")
+
 # CRITICAL DEBUG - Print what Railway gave us
 print("RAILWAY DEBUG: What DATABASE_URL did we get?")
 print("=" * 80)
