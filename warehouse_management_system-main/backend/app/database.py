@@ -10,6 +10,17 @@ load_dotenv()
 # Database URL from environment variable
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./warehouse_db.sqlite")
 
+# Debug: Print the actual DATABASE_URL Railway is providing
+print(f"DEBUG: DATABASE_URL from Railway = '{DATABASE_URL}'")
+print(f"DEBUG: All DATABASE/MYSQL env vars:")
+for key, value in os.environ.items():
+    if 'DATABASE' in key.upper() or 'MYSQL' in key.upper():
+        if 'PASSWORD' in key.upper():
+            print(f"  {key} = ***HIDDEN***")
+        else:
+            print(f"  {key} = {value}")
+print(f"DEBUG: Using final DATABASE_URL = '{DATABASE_URL}'")
+
 # Create SQLAlchemy engine
 engine = create_engine(
     DATABASE_URL,
