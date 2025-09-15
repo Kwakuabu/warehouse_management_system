@@ -7,11 +7,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# FORCE RAILWAY TO SEE THIS CHANGE - TIMESTAMP: 2025-09-15 7:22 PM
+print("NEW CODE LOADED - LAZY INITIALIZATION VERSION")
+print("=" * 80)
+
 # Database URL from environment variable
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./warehouse_db.sqlite")
 
 # CRITICAL DEBUG - Print what Railway gave us
-print("=" * 80)
 print("RAILWAY DEBUG: What DATABASE_URL did we get?")
 print("=" * 80)
 print(f"Raw DATABASE_URL: {repr(DATABASE_URL)}")
