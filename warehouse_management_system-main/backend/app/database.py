@@ -11,15 +11,22 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./warehouse_db.sqlite")
 
 # Debug: Print the actual DATABASE_URL Railway is providing
-print(f"DEBUG: DATABASE_URL from Railway = '{DATABASE_URL}'")
-print(f"DEBUG: All DATABASE/MYSQL env vars:")
+print("=" * 80)
+print("RAILWAY DATABASE DEBUG - START")
+print("=" * 80)
+print(f"DATABASE_URL from Railway = '{DATABASE_URL}'")
+print(f"Length of DATABASE_URL = {len(DATABASE_URL)}")
+print(f"DATABASE_URL starts with: '{DATABASE_URL[:20]}...'")
+print("All DATABASE/MYSQL environment variables:")
 for key, value in os.environ.items():
     if 'DATABASE' in key.upper() or 'MYSQL' in key.upper():
         if 'PASSWORD' in key.upper():
-            print(f"  {key} = ***HIDDEN***")
+            print(f"  {key} = ***HIDDEN*** (length: {len(value)})")
         else:
             print(f"  {key} = {value}")
-print(f"DEBUG: Using final DATABASE_URL = '{DATABASE_URL}'")
+print("=" * 80)
+print("RAILWAY DATABASE DEBUG - END") 
+print("=" * 80)
 
 # Global variables for lazy initialization
 _engine = None
