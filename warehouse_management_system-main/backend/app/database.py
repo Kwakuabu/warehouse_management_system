@@ -7,32 +7,30 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Simple database URL configuration
-DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("MYSQL_URL", "sqlite:///./warehouse_db.sqlite")
+# Database URL from environment variable - Railway MySQL
+DATABASE_URL = os.getenv("MYSQL_URL", os.getenv("DATABASE_URL", "sqlite:///./warehouse_db.sqlite"))
 
-# Debug: Print what we actually have
-print("DEBUG: Available environment variables:")
-import os
-for key in sorted(os.environ.keys()):
-    if any(keyword in key.upper() for keyword in ['DATABASE', 'MYSQL', 'DB']):
-        value = os.environ[key]
-        if 'PASSWORD' in key.upper():
-            print(f"  {key}=***masked***")
-        else:
-            print(f"  {key}={value}")
+print(f"DEBUG: Raw DATABASE_URL: {DATABASE_URL}")
 
-# Convert mysql:// to mysql+pymysql:// if needed
+# Convert MySQL URL to use PyMySQL driver
 if DATABASE_URL.startswith("mysql://"):
     DATABASE_URL = DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
+    print("DEBUG: Converted mysql:// to mysql+pymysql://")
+
+# Handle Railway PostgreSQL URL format
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    print("DEBUG: Converted postgres:// to postgresql://")
 
 print(f"DEBUG: Final DATABASE_URL: {DATABASE_URL}")
 
-# Create SQLAlchemy engine
+# Create SQLAlchemy engine with better error handling
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
     pool_recycle=300,
-    echo=False
+    echo=False,  # Set to False in production
+    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
 )
 
 # Create SessionLocal class
