@@ -394,9 +394,18 @@ async def users_list_page(
 @router.get("/users/add", response_class=HTMLResponse)
 async def add_user_form(
     request: Request,
-    current_user: User = Depends(check_user_role_from_cookie("admin"))
+    current_user: User = Depends(check_user_role_from_cookie("admin")),
+    db: Session = Depends(get_db)
 ):
-    return templates.TemplateResponse("settings/users_add.html", {"request": request, "current_user": current_user})
+    """Display add user form with dynamic hospital list"""
+    # Fetch hospitals from database (exclude id=1 which is typically system/default)
+    hospitals = db.query(Customer).filter(Customer.is_active == True, Customer.id != 1).order_by(Customer.name).all()
+    
+    return templates.TemplateResponse("settings/users_add.html", {
+        "request": request, 
+        "current_user": current_user,
+        "hospitals": hospitals
+    })
 
 @router.post("/users/add")
 async def add_user_submit(
