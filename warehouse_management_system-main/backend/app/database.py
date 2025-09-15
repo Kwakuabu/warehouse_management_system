@@ -7,10 +7,30 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Database URL from environment variable - Railway MySQL
-DATABASE_URL = os.getenv("MYSQL_URL", os.getenv("DATABASE_URL", "sqlite:///./warehouse_db.sqlite"))
+# Print ALL environment variables for debugging
+print("=" * 50)
+print("DEBUG: ALL ENVIRONMENT VARIABLES")
+print("=" * 50)
+for key in sorted(os.environ.keys()):
+    if any(keyword in key.upper() for keyword in ['DATABASE', 'MYSQL', 'DB', 'URL']):
+        value = os.environ[key]
+        if 'PASSWORD' in key.upper() or 'PASS' in key.upper():
+            print(f"{key} = ***MASKED***")
+        else:
+            print(f"{key} = {value}")
 
-print(f"DEBUG: Raw DATABASE_URL: {DATABASE_URL}")
+print("=" * 50)
+
+# Database URL from environment variable - Railway MySQL
+mysql_url = os.getenv("MYSQL_URL")
+database_url = os.getenv("DATABASE_URL")
+
+print(f"DEBUG: MYSQL_URL = {mysql_url}")
+print(f"DEBUG: DATABASE_URL = {database_url}")
+
+# Choose the URL
+DATABASE_URL = mysql_url or database_url or "sqlite:///./warehouse_db.sqlite"
+print(f"DEBUG: Chosen DATABASE_URL = {DATABASE_URL}")
 
 # Convert MySQL URL to use PyMySQL driver
 if DATABASE_URL.startswith("mysql://"):
@@ -22,7 +42,8 @@ if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
     print("DEBUG: Converted postgres:// to postgresql://")
 
-print(f"DEBUG: Final DATABASE_URL: {DATABASE_URL}")
+print(f"DEBUG: Final DATABASE_URL = {DATABASE_URL}")
+print("=" * 50)
 
 # Create SQLAlchemy engine with better error handling
 engine = create_engine(
