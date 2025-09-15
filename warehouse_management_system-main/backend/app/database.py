@@ -10,11 +10,22 @@ load_dotenv()
 # Simple database URL configuration
 DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("MYSQL_URL", "sqlite:///./warehouse_db.sqlite")
 
+# Debug: Print what we actually have
+print("DEBUG: Available environment variables:")
+import os
+for key in sorted(os.environ.keys()):
+    if any(keyword in key.upper() for keyword in ['DATABASE', 'MYSQL', 'DB']):
+        value = os.environ[key]
+        if 'PASSWORD' in key.upper():
+            print(f"  {key}=***masked***")
+        else:
+            print(f"  {key}={value}")
+
 # Convert mysql:// to mysql+pymysql:// if needed
 if DATABASE_URL.startswith("mysql://"):
     DATABASE_URL = DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
 
-print(f"DEBUG: Using database URL: {DATABASE_URL}")
+print(f"DEBUG: Final DATABASE_URL: {DATABASE_URL}")
 
 # Create SQLAlchemy engine
 engine = create_engine(
