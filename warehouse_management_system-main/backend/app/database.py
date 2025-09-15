@@ -21,19 +21,39 @@ for key, value in os.environ.items():
             print(f"  {key} = {value}")
 print(f"DEBUG: Using final DATABASE_URL = '{DATABASE_URL}'")
 
-# Create SQLAlchemy engine
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
-    pool_recycle=300,
-    echo=True  # Set to False in production
-)
+# Global variables for lazy initialization
+_engine = None
+_SessionLocal = None
 
-# Create SessionLocal class
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+def get_engine():
+    global _engine
+    if _engine is None:
+        print("DEBUG: Creating SQLAlchemy engine...")
+        # Create SQLAlchemy engine
+        _engine = create_engine(
+            DATABASE_URL,
+            pool_pre_ping=True,
+            pool_recycle=300,
+            echo=True  # Set to False in production
+        )
+        print("DEBUG: Engine created successfully")
+    return _engine
+
+def get_session_local():
+    global _SessionLocal
+    if _SessionLocal is None:
+        engine = get_engine()
+        _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        print("DEBUG: SessionLocal created successfully")
+    return _SessionLocal
+
+# Keep these for backward compatibility
+engine = None  # Will be created lazily
+SessionLocal = None  # Will be created lazily
 
 # Dependency to get database session
 def get_db():
+    SessionLocal = get_session_local()
     db = SessionLocal()
     try:
         yield db
@@ -42,8 +62,12 @@ def get_db():
 
 # Function to create all tables
 def create_tables():
+    engine = get_engine()
+    print("DEBUG: About to create all tables...")
     Base.metadata.create_all(bind=engine)
+    print("DEBUG: Tables created successfully")
 
 # Function to drop all tables (for development only)
 def drop_tables():
+    engine = get_engine()
     Base.metadata.drop_all(bind=engine)
