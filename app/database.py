@@ -7,36 +7,49 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Database URL from environment variable - Railway MySQL
-DATABASE_URL = os.getenv("MYSQL_URL", os.getenv("DATABASE_URL", "sqlite:///./warehouse_db.sqlite"))
+# FORCE RAILWAY TO SEE THIS CHANGE - TIMESTAMP: 2025-09-15 7:22 PM
+print("NEW CODE LOADED - LAZY INITIALIZATION VERSION")
+print("=" * 80)
 
-# Convert MySQL URL to use PyMySQL driver
-if DATABASE_URL.startswith("mysql://"):
-    DATABASE_URL = DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
+# Database URL from environment variable
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./warehouse_db.sqlite")
 
-# Handle Railway PostgreSQL URL format
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+# CRITICAL DEBUG - Print what Railway gave us
+print("RAILWAY DEBUG: What DATABASE_URL did we get?")
+print("=" * 80)
+print(f"Raw DATABASE_URL: {repr(DATABASE_URL)}")
+print(f"DATABASE_URL length: {len(DATABASE_URL) if DATABASE_URL else 'None'}")
+if DATABASE_URL:
+    print(f"DATABASE_URL first 50 chars: {DATABASE_URL[:50]}")
+    print(f"DATABASE_URL last 50 chars: {DATABASE_URL[-50:]}")
+print("=" * 80)
 
-# Handle Railway MySQL URL format
-if DATABASE_URL.startswith("mysql://"):
-    # MySQL URL is already in correct format for PyMySQL
-    pass
+# Global variables for truly lazy initialization
+_engine = None
+_SessionLocal = None
 
-# Create SQLAlchemy engine with better error handling
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
-    pool_recycle=300,
-    echo=False,  # Set to False in production
-    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
-)
+def get_engine():
+    global _engine
+    if _engine is None:
+        print(f"Creating engine with URL: {DATABASE_URL}")
+        _engine = create_engine(
+            DATABASE_URL,
+            pool_pre_ping=True,
+            pool_recycle=300,
+            echo=True
+        )
+    return _engine
 
-# Create SessionLocal class
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+def get_session_local():
+    global _SessionLocal
+    if _SessionLocal is None:
+        engine = get_engine()
+        _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    return _SessionLocal
 
 # Dependency to get database session
 def get_db():
+    SessionLocal = get_session_local()
     db = SessionLocal()
     try:
         yield db
@@ -45,8 +58,10 @@ def get_db():
 
 # Function to create all tables
 def create_tables():
+    engine = get_engine()
     Base.metadata.create_all(bind=engine)
 
 # Function to drop all tables (for development only)
 def drop_tables():
+    engine = get_engine()
     Base.metadata.drop_all(bind=engine)
