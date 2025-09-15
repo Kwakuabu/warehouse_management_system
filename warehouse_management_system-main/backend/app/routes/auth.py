@@ -29,9 +29,19 @@ async def login_page(request: Request):
 
 # Register page
 @router.get("/register", response_class=HTMLResponse)
-async def register_page(request: Request):
+async def register_page(request: Request, db: Session = Depends(get_db)):
     """Display registration page"""
-    return templates.TemplateResponse("register.html", {"request": request})
+    # Fetch active hospitals (customers) for staff assignment
+    from app.models.models import Customer
+    hospitals = db.query(Customer).filter(
+        Customer.is_active == True,
+        Customer.id != 1  # Exclude "Nathaniel Amponsah" which is not a hospital
+    ).order_by(Customer.name).all()
+    
+    return templates.TemplateResponse("register.html", {
+        "request": request,
+        "hospitals": hospitals
+    })
 
 # API: Login for token
 @router.post("/token", response_model=Token)
@@ -148,25 +158,32 @@ async def register_form(
     db: Session = Depends(get_db)
 ):
     """Handle form-based registration"""
+    # Fetch hospitals for error cases
+    from app.models.models import Customer
+    hospitals = db.query(Customer).filter(
+        Customer.is_active == True,
+        Customer.id != 1  # Exclude "Nathaniel Amponsah" which is not a hospital
+    ).order_by(Customer.name).all()
+    
     # Validate passwords match
     if password != confirm_password:
         return templates.TemplateResponse(
             "register.html", 
-            {"request": request, "error": "Passwords do not match"}
+            {"request": request, "error": "Passwords do not match", "hospitals": hospitals}
         )
     
     # Check if username exists
     if get_user_by_username(db, username):
         return templates.TemplateResponse(
             "register.html", 
-            {"request": request, "error": "Username already exists"}
+            {"request": request, "error": "Username already exists", "hospitals": hospitals}
         )
     
     # Check if email exists
     if get_user_by_email(db, email):
         return templates.TemplateResponse(
             "register.html", 
-            {"request": request, "error": "Email already registered"}
+            {"request": request, "error": "Email already registered", "hospitals": hospitals}
         )
     
     # Initialize hospital_id_int
@@ -177,7 +194,7 @@ async def register_form(
         if not hospital_id or hospital_id.strip() == "":
             return templates.TemplateResponse(
                 "register.html", 
-                {"request": request, "error": "Staff users must be assigned to a hospital"}
+                {"request": request, "error": "Staff users must be assigned to a hospital", "hospitals": hospitals}
             )
         
         # Convert hospital_id to integer
@@ -186,11 +203,10 @@ async def register_form(
         except ValueError:
             return templates.TemplateResponse(
                 "register.html", 
-                {"request": request, "error": "Invalid hospital selection"}
+                {"request": request, "error": "Invalid hospital selection", "hospitals": hospitals}
             )
         
         # Verify the hospital exists and is a valid hospital (not a regular customer)
-        from app.models.models import Customer
         hospital = db.query(Customer).filter(
             Customer.id == hospital_id_int,
             Customer.is_active == True
@@ -199,14 +215,14 @@ async def register_form(
         if not hospital:
             return templates.TemplateResponse(
                 "register.html", 
-                {"request": request, "error": "Selected hospital not found"}
+                {"request": request, "error": "Selected hospital not found", "hospitals": hospitals}
             )
         
         # Check if it's a valid hospital (not "Nathaniel Amponsah" which is ID 1)
         if hospital_id_int == 1:  # Nathaniel Amponsah is not a hospital
             return templates.TemplateResponse(
                 "register.html", 
-                {"request": request, "error": "Please select a valid hospital"}
+                {"request": request, "error": "Please select a valid hospital", "hospitals": hospitals}
             )
     
     # Create user (pending approval)
