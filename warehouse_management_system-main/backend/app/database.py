@@ -11,8 +11,13 @@ load_dotenv()
 print("CORRECT DATABASE.PY LOADED - LAZY INITIALIZATION - TIMESTAMP 7:35 PM")
 print("=" * 80)
 
-# Database URL from environment variable
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./warehouse_db.sqlite")
+# Database URL from environment variable - try multiple Railway variables
+DATABASE_URL = (
+    os.getenv("DATABASE_URL") or 
+    os.getenv("MYSQL_URL") or 
+    os.getenv("MYSQL_PUBLIC_URL") or 
+    "sqlite:///./warehouse_db.sqlite"
+)
 
 # CRITICAL DEBUG - Print what Railway gave us
 print("RAILWAY DEBUG: What DATABASE_URL did we get?")
