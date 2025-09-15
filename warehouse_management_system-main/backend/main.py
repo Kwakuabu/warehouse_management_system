@@ -89,11 +89,29 @@ async def add_pending_users_count(request: Request, call_next):
     
     return response
 
-# Root endpoint - Dashboard (Protected)
+# Root endpoint - Redirect to login page if not authenticated
 @app.get("/", response_class=HTMLResponse)
-async def root_dashboard(request: Request, current_user: User = Depends(get_current_user_from_cookie)):
-    """Main dashboard page - requires authentication"""
-    return RedirectResponse(url="/dashboard", status_code=302)
+async def root_redirect(request: Request):
+    """Root page - redirect to login if not authenticated, dashboard if authenticated"""
+    # Check if user has authentication cookie
+    access_token = request.cookies.get("access_token")
+    
+    if access_token:
+        try:
+            # Try to validate the token by getting user info
+            db = next(get_db())
+            current_user = await get_current_user_from_cookie(access_token, db)
+            db.close()
+            
+            if current_user:
+                # User is authenticated, redirect to dashboard
+                return RedirectResponse(url="/dashboard", status_code=302)
+        except:
+            # Invalid token or user not found
+            pass
+    
+    # No token or invalid token - redirect to login page
+    return RedirectResponse(url="/auth/login", status_code=302)
 
 # Redirect root paths to auth
 @app.get("/login", response_class=HTMLResponse)
