@@ -28,27 +28,49 @@ async def lifespan(app: FastAPI):
     # Run database migration for user approval system
     try:
         db = next(get_db())
-        from sqlalchemy import text
+        from sqlalchemy import text, inspect
+        from app.database import DATABASE_URL
         
-        # Check if approval columns exist
-        result = db.execute(text("SHOW COLUMNS FROM users LIKE 'requires_approval'"))
-        if not result.fetchone():
+        # Check if approval columns exist using SQLAlchemy inspector
+        inspector = inspect(db.bind)
+        columns = [col['name'] for col in inspector.get_columns('users')]
+        
+        if 'requires_approval' not in columns:
             print("Adding user approval columns to database...")
             
-            # Add new columns
-            db.execute(text("ALTER TABLE users ADD COLUMN requires_approval BOOLEAN DEFAULT 1"))
-            db.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT 0"))
-            db.execute(text("ALTER TABLE users ADD COLUMN approved_by INT"))
-            db.execute(text("ALTER TABLE users ADD COLUMN approved_at DATETIME"))
+            # Determine database type
+            is_mysql = 'mysql' in DATABASE_URL.lower()
             
-            # Update existing users to be approved
-            db.execute(text("""
-                UPDATE users 
-                SET requires_approval = 0, 
-                    is_approved = 1, 
-                    approved_at = NOW() 
-                WHERE requires_approval = 1 OR is_approved = 0
-            """))
+            if is_mysql:
+                # MySQL syntax
+                db.execute(text("ALTER TABLE users ADD COLUMN requires_approval BOOLEAN DEFAULT 1"))
+                db.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT 0"))
+                db.execute(text("ALTER TABLE users ADD COLUMN approved_by INT"))
+                db.execute(text("ALTER TABLE users ADD COLUMN approved_at DATETIME"))
+                
+                # Update existing users to be approved
+                db.execute(text("""
+                    UPDATE users 
+                    SET requires_approval = 0, 
+                        is_approved = 1, 
+                        approved_at = NOW() 
+                    WHERE requires_approval IS NULL OR is_approved IS NULL
+                """))
+            else:
+                # SQLite syntax
+                db.execute(text("ALTER TABLE users ADD COLUMN requires_approval BOOLEAN DEFAULT 1"))
+                db.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT 0"))
+                db.execute(text("ALTER TABLE users ADD COLUMN approved_by INTEGER"))
+                db.execute(text("ALTER TABLE users ADD COLUMN approved_at DATETIME"))
+                
+                # Update existing users to be approved
+                db.execute(text("""
+                    UPDATE users 
+                    SET requires_approval = 0, 
+                        is_approved = 1, 
+                        approved_at = datetime('now') 
+                    WHERE requires_approval IS NULL OR is_approved IS NULL
+                """))
             
             db.commit()
             print("User approval system migration completed successfully!")
@@ -57,6 +79,7 @@ async def lifespan(app: FastAPI):
             
     except Exception as e:
         print(f"Migration error: {e}")
+        print("Continuing without migration...")
     finally:
         if 'db' in locals():
             db.close()

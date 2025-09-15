@@ -7,15 +7,38 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Database URL from environment variable
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./warehouse_db.sqlite")
+# Database URL configuration for Railway
+def get_database_url():
+    # Check if we're in Railway environment
+    database_url = os.getenv("DATABASE_URL")
+    
+    if database_url:
+        # Use provided DATABASE_URL (works for Railway MySQL)
+        return database_url
+    
+    # Check for Railway MySQL environment variables
+    mysql_host = os.getenv("MYSQL_HOST")
+    mysql_port = os.getenv("MYSQL_PORT", "3306")
+    mysql_database = os.getenv("MYSQL_DATABASE")
+    mysql_user = os.getenv("MYSQL_USER", "root")
+    mysql_password = os.getenv("MYSQL_PASSWORD") or os.getenv("MYSQL_ROOT_PASSWORD")
+    
+    if all([mysql_host, mysql_database, mysql_password]):
+        # Build MySQL URL for Railway
+        return f"mysql+pymysql://{mysql_user}:{mysql_password}@{mysql_host}:{mysql_port}/{mysql_database}?charset=utf8mb4"
+    
+    # Fallback to SQLite for local development
+    return "sqlite:///./warehouse_db.sqlite"
+
+DATABASE_URL = get_database_url()
+print(f"DEBUG: Using database URL: {DATABASE_URL}")
 
 # Create SQLAlchemy engine
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
     pool_recycle=300,
-    echo=True  # Set to False in production
+    echo=False  # Disable echo in production
 )
 
 # Create SessionLocal class
