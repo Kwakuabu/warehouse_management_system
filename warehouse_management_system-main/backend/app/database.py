@@ -5,15 +5,11 @@ from app.models.models import Base
 import os
 from dotenv import load_dotenv
 
-print("LOADING DATABASE.PY - CHECKING IF RAILWAY SEES THIS")
 load_dotenv()
 
-# FORCE RAILWAY TO SEE THIS CHANGE - TIMESTAMP: 2025-09-15 7:24 PM
-print("NEW CODE LOADED - LAZY INITIALIZATION VERSION - 7:24 PM")
+# FORCE RAILWAY DEPLOYMENT - TIMESTAMP: 2025-09-15 7:35 PM
+print("CORRECT DATABASE.PY LOADED - LAZY INITIALIZATION - TIMESTAMP 7:35 PM")
 print("=" * 80)
-
-# IF RAILWAY IS RUNNING OLD CODE, IT WILL CRASH BEFORE THIS LINE
-assert False, "TESTING: If you see this error, Railway IS running our new code!"
 
 # Database URL from environment variable
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./warehouse_db.sqlite")
