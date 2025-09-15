@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, File
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models.models import User
+from app.models.models import User, Customer
 from app.utils.auth import check_user_role_from_cookie, get_current_active_user_from_cookie
 from datetime import datetime
 from typing import Optional, Dict, Any
