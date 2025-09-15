@@ -20,9 +20,17 @@ def get_database_url():
             else:
                 print(f"  {key}={value}")
     
-    # Check if we're in Railway environment
-    database_url = os.getenv("DATABASE_URL")
+    # Check for Railway's MYSQL_URL first (this is what Railway provides)
+    mysql_url = os.getenv("MYSQL_URL")
+    if mysql_url:
+        print(f"DEBUG: Found MYSQL_URL from Railway")
+        # Convert mysql:// to mysql+pymysql://
+        if mysql_url.startswith("mysql://"):
+            mysql_url = mysql_url.replace("mysql://", "mysql+pymysql://", 1)
+        return mysql_url + "?charset=utf8mb4"
     
+    # Check for standard DATABASE_URL
+    database_url = os.getenv("DATABASE_URL")
     if database_url:
         print(f"DEBUG: Found DATABASE_URL")
         return database_url
