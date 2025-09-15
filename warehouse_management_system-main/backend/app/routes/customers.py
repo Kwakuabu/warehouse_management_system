@@ -176,7 +176,7 @@ async def delete_customer(
     customer.is_active = False
     db.commit()
     
-    return RedirectResponse(url="/customers", status_code=302)
+    return RedirectResponse(url="/customers/", status_code=302)
 
 # API endpoints for AJAX calls
 @router.get("/api/customers")
