@@ -384,7 +384,8 @@ async def users_list_page(
     db: Session = Depends(get_db)
 ):
     """Display user management page - Admin only"""
-    users = db.query(User).order_by(User.created_at.desc()).all()
+    # Show only active users by default
+    users = db.query(User).filter(User.is_active == True).order_by(User.created_at.desc()).all()
     return templates.TemplateResponse("settings/users.html", {
         "request": request,
         "users": users,
@@ -534,10 +535,19 @@ async def delete_user(
     db: Session = Depends(get_db),
     current_user: User = Depends(check_user_role_from_cookie("admin"))
 ):
+    """Soft delete a user to avoid foreign key constraint issues"""
     user = db.query(User).filter(User.id == user_id).first()
-    if user:
-        db.delete(user)
-        db.commit()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Prevent admin from deleting themselves
+    if user.id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+    
+    # Soft delete - set is_active to False
+    user.is_active = False
+    db.commit()
+    
     return RedirectResponse(url="/settings/users", status_code=302)
 
 # API endpoints - Admin only
